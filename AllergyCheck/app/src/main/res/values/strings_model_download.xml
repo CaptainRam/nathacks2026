@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="model_download_notification_title">Gemma ingredient reader</string>
+    <string name="model_download_notification_description">Downloading the local AI model (about 555 MB).</string>
+    <string name="model_download_start_error">Couldn\'t start the download. Check available storage and that system downloads are enabled, then try again.</string>
+    <string name="model_download_failed">Download failed. Check your connection and available storage, then try again.</string>
+    <string name="model_download_storage_error">Not enough storage to download the model. Free up space and try again.</string>
+    <string name="model_download_interrupted">The download was removed or interrupted. You can download the model again.</string>
+    <string name="model_download_query_error">Waiting for the download service. Your download will be checked again automatically.</string>
+    <string name="model_download_verification_error">The downloaded model could not be verified or installed. Please try downloading it again.</string>
+    <string name="model_delete_error">Couldn\'t delete the model. Check device storage and try again.</string>
+    <string name="model_intro_title">Download the local AI model?</string>
+    <string name="model_intro_message">Gemma 3 1B can correct label text and extract ingredients on your device. The download is about 555 MB and may use mobile data. Once installed, the model works offline.\n\nYou can download or delete it anytime in Settings.</string>
+    <string name="model_source_links"><a href="https://huggingface.co/nikhil2024/gemma3-1b-it-litert-mirror">Source: Hugging Face · nikhil2024 mirror</a>\n<a href="https://ai.google.dev/gemma/terms">Gemma terms of use</a></string>
+    <string name="model_download_action">Download model</string>
+    <string name="model_later">Later</string>
+    <string name="model_missing_title">Local AI model not installed</string>
+    <string name="model_missing_description">Download the model to use the AI ingredient reader in OCR Test. Basic label scanning is still available.</string>
+    <string name="model_downloading_status">Downloading local AI model: %1$d%%</string>
+    <string name="model_download_paused_status">Model download is waiting for a connection or retry.</string>
+    <string name="model_installing_status">Verifying and installing the local AI model…</string>
+    <string name="model_ready_status">Local AI model installed. Ready to use offline.</string>
+    <string name="model_manage_action">Manage model</string>
+    <string name="model_download_unavailable">The local AI model is not installed. Download it using the button above.</string>
+</resources>
