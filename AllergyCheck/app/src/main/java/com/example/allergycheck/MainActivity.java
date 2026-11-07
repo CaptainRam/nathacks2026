@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
+import androidx.core.content.FileProvider;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -31,6 +32,7 @@ import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -39,6 +41,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private static final String PHOTO_STATE = "selected_photo";
+    private static final String CAMERA_STATE = "pending_camera_photo";
     private static final String PREFERENCES = "allergy_preferences";
     private static final String ALLERGENS = "selected_allergens";
     private static final int MAX_PREVIEW_SIZE = 1600;
@@ -46,10 +49,12 @@ public class MainActivity extends AppCompatActivity {
     private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
     private Uri selectedPhoto;
     private Uri pendingPhoto;
+    private Uri pendingCameraPhoto;
     private int imageRequest;
     private View loadingOverlay;
     private ImageView photoPreview;
     private MaterialButton importButton;
+    private MaterialButton cameraButton;
     private MaterialButton replaceButton;
     private MaterialButton allergensButton;
     private ChipGroup allergenChips;
@@ -58,6 +63,21 @@ public class MainActivity extends AppCompatActivity {
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
                 if (uri != null) {
                     loadPhoto(uri);
+                }
+            });
+
+    private final ActivityResultLauncher<Uri> photoCapture =
+            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+                Uri capturedPhoto = pendingCameraPhoto;
+                pendingCameraPhoto = null;
+                if (capturedPhoto == null) {
+                    return;
+                }
+                if (success) {
+                    loadPhoto(capturedPhoto);
+                } else {
+                    deleteCameraPhoto(capturedPhoto);
+                    cameraButton.setEnabled(loadingOverlay.getVisibility() != View.VISIBLE);
                 }
             });
 
@@ -83,17 +103,26 @@ public class MainActivity extends AppCompatActivity {
         loadingOverlay = findViewById(R.id.loading_overlay);
         photoPreview = findViewById(R.id.photo_preview);
         importButton = findViewById(R.id.import_button);
+        cameraButton = findViewById(R.id.camera_button);
         replaceButton = findViewById(R.id.replace_button);
         allergensButton = findViewById(R.id.allergens_button);
         allergenChips = findViewById(R.id.allergen_chips);
 
         importButton.setOnClickListener(view -> openPhotoPicker());
+        cameraButton.setOnClickListener(view -> takePhoto());
         replaceButton.setOnClickListener(view -> openPhotoPicker());
-        findViewById(R.id.empty_state).setOnClickListener(view -> openPhotoPicker());
         findViewById(R.id.remove_button).setOnClickListener(view -> removePhoto());
-        findViewById(R.id.profile_button).setOnClickListener(view -> showAllergenPreferences());
+        findViewById(R.id.settings_button).setOnClickListener(view -> showAllergenPreferences());
         allergensButton.setOnClickListener(view -> showAllergenPreferences());
         updateAllergenSummary();
+
+        if (savedInstanceState != null) {
+            String cameraPhoto = savedInstanceState.getString(CAMERA_STATE);
+            if (cameraPhoto != null) {
+                pendingCameraPhoto = Uri.parse(cameraPhoto);
+                cameraButton.setEnabled(false);
+            }
+        }
 
         String savedPhoto = savedInstanceState != null
                 ? savedInstanceState.getString(PHOTO_STATE)
@@ -110,6 +139,33 @@ public class MainActivity extends AppCompatActivity {
                     .build());
         } catch (ActivityNotFoundException exception) {
             Snackbar.make(findViewById(R.id.main), R.string.picker_error,
+                    Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void takePhoto() {
+        if (pendingCameraPhoto != null) {
+            return;
+        }
+        File photoFile = null;
+        try {
+            File photoDirectory = new File(getFilesDir(), "photos");
+            if (!photoDirectory.isDirectory() && !photoDirectory.mkdirs()) {
+                throw new IOException("Unable to create photo directory");
+            }
+            photoFile = File.createTempFile("capture_", ".jpg", photoDirectory);
+            pendingCameraPhoto = FileProvider.getUriForFile(this,
+                    getPackageName() + ".fileprovider", photoFile);
+            cameraButton.setEnabled(false);
+            photoCapture.launch(pendingCameraPhoto);
+        } catch (ActivityNotFoundException | IOException | SecurityException
+                 | IllegalArgumentException exception) {
+            pendingCameraPhoto = null;
+            if (photoFile != null) {
+                photoFile.delete();
+            }
+            cameraButton.setEnabled(true);
+            Snackbar.make(findViewById(R.id.main), R.string.camera_error,
                     Snackbar.LENGTH_LONG).show();
         }
     }
@@ -162,6 +218,8 @@ public class MainActivity extends AppCompatActivity {
                             && uri.toString().equals(preferences().getString(PHOTO_STATE, null))) {
                         preferences().edit().remove(PHOTO_STATE).apply();
                         releasePhotoAccess(uri);
+                    } else if (!uri.equals(selectedPhoto)) {
+                        deleteCameraPhoto(uri);
                     }
                     Snackbar.make(findViewById(R.id.main), R.string.photo_error,
                                     Snackbar.LENGTH_LONG)
@@ -174,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
     private void setLoading(boolean loading) {
         loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
         importButton.setEnabled(!loading);
+        cameraButton.setEnabled(!loading && pendingCameraPhoto == null);
         replaceButton.setEnabled(!loading);
     }
 
@@ -194,6 +253,9 @@ public class MainActivity extends AppCompatActivity {
         if (selectedPhoto != null) {
             releasePhotoAccess(selectedPhoto);
         }
+        if (pendingPhoto != null && !pendingPhoto.equals(selectedPhoto)) {
+            deleteCameraPhoto(pendingPhoto);
+        }
         selectedPhoto = null;
         pendingPhoto = null;
         preferences().edit().remove(PHOTO_STATE).apply();
@@ -203,6 +265,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void persistPhotoAccess(Uri uri) {
+        if (isCameraPhoto(uri)) {
+            return;
+        }
         try {
             getContentResolver().takePersistableUriPermission(uri,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -212,11 +277,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void releasePhotoAccess(Uri uri) {
+        if (isCameraPhoto(uri)) {
+            deleteCameraPhoto(uri);
+            return;
+        }
         try {
             getContentResolver().releasePersistableUriPermission(uri,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION);
         } catch (SecurityException exception) {
             // A temporary grant does not need to be released explicitly.
+        }
+    }
+
+    private boolean isCameraPhoto(Uri uri) {
+        return "content".equals(uri.getScheme())
+                && (getPackageName() + ".fileprovider").equals(uri.getAuthority())
+                && uri.getPathSegments().size() == 2
+                && "photos".equals(uri.getPathSegments().get(0));
+    }
+
+    private void deleteCameraPhoto(Uri uri) {
+        if (!isCameraPhoto(uri)) {
+            return;
+        }
+        String filename = uri.getLastPathSegment();
+        if (filename == null || !filename.startsWith("capture_") || !filename.endsWith(".jpg")) {
+            return;
+        }
+        try {
+            File directory = new File(getFilesDir(), "photos").getCanonicalFile();
+            File photo = new File(directory, filename).getCanonicalFile();
+            // Only remove files created by this app, never a selected gallery image.
+            if (directory.equals(photo.getParentFile())) {
+                photo.delete();
+            }
+        } catch (IOException exception) {
+            // A file that cannot be resolved safely is left untouched.
         }
     }
 
@@ -294,6 +390,9 @@ public class MainActivity extends AppCompatActivity {
         Uri photoToRestore = pendingPhoto != null ? pendingPhoto : selectedPhoto;
         if (photoToRestore != null) {
             outState.putString(PHOTO_STATE, photoToRestore.toString());
+        }
+        if (pendingCameraPhoto != null) {
+            outState.putString(CAMERA_STATE, pendingCameraPhoto.toString());
         }
         super.onSaveInstanceState(outState);
     }

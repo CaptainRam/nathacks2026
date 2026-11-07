@@ -5,7 +5,9 @@
     <string name="home_title">Know what’s in your food</string>
     <string name="home_subtitle">Snap the ingredient label and we’ll flag anything you need to avoid.</string>
     <string name="add_label_title">Add an ingredient label</string>
-    <string name="add_label_description">Pick a photo from your library</string>
+    <string name="add_label_description">Take a photo or choose one from your library</string>
+    <string name="take_photo">Take a photo</string>
+    <string name="camera_error">Couldn’t capture a photo. Please try again or import an image.</string>
     <string name="import_photo">Import a photo</string>
     <string name="replace_photo">Change photo</string>
     <string name="remove_photo">Remove photo</string>
@@ -20,6 +22,7 @@
     <string name="picker_error">No photo picker is available. Please try again.</string>
     <string name="try_again">Try again</string>
     <string name="allergen_preferences">Your allergen preferences</string>
+    <string name="settings">Settings</string>
     <string name="allergens_title">Your allergens</string>
     <string name="tip_frame">Fit the whole ingredient list in the frame</string>
     <string name="tip_light">Use even lighting and avoid glare</string>
