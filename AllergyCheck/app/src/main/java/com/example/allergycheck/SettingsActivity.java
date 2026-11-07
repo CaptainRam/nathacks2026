@@ -2,6 +2,9 @@ package com.example.allergycheck;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.text.format.Formatter;
+import android.text.method.LinkMovementMethod;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -13,8 +16,12 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.allergycheck.ingredients.LocalModelManager;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,6 +32,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     private final Set<String> selectedAllergens = new HashSet<>();
     private TextView selectionSummary;
+    private LocalModelManager modelManager;
+    private TextView modelAvailability;
+    private TextView modelStatus;
+    private LinearProgressIndicator modelProgress;
+    private MaterialButton modelDownloadButton;
+    private MaterialButton modelDeleteButton;
+    private final LocalModelManager.Listener modelListener = this::renderModelStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +63,26 @@ public class SettingsActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.settings_toolbar);
         toolbar.setNavigationOnClickListener(view -> finish());
         selectionSummary = findViewById(R.id.selection_summary);
+        modelManager = LocalModelManager.get(this);
+        modelAvailability = findViewById(R.id.model_availability);
+        modelStatus = findViewById(R.id.model_download_status);
+        modelProgress = findViewById(R.id.model_download_progress);
+        modelDownloadButton = findViewById(R.id.model_download_button);
+        modelDeleteButton = findViewById(R.id.model_delete_button);
+        ((TextView) findViewById(R.id.model_download_source))
+                .setMovementMethod(LinkMovementMethod.getInstance());
+        ((TextView) findViewById(R.id.model_terms_link))
+                .setMovementMethod(LinkMovementMethod.getInstance());
+        modelDownloadButton.setOnClickListener(view -> modelManager.download());
+        modelDeleteButton.setOnClickListener(view ->
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.model_settings_delete_title)
+                        .setMessage(R.string.model_settings_delete_message)
+                        .setNegativeButton(R.string.cancel, null)
+                        .setPositiveButton(R.string.model_settings_delete,
+                                (dialog, which) -> modelManager.delete())
+                        .show());
+        renderModelStatus(modelManager.getStatus());
 
         ArrayList<String> draft = savedInstanceState == null ? null
                 : savedInstanceState.getStringArrayList(DRAFT_ALLERGENS);
@@ -85,6 +119,78 @@ public class SettingsActivity extends AppCompatActivity {
             setResult(RESULT_OK);
             finish();
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        modelManager.addListener(modelListener);
+    }
+
+    @Override
+    protected void onStop() {
+        modelManager.removeListener(modelListener);
+        super.onStop();
+    }
+
+    private void renderModelStatus(LocalModelManager.Status status) {
+        boolean installed = status.isInstalled();
+        boolean downloading = status.state == LocalModelManager.State.DOWNLOADING
+                || status.state == LocalModelManager.State.PAUSED;
+        boolean installing = status.state == LocalModelManager.State.INSTALLING;
+        modelAvailability.setText(installed ? R.string.model_settings_installed
+                : R.string.model_settings_missing);
+        modelDownloadButton.setEnabled(!installed && !downloading && !installing);
+        modelDownloadButton.setText(status.state == LocalModelManager.State.FAILED
+                ? R.string.model_settings_retry : R.string.model_settings_download);
+        modelDeleteButton.setEnabled(installed && !downloading && !installing);
+
+        modelProgress.setVisibility(View.GONE);
+        if (downloading || installing) {
+            modelProgress.setIndeterminate(installing || status.totalBytes <= 0);
+            if (!installing && status.totalBytes > 0) {
+                int percent = (int) Math.max(0, Math.min(100,
+                        Math.round(100d * status.downloadedBytes / status.totalBytes)));
+                modelProgress.setProgressCompat(percent, false);
+            }
+            modelProgress.setVisibility(View.VISIBLE);
+        }
+
+        switch (status.state) {
+            case READY:
+                modelStatus.setText(R.string.model_settings_ready);
+                break;
+            case DOWNLOADING:
+                modelStatus.setText(downloadProgress(status));
+                break;
+            case PAUSED:
+                modelStatus.setText(status.error == null
+                        ? getString(R.string.model_settings_waiting, downloadProgress(status)) : status.error);
+                break;
+            case INSTALLING:
+                modelStatus.setText(R.string.model_settings_installing);
+                break;
+            case FAILED:
+                modelStatus.setText(status.error == null || status.error.trim().isEmpty()
+                        ? getString(R.string.model_settings_failed)
+                        : getString(R.string.model_settings_failed_reason, status.error));
+                break;
+            case MISSING:
+            default:
+                modelStatus.setText(R.string.model_settings_not_downloaded);
+                break;
+        }
+    }
+
+    private String downloadProgress(LocalModelManager.Status status) {
+        String downloaded = Formatter.formatFileSize(this, Math.max(0, status.downloadedBytes));
+        if (status.totalBytes <= 0) {
+            return getString(R.string.model_settings_downloading_unknown, downloaded);
+        }
+        int percent = (int) Math.max(0, Math.min(100,
+                Math.round(100d * status.downloadedBytes / status.totalBytes)));
+        return getString(R.string.model_settings_downloading, percent, downloaded,
+                Formatter.formatFileSize(this, status.totalBytes));
     }
 
     private void updateSelectionSummary() {

@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean ingredientDialogScanning;
     private boolean ingredientDialogRetry;
     private boolean activityResumed;
+    private ModelDownloadController modelDownloadController;
 
     private final ActivityResultLauncher<Intent> settingsLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -129,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
         allergensButton = findViewById(R.id.allergens_button);
         allergenChips = findViewById(R.id.allergen_chips);
         ocrPipeline = new OcrPipeline();
+        modelDownloadController = new ModelDownloadController(this);
 
         importButton.setOnClickListener(view -> openPhotoPicker());
         cameraButton.setOnClickListener(view -> takePhoto());
@@ -512,10 +514,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        modelDownloadController.start();
+    }
+
+    @Override
+    protected void onStop() {
+        modelDownloadController.stop();
+        super.onStop();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         activityResumed = true;
         showIngredientDialog();
+        if (ingredientDialogTitle == null) {
+            modelDownloadController.offerIntroduction();
+        }
     }
 
     @Override

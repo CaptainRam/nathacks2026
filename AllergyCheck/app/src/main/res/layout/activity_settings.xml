@@ -75,6 +75,109 @@
                     android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Material3.CardView.Filled"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    app:cardElevation="0dp"
+                    app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
+                    app:strokeWidth="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:accessibilityHeading="true"
+                            android:text="@string/model_settings_title"
+                            android:textAppearance="?attr/textAppearanceTitleMedium"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/model_settings_description"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/model_download_source"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:linksClickable="true"
+                            android:text="@string/model_settings_source"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textColorLink="?attr/colorPrimary" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/model_terms_link"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:linksClickable="true"
+                            android:text="@string/model_settings_terms"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textColorLink="?attr/colorPrimary" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/model_availability"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/model_settings_missing"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/model_download_status"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:accessibilityLiveRegion="polite"
+                            android:text="@string/model_settings_not_downloaded"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/model_download_progress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:contentDescription="@string/model_settings_title"
+                            android:max="100"
+                            android:visibility="gone"
+                            app:trackCornerRadius="2dp"
+                            app:trackThickness="4dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/model_download_button"
+                            style="@style/Widget.AllergyCheck.PrimaryButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:text="@string/model_settings_download" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/model_delete_button"
+                            style="@style/Widget.AllergyCheck.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:enabled="false"
+                            android:text="@string/model_settings_delete" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
                 <com.google.android.material.textview.MaterialTextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

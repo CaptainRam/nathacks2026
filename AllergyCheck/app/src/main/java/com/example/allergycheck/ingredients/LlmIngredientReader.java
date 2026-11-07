@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
  * MediaPipe LLM Inference). Fully offline: the text never leaves the phone.
  *
  * <p>The model file is too large to ship inside the APK, so it is loaded from the app's own
- * external files folder — see {@link #modelDirectory(Context)}. Push it there once with:
+ * external files folder — see {@link #modelDirectory(Context)}. Download it from Settings, or use:
  * <pre>adb push gemma3-1b-it-int4.task /sdcard/Android/data/com.example.allergycheck/files/llm/</pre>
  *
  * <p>Create one per screen and {@link #close()} it in {@code onDestroy}. All model work happens on
@@ -57,7 +57,7 @@ public final class LlmIngredientReader {
     }
 
     /** Preferred model file name; any other single .task file in the folder is used if this is absent. */
-    public static final String MODEL_FILE = "gemma3-1b-it-int4.task";
+    public static final String MODEL_FILE = ModelFiles.MODEL_FILE;
 
     /** Prompt + reply budget. Must not exceed the model build's context size (2048 for the 1B q4 build). */
     private static final int MAX_TOKENS = 2048;
@@ -72,6 +72,9 @@ public final class LlmIngredientReader {
 
     /** Created lazily on the worker thread (loading takes a few seconds) and only touched there. */
     private LlmInference engine;
+    private File loadedModel;
+    private long loadedModelModified;
+    private long loadedModelLength;
 
     public LlmIngredientReader(@NonNull Context context) {
         this.appContext = context.getApplicationContext();
@@ -80,8 +83,7 @@ public final class LlmIngredientReader {
     /** The folder the model file is loaded from: {@code <external files>/llm}. */
     @NonNull
     public static File modelDirectory(@NonNull Context context) {
-        File base = context.getExternalFilesDir(null);
-        return new File(base != null ? base : context.getFilesDir(), "llm");
+        return LocalModelManager.modelDirectory(context);
     }
 
     /** Asks the model for the ingredients in {@code ocrText}. */
@@ -151,27 +153,35 @@ public final class LlmIngredientReader {
     }
 
     private LlmInference engine() throws ModelNotFoundException {
+        File model = findModel();
+        if (engine != null && (!model.equals(loadedModel)
+                || model.lastModified() != loadedModelModified || model.length() != loadedModelLength)) {
+            engine.close();
+            engine = null;
+        }
         if (engine == null) {
             LlmInference.LlmInferenceOptions options = LlmInference.LlmInferenceOptions.builder()
-                    .setModelPath(findModel().getAbsolutePath())
+                    .setModelPath(model.getAbsolutePath())
                     .setMaxTokens(MAX_TOKENS)
                     .build();
             engine = LlmInference.createFromOptions(appContext, options);
+            loadedModel = model;
+            loadedModelModified = model.lastModified();
+            loadedModelLength = model.length();
         }
         return engine;
     }
 
     private File findModel() throws ModelNotFoundException {
-        File dir = modelDirectory(appContext);
-        File preferred = new File(dir, MODEL_FILE);
-        if (preferred.isFile()) {
-            return preferred;
+        File model = LocalModelManager.installedModel(appContext);
+        if (model != null) {
+            return model;
         }
-        File[] tasks = dir.listFiles((d, name) -> name.endsWith(".task"));
-        if (tasks != null && tasks.length > 0) {
-            return tasks[0];
+        if (engine != null) {
+            engine.close();
+            engine = null;
         }
-        throw new ModelNotFoundException(dir);
+        throw new ModelNotFoundException(modelDirectory(appContext));
     }
 
     /** Gemma's chat turn markers, set explicitly so the prompt is wrapped exactly once. */

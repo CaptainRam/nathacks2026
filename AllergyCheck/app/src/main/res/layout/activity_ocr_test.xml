@@ -18,6 +18,8 @@
         android:layout_height="wrap_content"
         android:text="@string/pick_image" />
 
+    <include layout="@layout/view_model_download" />
+
     <ImageView
         android:id="@+id/image_preview"
         android:layout_width="match_parent"

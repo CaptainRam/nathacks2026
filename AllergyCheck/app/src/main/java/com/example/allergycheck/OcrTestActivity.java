@@ -18,6 +18,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.allergycheck.ingredients.LlmIngredientReader;
+import com.example.allergycheck.ingredients.LocalModelManager;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
 import com.example.allergycheck.ocr.PassThroughFilter;
@@ -43,9 +44,20 @@ public class OcrTestActivity extends AppCompatActivity {
     private ProgressBar progress;
     private TextView ocrOutput;
     private LlmIngredientReader ingredientReader;
+    private ModelDownloadController modelDownloadController;
+    private String pendingOcrText;
+    private int pendingModelRequest;
 
     /** Incremented per image so a slow, superseded OCR or model result is ignored. */
     private int requestId;
+
+    private final LocalModelManager.Listener modelListener = status -> {
+        if (status.isInstalled() && pendingOcrText != null && pendingModelRequest == requestId) {
+            String text = pendingOcrText;
+            pendingOcrText = null;
+            readIngredients(text, requestId);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +78,7 @@ public class OcrTestActivity extends AppCompatActivity {
         // to the ingredients declaration — nothing else in this class needs to change.
         ocrPipeline = new OcrPipeline(new PassThroughFilter());
         ingredientReader = new LlmIngredientReader(this);
+        modelDownloadController = new ModelDownloadController(this);
 
         // Must be registered before the activity reaches STARTED, hence here rather than in the
         // click listener. minSdk 34 means the photo picker needs no storage permission.
@@ -85,6 +98,7 @@ public class OcrTestActivity extends AppCompatActivity {
     }
 
     private void runOcr(@NonNull Uri imageUri) {
+        pendingOcrText = null;
         imagePreview.setImageURI(imageUri);
         imagePreview.setVisibility(View.VISIBLE);
         progress.setVisibility(View.VISIBLE);
@@ -123,6 +137,14 @@ public class OcrTestActivity extends AppCompatActivity {
 
     /** Hands the OCR text to the on-device model, which corrects misreads and lists the ingredients. */
     private void readIngredients(String ocrText, int thisRequest) {
+        if (!LocalModelManager.get(this).getStatus().isInstalled()) {
+            pendingOcrText = ocrText;
+            pendingModelRequest = thisRequest;
+            progress.setVisibility(View.GONE);
+            ocrOutput.setText(R.string.model_download_unavailable);
+            return;
+        }
+        progress.setVisibility(View.VISIBLE);
         ocrOutput.setText(R.string.reading_ingredients);
         ingredientReader.read(ocrText, new LlmIngredientReader.Callback() {
             @Override
@@ -141,8 +163,10 @@ public class OcrTestActivity extends AppCompatActivity {
                 }
                 progress.setVisibility(View.GONE);
                 if (error instanceof LlmIngredientReader.ModelNotFoundException) {
-                    ocrOutput.setText(getString(R.string.model_missing,
-                            ((LlmIngredientReader.ModelNotFoundException) error).directory().getAbsolutePath()));
+                    pendingOcrText = ocrText;
+                    pendingModelRequest = thisRequest;
+                    LocalModelManager.get(OcrTestActivity.this).refresh();
+                    ocrOutput.setText(R.string.model_download_unavailable);
                 } else {
                     ocrOutput.setText(getString(R.string.ingredients_error, messageOf(error)));
                 }
@@ -167,6 +191,26 @@ public class OcrTestActivity extends AppCompatActivity {
 
     private static String messageOf(Exception error) {
         return error.getMessage() != null ? error.getMessage() : error.getClass().getSimpleName();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        modelDownloadController.start();
+        LocalModelManager.get(this).addListener(modelListener);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        modelDownloadController.offerIntroduction();
+    }
+
+    @Override
+    protected void onStop() {
+        LocalModelManager.get(this).removeListener(modelListener);
+        modelDownloadController.stop();
+        super.onStop();
     }
 
     @Override

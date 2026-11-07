@@ -109,6 +109,8 @@
                     android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
+                <include layout="@layout/view_model_download" />
+
                 <!-- Photo -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/photo_card"
