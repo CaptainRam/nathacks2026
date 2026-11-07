@@ -51,42 +51,60 @@ public final class LabelParser {
         String raw = rawText == null ? "" : rawText;
         String text = prepare(raw);
 
-        // Heading: keep what follows the first one; later ones (a second language) become breaks.
+        // Every heading starts a new section (a second heading is usually the other language), and
+        // each section is parsed independently so a terminator in one cannot hide the next. Text
+        // before the first heading is parsed too: a phrase like "no artificial ingredients" can
+        // look like a heading, and dropping what precedes it could hide the real list.
         Matcher heading = HEADING.matcher(text);
         boolean headingFound = heading.find();
-        int ingredientsStart = headingFound ? heading.end() : 0;
-        String beforeHeading = headingFound ? text.substring(0, heading.start()) : "";
-        String afterHeading = HEADING.matcher(text.substring(ingredientsStart)).replaceAll(String.valueOf(BREAK) + ". ");
+        List<String> sections = new ArrayList<>();
+        if (headingFound) {
+            sections.add(text.substring(0, heading.start()));
+            for (String section : HEADING.split(text.substring(heading.end()), -1)) {
+                sections.add(section);
+            }
+        } else {
+            sections.add(text);
+        }
 
         List<ParsedLabel.Statement> statements = new ArrayList<>();
         List<IngredientItem> ingredients = new ArrayList<>();
-
-        // Text before the heading can only contribute statements (e.g. "CONTAINS: MILK" on the front).
-        for (String segment : segments(beforeHeading)) {
-            ParsedLabel.Statement statement = asStatement(segment);
-            if (statement != null) {
-                statements.add(statement);
-            }
+        for (String section : sections) {
+            parseSection(section, ingredients, statements);
         }
+        return new ParsedLabel(raw, headingFound, ingredients, statements);
+    }
 
-        boolean ingredientsEnded = false;
-        for (String segment : segments(afterHeading)) {
+    private static void parseSection(String section, List<IngredientItem> ingredients,
+                                     List<ParsedLabel.Statement> statements) {
+        boolean ended = false;
+        for (String segment : segments(section)) {
             ParsedLabel.Statement statement = asStatement(segment);
             if (statement != null) {
-                statements.add(statement);
+                // A statement with no closing full stop runs on into the next panel; cut it there.
+                Matcher terminator = TERMINATOR.matcher(statement.text());
+                if (terminator.find()) {
+                    ended = true;
+                    String cut = statement.text().substring(0, terminator.start())
+                            .replaceAll("[\\s;,\\-–]+$", "");
+                    if (!TextUtil.normalise(cut).isEmpty()) {
+                        statements.add(new ParsedLabel.Statement(statement.kind(), cut));
+                    }
+                } else {
+                    statements.add(statement);
+                }
                 continue;
             }
-            if (ingredientsEnded) {
+            if (ended) {
                 continue;
             }
             Matcher terminator = TERMINATOR.matcher(segment);
             if (terminator.find()) {
                 segment = segment.substring(0, terminator.start());
-                ingredientsEnded = true;
+                ended = true;
             }
-            addIngredients(segment, 0, ingredients);
+            addIngredients(segment, 0, ingredients, statements);
         }
-        return new ParsedLabel(raw, headingFound, ingredients, statements);
     }
 
     /** Joins hyphenated line wraps and flattens newlines so the label reads as running text. */
@@ -151,15 +169,34 @@ public final class LabelParser {
     }
 
     /** Splits {@code text} at depth-0 commas/semicolons/bullets, recursing into bracketed sub-lists. */
-    private static void addIngredients(String text, int depth, List<IngredientItem> out) {
+    private static void addIngredients(String text, int depth, List<IngredientItem> out,
+                                       List<ParsedLabel.Statement> statements) {
         String cleaned = ALLERGEN_PREFIX.matcher(text).replaceFirst("");
         for (String part : splitTopLevel(cleaned)) {
             String original = part.trim().replaceAll("^[\\s:;,\\-–•·*]+|[\\s:;,\\-–•·*]+$", "");
             if (TextUtil.letterCount(original) < 2) {
                 continue;
             }
+            // A bracketed sub-item such as "may contain milk" is a precaution, not an ingredient.
+            ParsedLabel.Statement own = asStatement(original);
+            if (own != null) {
+                statements.add(own);
+                continue;
+            }
             int open = firstOpen(original);
             if (open < 0) {
+                // "sugar may contain milk" inside brackets: split the precaution off the ingredient.
+                Matcher start = STATEMENT_START.matcher(original);
+                if (start.find() && start.start() > 0) {
+                    ParsedLabel.Statement tail = asStatement(original.substring(start.start()));
+                    if (tail != null) {
+                        statements.add(tail);
+                        original = original.substring(0, start.start()).trim();
+                        if (TextUtil.letterCount(original) < 2) {
+                            continue;
+                        }
+                    }
+                }
                 out.add(new IngredientItem(original, original, depth));
                 continue;
             }
@@ -168,7 +205,7 @@ public final class LabelParser {
             String inner = close < 0 ? original.substring(open + 1) : original.substring(open + 1, close);
             String rest = close < 0 ? "" : original.substring(close + 1);
             out.add(new IngredientItem(original, (name + " " + rest).trim(), depth));
-            addIngredients(inner, depth + 1, out);
+            addIngredients(inner, depth + 1, out, statements);
         }
     }
 

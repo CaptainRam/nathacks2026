@@ -41,25 +41,25 @@ public final class Analyzer {
                     Collections.<AllergenResult>emptyList(), label, false);
         }
 
-        boolean unreadable = label.isEmpty() || TextUtil.letterCount(label.rawText()) < MIN_LETTERS;
+        // Always look for evidence first: a short crop like "Contains: egg" is too little text to
+        // clear anything, but is plenty to flag an allergen. Too little text only matters when
+        // nothing was found — then it must read as "couldn't check", never as "not detected".
+        boolean thin = label.isEmpty() || TextUtil.letterCount(label.rawText()) < MIN_LETTERS;
         List<AllergenResult> results = new ArrayList<>();
         for (Allergen allergen : allergens) {
-            if (unreadable) {
-                results.add(new AllergenResult(allergen, AnalysisReport.Status.UNREADABLE,
-                        Collections.<Finding>emptyList()));
-                continue;
-            }
             List<Finding> findings = AllergenMatcher.match(label, allergen);
             findings.sort((a, b) -> a.level().compareTo(b.level()));
-            results.add(new AllergenResult(allergen, statusOf(findings), findings));
+            AnalysisReport.Status status = findings.isEmpty() && thin
+                    ? AnalysisReport.Status.UNREADABLE : statusOf(findings);
+            results.add(new AllergenResult(allergen, status, findings));
         }
         results.sort((a, b) -> {
             int byStatus = a.status().compareTo(b.status());
             return byStatus != 0 ? byStatus : a.allergen().compareTo(b.allergen());
         });
 
-        AnalysisReport.Status overall = unreadable ? AnalysisReport.Status.UNREADABLE : results.get(0).status();
-        return new AnalysisReport(overall, results, label, unreadable || isLowConfidence(label));
+        // Statuses are ordered by severity, so the first result decides the overall banner.
+        return new AnalysisReport(results.get(0).status(), results, label, thin || isLowConfidence(label));
     }
 
     private static AnalysisReport.Status statusOf(List<Finding> findings) {
