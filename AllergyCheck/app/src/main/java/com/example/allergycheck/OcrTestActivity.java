@@ -17,9 +17,16 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
 import com.example.allergycheck.ocr.PassThroughFilter;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * Throwaway screen for exercising {@link OcrPipeline}: pick an image, see the text that comes back.
@@ -39,6 +46,14 @@ public class OcrTestActivity extends AppCompatActivity {
     private ImageView imagePreview;
     private ProgressBar progress;
     private TextView ocrOutput;
+    private MaterialButton allergensButton;
+    private MaterialButton analyseButton;
+
+    /** Stand-in for the home screen's saved allergen preferences; everything on by default. */
+    private final Set<Allergen> selectedAllergens = EnumSet.allOf(Allergen.class);
+
+    /** The last successful OCR read, ready to analyse. {@code null} until one succeeds. */
+    private OcrResult lastOcrResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +85,18 @@ public class OcrTestActivity extends AppCompatActivity {
                     // A null uri means the user backed out of the picker; leave the screen as-is.
                 });
 
+        allergensButton = findViewById(R.id.allergens_button);
+        analyseButton = findViewById(R.id.analyse_button);
+        allergensButton.setOnClickListener(v -> showAllergenPicker());
+        analyseButton.setOnClickListener(v -> {
+            if (lastOcrResult != null) {
+                // Empty OCR results are analysed too: they come back UNREADABLE, never "clear".
+                startActivity(ResultsActivity.newIntent(this,
+                        Analyzer.analyse(lastOcrResult, selectedAllergens)));
+            }
+        });
+        updateAllergenButton();
+
         findViewById(R.id.pick_image_button).setOnClickListener(v ->
                 pickImage.launch(new PickVisualMediaRequest.Builder()
                         .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
@@ -81,11 +108,15 @@ public class OcrTestActivity extends AppCompatActivity {
         imagePreview.setVisibility(View.VISIBLE);
         progress.setVisibility(View.VISIBLE);
         ocrOutput.setText("");
+        lastOcrResult = null;
+        analyseButton.setEnabled(false);
 
         ocrPipeline.recognize(this, imageUri, new OcrPipeline.Callback() {
             @Override
             public void onSuccess(@NonNull OcrResult result) {
                 progress.setVisibility(View.GONE);
+                lastOcrResult = result;
+                analyseButton.setEnabled(true);
                 // "Found no text" and "could not read the image" are shown differently on purpose:
                 // neither may be presented as a clean, allergen-free read.
                 if (result.isEmpty()) {
@@ -104,6 +135,33 @@ public class OcrTestActivity extends AppCompatActivity {
                 ocrOutput.setText(getString(R.string.ocr_error, message));
             }
         });
+    }
+
+    private void updateAllergenButton() {
+        allergensButton.setText(getString(R.string.choose_allergens, selectedAllergens.size()));
+    }
+
+    private void showAllergenPicker() {
+        Allergen[] all = Allergen.values();
+        String[] labels = new String[all.length];
+        boolean[] checked = new boolean[all.length];
+        for (int i = 0; i < all.length; i++) {
+            labels[i] = all[i].label();
+            checked[i] = selectedAllergens.contains(all[i]);
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.choose_allergens_title)
+                .setMultiChoiceItems(labels, checked, (dialog, which, isChecked) -> checked[which] = isChecked)
+                .setPositiveButton(R.string.dialog_done, (dialog, which) -> {
+                    selectedAllergens.clear();
+                    for (int i = 0; i < all.length; i++) {
+                        if (checked[i]) {
+                            selectedAllergens.add(all[i]);
+                        }
+                    }
+                    updateAllergenButton();
+                })
+                .show();
     }
 
     @Override

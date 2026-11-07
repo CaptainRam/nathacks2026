@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status colours for the results banner. Always paired with a text title, never colour alone. -->
+<resources>
+    <color name="status_contains">#B3261E</color>
+    <color name="status_may_contain">#B25E00</color>
+    <color name="status_possible">#8A6D00</color>
+    <color name="status_not_detected">#2E6B34</color>
+    <color name="status_unreadable">#49454F</color>
+    <color name="status_neutral">#49454F</color>
+    <color name="highlight_item_bg">#FFE3E0</color>
+    <color name="highlight_item_text">#410E0B</color>
+</resources>
