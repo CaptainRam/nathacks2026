@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Allergy Check</string>
+
+    <!-- OCR test harness. Remove alongside OcrTestActivity. -->
+    <string name="ocr_test_title">OCR Test</string>
+    <string name="pick_image">Select label photo</string>
+    <string name="image_preview_description">The selected label photo</string>
+    <string name="ocr_placeholder">Pick a photo of a food label to extract its text.</string>
+    <string name="ocr_empty_result">No text found in this image. Try a closer, better-lit photo of the label.</string>
+    <string name="ocr_error">Couldn\'t read this image: %1$s</string>
 </resources>
