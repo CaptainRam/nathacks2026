@@ -29,12 +29,10 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.color.MaterialColors;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,8 +40,6 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity {
     private static final String PHOTO_STATE = "selected_photo";
     private static final String CAMERA_STATE = "pending_camera_photo";
-    private static final String PREFERENCES = "allergy_preferences";
-    private static final String ALLERGENS = "selected_allergens";
     private static final int MAX_PREVIEW_SIZE = 1600;
 
     private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
@@ -58,6 +54,15 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton replaceButton;
     private MaterialButton allergensButton;
     private ChipGroup allergenChips;
+
+    private final ActivityResultLauncher<Intent> settingsLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    updateAllergenSummary();
+                    Snackbar.make(findViewById(R.id.main), R.string.preferences_saved,
+                            Snackbar.LENGTH_SHORT).show();
+                }
+            });
 
     private final ActivityResultLauncher<PickVisualMediaRequest> photoPicker =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
@@ -112,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
         cameraButton.setOnClickListener(view -> takePhoto());
         replaceButton.setOnClickListener(view -> openPhotoPicker());
         findViewById(R.id.remove_button).setOnClickListener(view -> removePhoto());
-        findViewById(R.id.settings_button).setOnClickListener(view -> showAllergenPreferences());
-        allergensButton.setOnClickListener(view -> showAllergenPreferences());
+        findViewById(R.id.settings_button).setOnClickListener(view -> openSettings());
+        allergensButton.setOnClickListener(view -> openSettings());
         updateAllergenSummary();
 
         if (savedInstanceState != null) {
@@ -317,38 +322,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private SharedPreferences preferences() {
-        return getSharedPreferences(PREFERENCES, MODE_PRIVATE);
+        return AllergenPreferences.preferences(this);
     }
 
-    private void showAllergenPreferences() {
-        String[] options = getResources().getStringArray(R.array.allergen_options);
-        Set<String> saved = preferences().getStringSet(ALLERGENS, new HashSet<>());
-        boolean[] checked = new boolean[options.length];
-        for (int index = 0; index < options.length; index++) {
-            checked[index] = saved.contains(options[index]);
-        }
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.allergens_title)
-                .setMultiChoiceItems(options, checked, (dialog, index, isChecked) ->
-                        checked[index] = isChecked)
-                .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.save_preferences, (dialog, which) -> {
-                    Set<String> selected = new HashSet<>();
-                    for (int index = 0; index < options.length; index++) {
-                        if (checked[index]) {
-                            selected.add(options[index]);
-                        }
-                    }
-                    preferences().edit().putStringSet(ALLERGENS, selected).apply();
-                    updateAllergenSummary();
-                    Snackbar.make(findViewById(R.id.main), R.string.preferences_saved,
-                            Snackbar.LENGTH_SHORT).show();
-                })
-                .show();
+    private void openSettings() {
+        settingsLauncher.launch(new Intent(this, SettingsActivity.class));
     }
 
     private void updateAllergenSummary() {
-        Set<String> saved = preferences().getStringSet(ALLERGENS, new HashSet<>());
+        Set<String> saved = AllergenPreferences.selectedAllergens(this);
         int count = saved.size();
         allergensButton.setText(count == 0 ? getString(R.string.set_allergens)
                 : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
