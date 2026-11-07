@@ -39,6 +39,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private static final String PHOTO_STATE = "selected_photo";
+    private static final String PENDING_PHOTO_STATE = "pending_photo";
     private static final String CAMERA_STATE = "pending_camera_photo";
     private static final int MAX_PREVIEW_SIZE = 1600;
 
@@ -133,7 +134,14 @@ public class MainActivity extends AppCompatActivity {
                 ? savedInstanceState.getString(PHOTO_STATE)
                 : preferences().getString(PHOTO_STATE, null);
         if (savedPhoto != null) {
-            loadPhoto(Uri.parse(savedPhoto));
+            selectedPhoto = Uri.parse(savedPhoto);
+        }
+        String savedPendingPhoto = savedInstanceState == null ? null
+                : savedInstanceState.getString(PENDING_PHOTO_STATE);
+        if (savedPendingPhoto != null) {
+            loadPhoto(Uri.parse(savedPendingPhoto));
+        } else if (selectedPhoto != null) {
+            loadPhoto(selectedPhoto);
         }
     }
 
@@ -218,13 +226,21 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                     pendingPhoto = null;
-                    setLoading(false);
+                    if (photoPreview.getDrawable() == null && uri.equals(selectedPhoto)) {
+                        selectedPhoto = null;
+                    }
                     if (selectedPhoto == null
                             && uri.toString().equals(preferences().getString(PHOTO_STATE, null))) {
                         preferences().edit().remove(PHOTO_STATE).apply();
                         releasePhotoAccess(uri);
                     } else if (!uri.equals(selectedPhoto)) {
                         deleteCameraPhoto(uri);
+                    }
+                    if (selectedPhoto != null && photoPreview.getDrawable() == null) {
+                        // Recreation kept the committed URI, but its preview still needs loading.
+                        loadPhoto(selectedPhoto);
+                    } else {
+                        setLoading(false);
                     }
                     Snackbar.make(findViewById(R.id.main), R.string.photo_error,
                                     Snackbar.LENGTH_LONG)
@@ -369,9 +385,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        Uri photoToRestore = pendingPhoto != null ? pendingPhoto : selectedPhoto;
-        if (photoToRestore != null) {
-            outState.putString(PHOTO_STATE, photoToRestore.toString());
+        if (selectedPhoto != null) {
+            outState.putString(PHOTO_STATE, selectedPhoto.toString());
+        }
+        if (pendingPhoto != null) {
+            outState.putString(PENDING_PHOTO_STATE, pendingPhoto.toString());
         }
         if (pendingCameraPhoto != null) {
             outState.putString(CAMERA_STATE, pendingCameraPhoto.toString());
