@@ -89,6 +89,32 @@ public final class LabelParser {
         return new ParsedLabel(raw, headingFound, ingredients, statements);
     }
 
+    /**
+     * Builds a label from an ingredient list that some other reader already pulled out of
+     * {@code rawText} — e.g. {@code ingredients.IngredientExtractor} — while still taking the
+     * "contains" / "may contain" statements from the full text, since those are printed outside
+     * the ingredient list.
+     *
+     * <p>Each supplied item is cleaned and expanded exactly as {@link #parse} would, so a
+     * bracketed sub-list such as {@code "Chocolate (soy lecithin)"} still yields its children.
+     * An empty or {@code null} list falls back to {@link #parse}, so a reader that found nothing
+     * can never hide an allergen statement printed elsewhere on the package.
+     */
+    public static ParsedLabel fromIngredients(String rawText, List<String> extractedIngredients) {
+        String raw = rawText == null ? "" : rawText;
+        ParsedLabel parsed = parse(raw);
+        if (extractedIngredients == null || extractedIngredients.isEmpty()) {
+            return parsed;
+        }
+        List<IngredientItem> ingredients = new ArrayList<>();
+        for (String ingredient : extractedIngredients) {
+            if (ingredient != null) {
+                addIngredients(ingredient, 0, ingredients);
+            }
+        }
+        return new ParsedLabel(raw, parsed.ingredientHeadingFound(), ingredients, parsed.statements());
+    }
+
     /** Joins hyphenated line wraps and flattens newlines so the label reads as running text. */
     private static String prepare(String raw) {
         String s = raw.replace("\r", "");

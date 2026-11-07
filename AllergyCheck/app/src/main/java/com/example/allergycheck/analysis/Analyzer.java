@@ -32,7 +32,20 @@ public final class Analyzer {
     }
 
     public static AnalysisReport analyse(@Nullable String rawText, @Nullable Collection<Allergen> selected) {
-        ParsedLabel label = LabelParser.parse(rawText);
+        return analyse(LabelParser.parse(rawText), selected);
+    }
+
+    /**
+     * Analyses an ingredient list that has already been read out of {@code rawText} elsewhere —
+     * see {@link LabelParser#fromIngredients}. The allergen statements still come from the full
+     * text, so a "may contain" warning outside the list is not lost.
+     */
+    public static AnalysisReport analyse(@Nullable List<String> ingredients, @Nullable String rawText,
+                                         @Nullable Collection<Allergen> selected) {
+        return analyse(LabelParser.fromIngredients(rawText, ingredients), selected);
+    }
+
+    public static AnalysisReport analyse(@NonNull ParsedLabel label, @Nullable Collection<Allergen> selected) {
         Set<Allergen> allergens = selected == null || selected.isEmpty()
                 ? EnumSet.noneOf(Allergen.class) : EnumSet.copyOf(selected);
 

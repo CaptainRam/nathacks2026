@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the allergen analysis shown after a scan. Kept in their own file so they merge
+     cleanly with the home-screen strings.xml. -->
+<resources>
+
+    <!-- Verdict headline + explanation per overall status -->
+    <string name="status_contains_title">Contains an allergen</string>
+    <string name="status_contains_message">The label lists: %1$s.</string>
+    <string name="status_may_contain_title">May contain an allergen</string>
+    <string name="status_may_contain_message">The label has a precautionary warning for: %1$s.</string>
+    <string name="status_possible_title">Possible allergen — check the label</string>
+    <string name="status_possible_message">Something on the label might involve: %1$s. We couldn\'t be sure, so please check the package.</string>
+    <string name="status_not_detected_title">Not detected in the text read</string>
+    <string name="status_not_detected_message">None of your selected allergens were found in the text that was read. This is not a guarantee the product is safe — always check the package yourself.</string>
+    <string name="status_unreadable_title">Couldn\'t read this label</string>
+    <string name="status_unreadable_message">Not enough text could be read to check for allergens. This is NOT a clear result. Retake a closer, well-lit photo of the ingredient list.</string>
+    <string name="status_no_allergens_title">No allergens selected</string>
+    <string name="status_no_allergens_message">Choose the allergens you want to check for, then scan the label again.</string>
+
+    <string name="low_confidence_warning">Heads up: the label text was thin or missing an \"Ingredients\" heading, so this result may be incomplete. Retaking the photo may help.</string>
+
+    <!-- Sections of the result -->
+    <string name="section_allergens">Your allergens</string>
+    <string name="section_ingredients">Ingredients read from the label (%1$d)</string>
+    <string name="no_ingredient_list">No ingredient list could be picked out of the text.</string>
+    <string name="disclaimer">Allergy Check is an aid, not a medical device. It can misread labels. Always read the package yourself when your health depends on it.</string>
+
+    <!-- Per-allergen status words -->
+    <string name="result_contains">Contains</string>
+    <string name="result_may_contain">May contain</string>
+    <string name="result_possible">Possible</string>
+    <string name="result_not_detected">Not detected</string>
+    <string name="result_unreadable">Couldn\'t check</string>
+
+    <!-- Evidence lines under each allergen -->
+    <string name="evidence_ingredient">Ingredient \"%1$s\" matches %2$s</string>
+    <string name="evidence_contains_statement">Contains statement \"%1$s\" matches %2$s</string>
+    <string name="evidence_may_contain_statement">Precautionary statement \"%1$s\" matches %2$s</string>
+    <string name="reason_ambiguous">can be made from this allergen — source unclear</string>
+    <string name="reason_uncertain_read">looks like a misread — please verify</string>
+
+    <string name="choose_allergens_action">Set allergens</string>
+</resources>

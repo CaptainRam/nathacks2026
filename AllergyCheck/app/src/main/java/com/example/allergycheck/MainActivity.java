@@ -28,6 +28,8 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.allergycheck.analysis.AnalysisReport;
+import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.ingredients.IngredientExtractor;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
@@ -69,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private String ingredientDialogMessage;
     private boolean ingredientDialogScanning;
     private boolean ingredientDialogRetry;
+    private boolean ingredientDialogChooseAllergens;
     private boolean activityResumed;
 
     private final ActivityResultLauncher<Intent> settingsLauncher =
@@ -77,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
                     updateAllergenSummary();
                     Snackbar.make(findViewById(R.id.main), R.string.preferences_saved,
                             Snackbar.LENGTH_SHORT).show();
+                    // The verdict depends on the chosen allergens, so re-check the current label.
+                    rescanCurrentPhoto();
                 }
             });
 
@@ -271,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void recognizeIngredients(Bitmap bitmap, int request) {
         updateIngredientDialog(getString(R.string.reading_ingredients),
-                getString(R.string.reading_ingredients_message), true, false);
+                getString(R.string.reading_ingredients_message), true, false, false);
         ocrPipeline.recognize(bitmap, new OcrPipeline.Callback() {
             @Override
             public void onSuccess(@NonNull OcrResult result) {
@@ -281,34 +286,44 @@ public class MainActivity extends AppCompatActivity {
                 String text = result.fullText();
                 if (text.trim().isEmpty()) {
                     updateIngredientDialog(getString(R.string.ingredient_result_title),
-                            getString(R.string.ocr_empty_result), false, true);
+                            getString(R.string.ocr_empty_result), false, true, false);
                     return;
                 }
                 List<String> ingredients = IngredientExtractor.extract(text);
-                if (ingredients.isEmpty()) {
+                // The extracted list is what gets analysed; statements such as "may contain nuts"
+                // are printed outside the list, so the analyser also sees the full text.
+                AnalysisReport report = Analyzer.analyse(ingredients, text,
+                        AllergenPreferences.selectedAllergenSet(MainActivity.this));
+                if (ingredients.isEmpty() && report.label().statements().isEmpty()) {
+                    // Nothing to analyse at all: show the raw text so the user can see what was read.
                     updateIngredientDialog(getString(R.string.ingredient_result_title),
-                            getString(R.string.no_ingredients_found, text), false, true);
+                            getString(R.string.no_ingredients_found, text), false, true, false);
                     return;
                 }
-                StringBuilder message = new StringBuilder();
-                for (String ingredient : ingredients) {
-                    if (message.length() > 0) {
-                        message.append('\n');
-                    }
-                    message.append("• ").append(ingredient);
-                }
-                updateIngredientDialog(getString(R.string.ingredients_found, ingredients.size()),
-                        message.toString(), false, false);
+                AnalysisMessage message = new AnalysisMessage(getResources());
+                boolean needsAllergens =
+                        report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED;
+                updateIngredientDialog(message.title(report), message.body(report), false,
+                        report.overall() == AnalysisReport.Status.UNREADABLE, needsAllergens);
             }
 
             @Override
             public void onFailure(@NonNull Exception error) {
                 if (isCurrentImageRequest(request)) {
                     updateIngredientDialog(getString(R.string.ingredient_result_title),
-                            getString(R.string.ingredient_read_error), false, true);
+                            getString(R.string.ingredient_read_error), false, true, false);
                 }
             }
         });
+    }
+
+    /** Re-reads the photo already on screen, if any; a no-op when nothing is loaded. */
+    private void rescanCurrentPhoto() {
+        if (selectedPhoto == null || !(photoPreview.getDrawable() instanceof BitmapDrawable)) {
+            return;
+        }
+        recognizeIngredients(((BitmapDrawable) photoPreview.getDrawable()).getBitmap(),
+                ++imageRequest);
     }
 
     private boolean isCurrentImageRequest(int request) {
@@ -316,11 +331,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateIngredientDialog(String title, String message, boolean scanning,
-                                        boolean retry) {
+                                        boolean retry, boolean chooseAllergens) {
         ingredientDialogTitle = title;
         ingredientDialogMessage = message;
         ingredientDialogScanning = scanning;
         ingredientDialogRetry = retry;
+        ingredientDialogChooseAllergens = chooseAllergens;
         showIngredientDialog();
     }
 
@@ -344,13 +360,12 @@ public class MainActivity extends AppCompatActivity {
                         ++imageRequest;
                     }
                 });
-        if (ingredientDialogRetry) {
-            builder.setNeutralButton(R.string.try_again, (dialog, which) -> {
-                if (selectedPhoto != null && photoPreview.getDrawable() instanceof BitmapDrawable) {
-                    recognizeIngredients(((BitmapDrawable) photoPreview.getDrawable()).getBitmap(),
-                            imageRequest);
-                }
-            });
+        if (ingredientDialogChooseAllergens) {
+            // Nothing could be checked yet; send the user straight to the allergen picker.
+            builder.setNeutralButton(R.string.choose_allergens_action,
+                    (dialog, which) -> openSettings());
+        } else if (ingredientDialogRetry) {
+            builder.setNeutralButton(R.string.try_again, (dialog, which) -> rescanCurrentPhoto());
         }
         ingredientDialog = builder.create();
         ingredientDialog.setOnDismissListener(dialog -> {
