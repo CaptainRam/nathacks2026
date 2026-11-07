@@ -27,10 +27,6 @@ final class AllergenMatcher {
     private static final Set<String> FUZZY_STOPLIST = new HashSet<>(Arrays.asList(
             "better", "batter", "bitter", "butler", "cheers", "lactase", "creams", "sodium"));
 
-    /** Digits OCR commonly produces for letters, and the letters each can stand for (same index). */
-    private static final String DIGIT_LOOKALIKES = "01345678";
-    private static final String[] LOOKALIKE_LETTERS = {"o", "lit", "e", "a", "s", "g", "t", "b"};
-
     private AllergenMatcher() {
     }
 
@@ -75,14 +71,7 @@ final class AllergenMatcher {
             }
         }
 
-        // 2. Near misses, to survive OCR typos ("peanu1", "mi1k", "pean ut"). Checked before the
-        //    ambiguous terms so the more specific explanation ("looks like a misread of …") wins.
-        String near = nearMiss(allergen, tokens, excluded);
-        if (near != null) {
-            return new Finding(allergen, Finding.Level.POSSIBLE, source, Finding.Reason.UNCERTAIN_READ, near, evidence);
-        }
-
-        // 3. Ambiguous terms — meaningful only in an ingredient list, where they are an ingredient.
+        // 2. Ambiguous terms — meaningful only in an ingredient list, where they are an ingredient.
         if (source == Finding.Source.INGREDIENT) {
             for (String[] term : allergen.ambiguousTerms()) {
                 int at = indexOfPhrase(tokens, term, excluded);
@@ -92,16 +81,18 @@ final class AllergenMatcher {
                 }
             }
         }
+
+        // 3. Near misses, to survive OCR typos ("peanu1", "pean ut").
+        String near = nearMiss(allergen, tokens, excluded);
+        if (near != null) {
+            return new Finding(allergen, Finding.Level.POSSIBLE, source, Finding.Reason.UNCERTAIN_READ, near, evidence);
+        }
         return null;
     }
 
-    /**
-     * A single-word term that the text almost spells. Exact spellings never count here: if one was
-     * rejected in step 1 (an exclusion, or "… free"), it was read correctly and means the opposite.
-     */
     private static String nearMiss(Allergen allergen, List<String> tokens, boolean[] excluded) {
         for (String[] term : allergen.terms()) {
-            if (term.length != 1) {
+            if (term.length != 1 || term[0].length() < FUZZY_MIN_LENGTH) {
                 continue;
             }
             String word = term[0];
@@ -112,12 +103,9 @@ final class AllergenMatcher {
                 if (isNear(tokens.get(i), word)) {
                     return word;
                 }
-                // A word split by OCR: "pean" + "ut". Here an exact join is the point.
-                if (word.length() >= FUZZY_MIN_LENGTH && i + 1 < tokens.size() && !excluded[i + 1]) {
-                    String joined = tokens.get(i) + tokens.get(i + 1);
-                    if (joined.equals(word) || isNear(joined, word)) {
-                        return word;
-                    }
+                // A word split by OCR: "pean" + "ut".
+                if (i + 1 < tokens.size() && !excluded[i + 1] && isNear(tokens.get(i) + tokens.get(i + 1), word)) {
+                    return word;
                 }
             }
         }
@@ -125,45 +113,10 @@ final class AllergenMatcher {
     }
 
     private static boolean isNear(String token, String term) {
-        if (FUZZY_STOPLIST.contains(token)) {
+        if (token.length() < FUZZY_MIN_LENGTH - 1 || FUZZY_STOPLIST.contains(token)) {
             return false;
         }
-        if (digitConfusable(token, term)) {
-            return true;
-        }
-        if (term.length() < FUZZY_MIN_LENGTH || token.length() < FUZZY_MIN_LENGTH - 1) {
-            return false;
-        }
-        int plain = TextUtil.levenshtein(token, term, 1);
-        int plural = TextUtil.levenshtein(token, term + "s", 1);
-        return (plain == 1 || plural == 1) && plain != 0 && plural != 0;
-    }
-
-    /**
-     * OCR often reads a letter as a look-alike digit. For short words, where general typo tolerance
-     * would collide with ordinary vocabulary, accept only that specific confusion
-     * ({@code mi1k}, {@code whea1}, {@code s0y}): same length, every difference a digit standing in
-     * for the letter it resembles.
-     */
-    private static boolean digitConfusable(String token, String term) {
-        if (term.length() < 3 || token.length() != term.length()) {
-            return false;
-        }
-        boolean sawDigit = false;
-        for (int i = 0; i < token.length(); i++) {
-            char t = token.charAt(i);
-            char w = term.charAt(i);
-            if (t == w) {
-                continue;
-            }
-            if (Character.isDigit(t) && DIGIT_LOOKALIKES.indexOf(t) >= 0
-                    && LOOKALIKE_LETTERS[DIGIT_LOOKALIKES.indexOf(t)].indexOf(w) >= 0) {
-                sawDigit = true;
-            } else {
-                return false;
-            }
-        }
-        return sawDigit;
+        return TextUtil.levenshtein(token, term, 1) <= 1 || TextUtil.levenshtein(token, term + "s", 1) <= 1;
     }
 
     /** Sets {@code excluded[i]} for every token covered by an occurrence of {@code phrase}. */

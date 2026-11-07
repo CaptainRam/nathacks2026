@@ -55,9 +55,6 @@ public class OcrTestActivity extends AppCompatActivity {
     /** The last successful OCR read, ready to analyse. {@code null} until one succeeds. */
     private OcrResult lastOcrResult;
 
-    /** Incremented per image so a slow, superseded recognition can be recognised and ignored. */
-    private int requestId;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,15 +111,9 @@ public class OcrTestActivity extends AppCompatActivity {
         lastOcrResult = null;
         analyseButton.setEnabled(false);
 
-        // Results for an image the user has since replaced must not overwrite the newer one.
-        final int thisRequest = ++requestId;
-
         ocrPipeline.recognize(this, imageUri, new OcrPipeline.Callback() {
             @Override
             public void onSuccess(@NonNull OcrResult result) {
-                if (thisRequest != requestId) {
-                    return;
-                }
                 progress.setVisibility(View.GONE);
                 lastOcrResult = result;
                 analyseButton.setEnabled(true);
@@ -137,9 +128,6 @@ public class OcrTestActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(@NonNull Exception error) {
-                if (thisRequest != requestId) {
-                    return;
-                }
                 progress.setVisibility(View.GONE);
                 String message = error.getMessage() != null
                         ? error.getMessage()

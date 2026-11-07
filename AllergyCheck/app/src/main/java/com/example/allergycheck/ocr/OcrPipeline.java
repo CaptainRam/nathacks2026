@@ -3,8 +3,6 @@ package com.example.allergycheck.ocr;
 import android.content.Context;
 import android.graphics.Rect;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -18,8 +16,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Turns an image into label text: recognise, then narrow with a {@link TextFilter}.
@@ -51,9 +47,6 @@ public final class OcrPipeline {
 
     private final TextRecognizer recognizer;
     private final TextFilter filter;
-    private final ExecutorService decoder = Executors.newSingleThreadExecutor();
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private volatile boolean closed;
 
     /** Uses {@link PassThroughFilter} — every recognised line is reported. */
     public OcrPipeline() {
@@ -73,50 +66,22 @@ public final class OcrPipeline {
      */
     @MainThread
     public void recognize(@NonNull Context context, @NonNull Uri imageUri, @NonNull Callback callback) {
-        Context appContext = context.getApplicationContext();
-        // Decoding a 12MP photo takes long enough to jank the UI, so it happens on a worker thread.
-        decoder.execute(() -> {
-            InputImage image;
-            try {
-                image = InputImage.fromFilePath(appContext, imageUri);
-            } catch (IOException | RuntimeException | OutOfMemoryError e) {
-                // IOException is a missing/corrupt file; RuntimeException covers revoked URI
-                // permissions (SecurityException); OOM is a photo too big to decode. All surface
-                // through the one failure branch rather than crashing the app.
-                Exception error = e instanceof Exception ? (Exception) e : new IOException("Image too large to read", e);
-                mainHandler.post(() -> deliverFailure(callback, error));
-                return;
-            }
-            mainHandler.post(() -> process(image, callback));
-        });
-    }
-
-    @MainThread
-    private void process(InputImage image, Callback callback) {
-        if (closed) {
-            return; // The screen is gone; nobody is left to hear the result.
+        InputImage image;
+        try {
+            image = InputImage.fromFilePath(context, imageUri);
+        } catch (IOException e) {
+            // Surfaced through the same path as recognition errors so callers have one failure branch.
+            callback.onFailure(e);
+            return;
         }
-        // Task listeners run on the main thread, which is where the Callback contract says we call back.
+
         recognizer.process(image)
-                .addOnSuccessListener(text -> {
-                    if (!closed) {
-                        callback.onSuccess(filter.apply(toResult(text)));
-                    }
-                })
-                .addOnFailureListener(error -> deliverFailure(callback, error));
+                .addOnSuccessListener(text -> callback.onSuccess(filter.apply(toResult(text))))
+                .addOnFailureListener(callback::onFailure);
     }
 
-    private void deliverFailure(Callback callback, Exception error) {
-        if (!closed) {
-            callback.onFailure(error);
-        }
-    }
-
-    /** Releases the recogniser. Safe to call more than once; callbacks stop after this. */
-    @MainThread
+    /** Releases the recogniser. Safe to call more than once. */
     public void close() {
-        closed = true;
-        decoder.shutdownNow();
         recognizer.close();
     }
 
