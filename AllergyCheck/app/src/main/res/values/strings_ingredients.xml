@@ -3,5 +3,6 @@
      with the home-screen strings.xml. -->
 <resources>
     <string name="ingredients_found">Ingredients (%1$d):</string>
+    <string name="additives_found">Additives &amp; chemicals (%1$d):</string>
     <string name="no_ingredients_found">No ingredients found. Couldn\'t find an \"Ingredients\" heading in this image.\n\nText read from the image:\n%1$s</string>
 </resources>
