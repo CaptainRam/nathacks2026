@@ -17,7 +17,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.allergycheck.ingredients.IngredientExtractor;
+import com.example.allergycheck.ingredients.LlmIngredientReader;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
 import com.example.allergycheck.ocr.PassThroughFilter;
@@ -42,6 +42,10 @@ public class OcrTestActivity extends AppCompatActivity {
     private ImageView imagePreview;
     private ProgressBar progress;
     private TextView ocrOutput;
+    private LlmIngredientReader ingredientReader;
+
+    /** Incremented per image so a slow, superseded OCR or model result is ignored. */
+    private int requestId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +65,7 @@ public class OcrTestActivity extends AppCompatActivity {
         // Swap PassThroughFilter for new IngredientListFilter() (same package) to restrict output
         // to the ingredients declaration — nothing else in this class needs to change.
         ocrPipeline = new OcrPipeline(new PassThroughFilter());
+        ingredientReader = new LlmIngredientReader(this);
 
         // Must be registered before the activity reaches STARTED, hence here rather than in the
         // click listener. minSdk 34 means the photo picker needs no storage permission.
@@ -85,36 +90,71 @@ public class OcrTestActivity extends AppCompatActivity {
         progress.setVisibility(View.VISIBLE);
         ocrOutput.setText("");
 
+        // OCR and the model both answer asynchronously; results for an image the user has since
+        // replaced must not overwrite the newer one.
+        final int thisRequest = ++requestId;
+
         ocrPipeline.recognize(this, imageUri, new OcrPipeline.Callback() {
             @Override
             public void onSuccess(@NonNull OcrResult result) {
-                progress.setVisibility(View.GONE);
+                if (thisRequest != requestId) {
+                    return;
+                }
                 // "Found no text" and "could not read the image" are shown differently on purpose:
                 // neither may be presented as a clean, allergen-free read.
                 if (result.isEmpty()) {
+                    progress.setVisibility(View.GONE);
                     ocrOutput.setText(R.string.ocr_empty_result);
                 } else {
-                    ocrOutput.setText(formatIngredients(result.fullText()));
+                    readIngredients(result.fullText(), thisRequest);
                 }
             }
 
             @Override
             public void onFailure(@NonNull Exception error) {
+                if (thisRequest != requestId) {
+                    return;
+                }
                 progress.setVisibility(View.GONE);
-                String message = error.getMessage() != null
-                        ? error.getMessage()
-                        : error.getClass().getSimpleName();
-                ocrOutput.setText(getString(R.string.ocr_error, message));
+                ocrOutput.setText(getString(R.string.ocr_error, messageOf(error)));
+            }
+        });
+    }
+
+    /** Hands the OCR text to the on-device model, which corrects misreads and lists the ingredients. */
+    private void readIngredients(String ocrText, int thisRequest) {
+        ocrOutput.setText(R.string.reading_ingredients);
+        ingredientReader.read(ocrText, new LlmIngredientReader.Callback() {
+            @Override
+            public void onSuccess(@NonNull List<String> ingredients) {
+                if (thisRequest != requestId) {
+                    return;
+                }
+                progress.setVisibility(View.GONE);
+                ocrOutput.setText(formatIngredients(ingredients, ocrText));
+            }
+
+            @Override
+            public void onFailure(@NonNull Exception error) {
+                if (thisRequest != requestId) {
+                    return;
+                }
+                progress.setVisibility(View.GONE);
+                if (error instanceof LlmIngredientReader.ModelNotFoundException) {
+                    ocrOutput.setText(getString(R.string.model_missing,
+                            ((LlmIngredientReader.ModelNotFoundException) error).directory().getAbsolutePath()));
+                } else {
+                    ocrOutput.setText(getString(R.string.ingredients_error, messageOf(error)));
+                }
             }
         });
     }
 
     /**
-     * The ingredients found in {@code ocrText} as a bulleted list. When there is no ingredient
-     * heading, says so and shows the raw text instead, so it is clear what was actually read.
+     * The ingredients as a bulleted list. When the model found no ingredient list, says so and
+     * shows the raw text instead, so it is clear what was actually read.
      */
-    private String formatIngredients(String ocrText) {
-        List<String> ingredients = IngredientExtractor.extract(ocrText);
+    private String formatIngredients(List<String> ingredients, String ocrText) {
         if (ingredients.isEmpty()) {
             return getString(R.string.no_ingredients_found, ocrText);
         }
@@ -125,9 +165,15 @@ public class OcrTestActivity extends AppCompatActivity {
         return out.toString();
     }
 
+    private static String messageOf(Exception error) {
+        return error.getMessage() != null ? error.getMessage() : error.getClass().getSimpleName();
+    }
+
     @Override
     protected void onDestroy() {
+        requestId++;
         ocrPipeline.close();
+        ingredientReader.close();
         super.onDestroy();
     }
 }

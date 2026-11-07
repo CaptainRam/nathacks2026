@@ -38,6 +38,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.material)
     implementation(libs.mlkit.text.recognition)
+    // On-device LLM (Gemma) that reads the OCR text and lists the ingredients.
+    implementation(libs.mediapipe.tasks.genai)
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
