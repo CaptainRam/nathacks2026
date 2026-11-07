@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="model_settings_title">Local AI model</string>
+    <string name="model_settings_summary">Gemma 3 1B · 555 MB · Offline</string>
+    <string name="model_settings_details">Details</string>
+    <string name="model_settings_hide_details">Hide details</string>
     <string name="model_settings_description">Gemma 3 1B reads ingredient lists on your device. Download about 555 MB once to use the AI ingredient reader offline. Downloads may use mobile data.</string>
     <string name="model_settings_source">Source: <a href="https://huggingface.co/nikhil2024/gemma3-1b-it-litert-mirror">Hugging Face · nikhil2024 mirror</a></string>
     <string name="model_settings_terms">Review the <a href="https://ai.google.dev/gemma/terms">Gemma Terms of Use</a> before downloading.</string>
-    <string name="model_settings_installed">Model file: Installed</string>
-    <string name="model_settings_missing">Model file: Not installed</string>
-    <string name="model_settings_not_downloaded">Not downloaded. Download the model to use the AI reader offline.</string>
+    <string name="model_settings_installed">Installed</string>
+    <string name="model_settings_missing">Not installed</string>
+    <string name="model_settings_not_downloaded">Download once. May use mobile data.</string>
     <string name="model_settings_ready">Ready for offline use.</string>
     <string name="model_settings_downloading">Downloading: %1$d%% · %2$s / %3$s</string>
     <string name="model_settings_downloading_unknown">Downloading: %1$s received</string>
@@ -14,9 +17,9 @@
     <string name="model_settings_installing">Checking and installing the downloaded model…</string>
     <string name="model_settings_failed">Model download failed. Check your connection and storage, then try again.</string>
     <string name="model_settings_failed_reason">Model unavailable: %1$s</string>
-    <string name="model_settings_download">Download model</string>
-    <string name="model_settings_retry">Retry download</string>
-    <string name="model_settings_delete">Delete model</string>
+    <string name="model_settings_download">Download</string>
+    <string name="model_settings_retry">Retry</string>
+    <string name="model_settings_delete">Delete</string>
     <string name="model_settings_delete_title">Delete the local AI model?</string>
     <string name="model_settings_delete_message">This frees the space used by the model. You can download it again here when you need the AI ingredient reader.</string>
 </resources>

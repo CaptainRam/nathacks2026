@@ -29,6 +29,7 @@ import java.util.Set;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String DRAFT_ALLERGENS = "draft_allergens";
+    private static final String MODEL_DETAILS_EXPANDED = "model_details_expanded";
 
     private final Set<String> selectedAllergens = new HashSet<>();
     private TextView selectionSummary;
@@ -38,6 +39,8 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearProgressIndicator modelProgress;
     private MaterialButton modelDownloadButton;
     private MaterialButton modelDeleteButton;
+    private View modelDetails;
+    private MaterialButton modelDetailsButton;
     private final LocalModelManager.Listener modelListener = this::renderModelStatus;
 
     @Override
@@ -69,6 +72,12 @@ public class SettingsActivity extends AppCompatActivity {
         modelProgress = findViewById(R.id.model_download_progress);
         modelDownloadButton = findViewById(R.id.model_download_button);
         modelDeleteButton = findViewById(R.id.model_delete_button);
+        modelDetails = findViewById(R.id.model_details);
+        modelDetailsButton = findViewById(R.id.model_details_button);
+        setModelDetailsExpanded(savedInstanceState != null
+                && savedInstanceState.getBoolean(MODEL_DETAILS_EXPANDED));
+        modelDetailsButton.setOnClickListener(view ->
+                setModelDetailsExpanded(modelDetails.getVisibility() != View.VISIBLE));
         ((TextView) findViewById(R.id.model_download_source))
                 .setMovementMethod(LinkMovementMethod.getInstance());
         ((TextView) findViewById(R.id.model_terms_link))
@@ -140,10 +149,16 @@ public class SettingsActivity extends AppCompatActivity {
         boolean installing = status.state == LocalModelManager.State.INSTALLING;
         modelAvailability.setText(installed ? R.string.model_settings_installed
                 : R.string.model_settings_missing);
+        modelAvailability.setVisibility(downloading || installing
+                || status.state == LocalModelManager.State.FAILED ? View.GONE : View.VISIBLE);
+        modelDownloadButton.setVisibility(installed ? View.GONE : View.VISIBLE);
         modelDownloadButton.setEnabled(!installed && !downloading && !installing);
         modelDownloadButton.setText(status.state == LocalModelManager.State.FAILED
                 ? R.string.model_settings_retry : R.string.model_settings_download);
         modelDeleteButton.setEnabled(installed && !downloading && !installing);
+        modelDeleteButton.setVisibility(installed ? View.VISIBLE : View.GONE);
+        modelStatus.setVisibility(status.state == LocalModelManager.State.READY
+                ? View.GONE : View.VISIBLE);
 
         modelProgress.setVisibility(View.GONE);
         if (downloading || installing) {
@@ -182,6 +197,12 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    private void setModelDetailsExpanded(boolean expanded) {
+        modelDetails.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        modelDetailsButton.setText(expanded ? R.string.model_settings_hide_details
+                : R.string.model_settings_details);
+    }
+
     private String downloadProgress(LocalModelManager.Status status) {
         String downloaded = Formatter.formatFileSize(this, Math.max(0, status.downloadedBytes));
         if (status.totalBytes <= 0) {
@@ -206,6 +227,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putStringArrayList(DRAFT_ALLERGENS, new ArrayList<>(selectedAllergens));
+        outState.putBoolean(MODEL_DETAILS_EXPANDED, modelDetails.getVisibility() == View.VISIBLE);
         super.onSaveInstanceState(outState);
     }
 }
