@@ -9,21 +9,23 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
+    <!-- Top bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:minHeight="72dp"
+        android:minHeight="64dp"
         android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="12dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="12dp"
+        android:paddingVertical="8dp">
 
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/circle_primary"
             android:importantForAccessibility="no"
-            android:padding="10dp"
+            android:padding="8dp"
             android:src="@drawable/ic_leaf"
             app:tint="?attr/colorOnPrimaryContainer" />
 
@@ -35,8 +37,9 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="@string/brand_name"
-            android:textAppearance="?attr/textAppearanceTitleLarge"
-            android:textColor="?attr/colorOnSurface" />
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/profile_button"
@@ -52,33 +55,35 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:fillViewport="true"
         android:overScrollMode="ifContentScrolls">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="32dp"
-            android:paddingBottom="24dp">
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="32dp">
 
             <!-- A bounded content column keeps the home usable on tablets too. -->
             <LinearLayout
                 android:id="@+id/content_column"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
                 android:orientation="vertical"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_max="480dp">
+                app:layout_constraintWidth_max="520dp">
 
+                <!-- Hero -->
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/eyebrow"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="0.12"
+                    android:layout_marginStart="4dp"
+                    android:letterSpacing="0.1"
                     android:text="@string/new_scan"
                     android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorPrimary" />
@@ -87,34 +92,34 @@
                     android:id="@+id/home_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="8dp"
                     android:accessibilityHeading="true"
-                    android:gravity="center"
                     android:text="@string/home_title"
-                    android:textAppearance="?attr/textAppearanceHeadlineLarge"
+                    android:textAppearance="?attr/textAppearanceHeadlineMedium"
                     android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/home_subtitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="8dp"
                     android:text="@string/home_subtitle"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
+                <!-- Photo -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/photo_card"
-                    style="@style/Widget.Material3.CardView.Outlined"
+                    style="@style/Widget.Material3.CardView.Filled"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                    android:layout_marginTop="24dp"
+                    app:cardBackgroundColor="@android:color/transparent"
                     app:cardElevation="0dp"
                     app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Large"
-                    app:strokeColor="?attr/colorOutlineVariant"
-                    app:strokeWidth="1dp">
+                    app:strokeWidth="0dp">
 
                     <FrameLayout
                         android:layout_width="match_parent"
@@ -124,33 +129,38 @@
                             android:id="@+id/empty_state"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_dropzone"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackground"
                             android:gravity="center"
                             android:orientation="vertical"
                             android:paddingHorizontal="24dp"
-                            android:paddingVertical="36dp">
+                            android:paddingTop="32dp"
+                            android:paddingBottom="28dp">
 
                             <ImageView
-                                android:layout_width="104dp"
-                                android:layout_height="104dp"
+                                android:layout_width="72dp"
+                                android:layout_height="72dp"
                                 android:background="@drawable/circle_primary"
                                 android:importantForAccessibility="no"
-                                android:padding="28dp"
+                                android:padding="20dp"
                                 android:src="@drawable/ic_add_photo"
                                 app:tint="?attr/colorOnPrimaryContainer" />
 
                             <com.google.android.material.textview.MaterialTextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="24dp"
+                                android:layout_marginTop="16dp"
                                 android:gravity="center"
                                 android:text="@string/add_label_title"
-                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                android:textAppearance="?attr/textAppearanceTitleMedium"
                                 android:textColor="?attr/colorOnSurface" />
 
                             <com.google.android.material.textview.MaterialTextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="4dp"
                                 android:gravity="center"
                                 android:text="@string/add_label_description"
                                 android:textAppearance="?attr/textAppearanceBodyMedium"
@@ -161,65 +171,68 @@
                                 style="@style/Widget.AllergyCheck.PrimaryButton"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="24dp"
+                                android:layout_marginTop="20dp"
                                 android:paddingHorizontal="28dp"
                                 android:text="@string/import_photo"
                                 app:icon="@drawable/ic_upload"
                                 app:iconGravity="textStart" />
                         </LinearLayout>
 
-                        <LinearLayout
+                        <FrameLayout
                             android:id="@+id/preview_state"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp"
+                            android:background="?attr/colorSurfaceContainer"
                             android:visibility="gone"
                             tools:visibility="gone">
 
                             <com.google.android.material.imageview.ShapeableImageView
                                 android:id="@+id/photo_preview"
                                 android:layout_width="match_parent"
-                                android:layout_height="280dp"
-                                android:background="?attr/colorSurfaceContainer"
+                                android:layout_height="320dp"
                                 android:contentDescription="@string/photo_preview_description"
-                                android:padding="8dp"
-                                android:scaleType="fitCenter"
-                                app:shapeAppearanceOverlay="@style/ShapeAppearance.AllergyCheck.Medium" />
+                                android:scaleType="fitCenter" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/remove_button"
+                                style="@style/Widget.AllergyCheck.TonalIconButton"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top|end"
+                                android:layout_margin="12dp"
+                                android:contentDescription="@string/remove_photo"
+                                app:icon="@drawable/ic_close"
+                                app:iconSize="20dp" />
 
                             <LinearLayout
-                                android:layout_width="match_parent"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
+                                android:layout_gravity="bottom|start"
+                                android:layout_margin="12dp"
+                                android:background="@drawable/bg_pill"
                                 android:gravity="center_vertical"
-                                android:orientation="horizontal">
+                                android:orientation="horizontal"
+                                android:paddingStart="10dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="14dp"
+                                android:paddingBottom="6dp">
 
                                 <ImageView
-                                    android:layout_width="24dp"
-                                    android:layout_height="24dp"
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
                                     android:importantForAccessibility="no"
                                     android:src="@drawable/ic_check"
-                                    app:tint="?attr/colorPrimary" />
+                                    app:tint="?attr/colorOnPrimaryContainer" />
 
                                 <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="0dp"
+                                    android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:layout_weight="1"
+                                    android:layout_marginStart="6dp"
                                     android:text="@string/photo_added"
                                     android:textAppearance="?attr/textAppearanceLabelLarge"
-                                    android:textColor="?attr/colorOnSurface" />
-
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/remove_button"
-                                    style="@style/Widget.Material3.Button.IconButton"
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:contentDescription="@string/remove_photo"
-                                    app:icon="@drawable/ic_close"
-                                    app:iconTint="?attr/colorOnSurfaceVariant" />
+                                    android:textColor="?attr/colorOnPrimaryContainer" />
                             </LinearLayout>
-                        </LinearLayout>
+                        </FrameLayout>
 
                         <FrameLayout
                             android:id="@+id/loading_overlay"
@@ -243,99 +256,65 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/replace_button"
-                    style="@style/Widget.AllergyCheck.PrimaryButton"
-                    android:layout_width="wrap_content"
+                    style="@style/Widget.AllergyCheck.OutlinedButton"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:paddingHorizontal="28dp"
+                    android:layout_marginTop="12dp"
                     android:text="@string/replace_photo"
                     android:visibility="gone"
                     app:icon="@drawable/ic_upload"
                     app:iconGravity="textStart" />
 
+                <!-- Photo tips -->
                 <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center"
-                    android:text="@string/photo_library_hint"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <com.google.android.material.card.MaterialCardView
-                    style="@style/Widget.Material3.CardView.Filled"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    app:cardBackgroundColor="?attr/colorSurfaceContainer"
-                    app:cardElevation="0dp"
-                    app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
-                    app:strokeWidth="0dp">
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="28dp"
+                    android:accessibilityHeading="true"
+                    android:drawablePadding="8dp"
+                    android:gravity="center_vertical"
+                    android:text="@string/photo_tip_title"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface"
+                    app:drawableStartCompat="@drawable/ic_lightbulb"
+                    app:drawableTint="?attr/colorPrimary" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="top"
-                        android:orientation="horizontal"
-                        android:padding="20dp">
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.AllergyCheck.TipRow"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/tip_frame" />
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:importantForAccessibility="no"
-                            android:src="@drawable/ic_lightbulb"
-                            app:tint="?attr/colorPrimary" />
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.AllergyCheck.TipRow"
+                    android:text="@string/tip_light" />
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.AllergyCheck.TipRow"
+                    android:text="@string/tip_focus" />
 
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/photo_tip_title"
-                                android:textAppearance="?attr/textAppearanceTitleSmall"
-                                android:textColor="?attr/colorOnSurface" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="@string/photo_tip_description"
-                                android:textAppearance="?attr/textAppearanceBodyMedium"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
+                <!-- Allergen preferences, with a compact summary of what is selected -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/allergens_button"
                     style="@style/Widget.AllergyCheck.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:layout_marginTop="16dp"
                     android:text="@string/set_allergens"
                     app:icon="@drawable/ic_person"
                     app:iconGravity="textStart" />
-            </LinearLayout>
 
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:gravity="center"
-                android:letterSpacing="0.04"
-                android:text="@string/home_footer"
-                android:textAppearance="?attr/textAppearanceLabelSmall"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@id/content_column"
-                app:layout_constraintStart_toStartOf="@id/content_column"
-                app:layout_constraintTop_toBottomOf="@id/content_column"
-                app:layout_constraintVertical_bias="1" />
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/allergen_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone"
+                    app:chipSpacingHorizontal="6dp"
+                    app:chipSpacingVertical="6dp" />
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

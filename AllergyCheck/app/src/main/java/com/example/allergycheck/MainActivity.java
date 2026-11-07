@@ -3,6 +3,7 @@ package com.example.allergycheck;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
@@ -24,6 +25,9 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -48,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton importButton;
     private MaterialButton replaceButton;
     private MaterialButton allergensButton;
+    private ChipGroup allergenChips;
 
     private final ActivityResultLauncher<PickVisualMediaRequest> photoPicker =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
@@ -80,9 +85,11 @@ public class MainActivity extends AppCompatActivity {
         importButton = findViewById(R.id.import_button);
         replaceButton = findViewById(R.id.replace_button);
         allergensButton = findViewById(R.id.allergens_button);
+        allergenChips = findViewById(R.id.allergen_chips);
 
         importButton.setOnClickListener(view -> openPhotoPicker());
         replaceButton.setOnClickListener(view -> openPhotoPicker());
+        findViewById(R.id.empty_state).setOnClickListener(view -> openPhotoPicker());
         findViewById(R.id.remove_button).setOnClickListener(view -> removePhoto());
         findViewById(R.id.profile_button).setOnClickListener(view -> showAllergenPreferences());
         allergensButton.setOnClickListener(view -> showAllergenPreferences());
@@ -245,9 +252,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateAllergenSummary() {
-        int count = preferences().getStringSet(ALLERGENS, new HashSet<>()).size();
+        Set<String> saved = preferences().getStringSet(ALLERGENS, new HashSet<>());
+        int count = saved.size();
         allergensButton.setText(count == 0 ? getString(R.string.set_allergens)
                 : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
+
+        allergenChips.removeAllViews();
+        // Keep chips in the same order as the picker rather than HashSet order.
+        for (String option : getResources().getStringArray(R.array.allergen_options)) {
+            if (!saved.contains(option)) {
+                continue;
+            }
+            Chip chip = new Chip(this);
+            chip.setText(option);
+            chip.setClickable(false);
+            chip.setFocusable(false);
+            chip.setEnsureMinTouchTargetSize(false);
+            chip.setChipStrokeWidth(0f);
+            // Small, read-only tags; the button above opens the editor.
+            chip.setChipMinHeight(dp(24));
+            chip.setChipStartPadding(0f);
+            chip.setChipEndPadding(0f);
+            chip.setTextStartPadding(dp(8));
+            chip.setTextEndPadding(dp(8));
+            chip.setChipBackgroundColor(ColorStateList.valueOf(MaterialColors.getColor(
+                    allergenChips, com.google.android.material.R.attr.colorSecondaryContainer)));
+            chip.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelSmall);
+            chip.setTextColor(MaterialColors.getColor(allergenChips,
+                    com.google.android.material.R.attr.colorOnSecondaryContainer));
+            allergenChips.addView(chip);
+        }
+        allergenChips.setVisibility(count == 0 ? View.GONE : View.VISIBLE);
+    }
+
+    private float dp(int value) {
+        return value * getResources().getDisplayMetrics().density;
     }
 
     @Override

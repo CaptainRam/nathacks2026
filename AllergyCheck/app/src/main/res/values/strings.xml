@@ -1,18 +1,15 @@
 <resources>
     <string name="app_name">Allergy Check</string>
     <string name="brand_name">AllergyCheck</string>
-    <string name="new_scan">A LITTLE MORE CLARITY</string>
-    <string name="home_title">Know what’s\nin your food.</string>
-    <string name="home_subtitle">Start with a photo of the ingredient label.</string>
-    <string name="add_label_title">Add your first label</string>
-    <string name="add_label_description">Choose a clear photo of the ingredients\non your food or drink packaging.</string>
+    <string name="new_scan">NEW SCAN</string>
+    <string name="home_title">Know what’s in your food</string>
+    <string name="home_subtitle">Snap the ingredient label and we’ll flag anything you need to avoid.</string>
+    <string name="add_label_title">Add an ingredient label</string>
+    <string name="add_label_description">Pick a photo from your library</string>
     <string name="import_photo">Import a photo</string>
     <string name="replace_photo">Change photo</string>
     <string name="remove_photo">Remove photo</string>
-    <string name="photo_library_hint">Select an image from your photo library</string>
-    <string name="photo_tip_title">A good photo makes a difference</string>
-    <string name="photo_tip_description">Keep the full ingredient list in frame. Use even lighting and avoid glare.</string>
-    <string name="home_footer">A closer look at every label.</string>
+    <string name="photo_tip_title">Tips for a clear photo</string>
     <string name="preview_eyebrow">YOUR INGREDIENT LABEL</string>
     <string name="preview_title">Looking good?</string>
     <string name="preview_subtitle">Make sure every ingredient is clear and easy to read.</string>
@@ -24,6 +21,9 @@
     <string name="try_again">Try again</string>
     <string name="allergen_preferences">Your allergen preferences</string>
     <string name="allergens_title">Your allergens</string>
+    <string name="tip_frame">Fit the whole ingredient list in the frame</string>
+    <string name="tip_light">Use even lighting and avoid glare</string>
+    <string name="tip_focus">Hold steady so the text stays sharp</string>
     <string name="set_allergens">Set your allergens</string>
     <string name="save_preferences">Save preferences</string>
     <string name="cancel">Cancel</string>
