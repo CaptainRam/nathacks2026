@@ -1,19 +1,320 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- Top bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="12dp"
+        android:paddingVertical="8dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/circle_primary"
+            android:importantForAccessibility="no"
+            android:padding="8dp"
+            android:src="@drawable/ic_leaf"
+            app:tint="?attr/colorOnPrimaryContainer" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/brand_name"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/settings_button"
+            style="@style/Widget.AllergyCheck.TonalIconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@string/settings"
+            app:icon="@drawable/ic_settings" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/content_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="ifContentScrolls">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="32dp">
+
+            <!-- A bounded content column keeps the home usable on tablets too. -->
+            <LinearLayout
+                android:id="@+id/content_column"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="520dp">
+
+                <!-- Hero -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eyebrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:letterSpacing="0.1"
+                    android:text="@string/new_scan"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textColor="?attr/colorPrimary" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/home_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="8dp"
+                    android:accessibilityHeading="true"
+                    android:text="@string/home_title"
+                    android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/home_subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/home_subtitle"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <!-- Photo -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/photo_card"
+                    style="@style/Widget.Material3.CardView.Filled"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardElevation="0dp"
+                    app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Large"
+                    app:strokeWidth="0dp">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:id="@+id/empty_state"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_dropzone"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="24dp"
+                            android:paddingTop="32dp"
+                            android:paddingBottom="28dp">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/camera_button"
+                                style="@style/Widget.AllergyCheck.PhotoActionButton"
+                                android:layout_width="72dp"
+                                android:layout_height="72dp"
+                                android:contentDescription="@string/take_photo"
+                                app:backgroundTint="?attr/colorPrimary"
+                                app:cornerRadius="36dp"
+                                app:icon="@drawable/ic_camera"
+                                app:iconSize="32dp"
+                                app:iconTint="?attr/colorOnPrimary" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:gravity="center"
+                                android:text="@string/add_label_title"
+                                android:textAppearance="?attr/textAppearanceTitleMedium"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:gravity="center"
+                                android:text="@string/add_label_description"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/import_button"
+                                style="@style/Widget.AllergyCheck.PrimaryButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="20dp"
+                                android:paddingHorizontal="28dp"
+                                android:text="@string/import_photo"
+                                app:icon="@drawable/ic_upload"
+                                app:iconGravity="textStart" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/preview_state"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/colorSurfaceContainer"
+                            android:visibility="gone"
+                            tools:visibility="gone">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/photo_preview"
+                                android:layout_width="match_parent"
+                                android:layout_height="320dp"
+                                android:contentDescription="@string/photo_preview_description"
+                                android:scaleType="fitCenter" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/remove_button"
+                                style="@style/Widget.AllergyCheck.TonalIconButton"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_gravity="top|end"
+                                android:layout_margin="12dp"
+                                android:contentDescription="@string/remove_photo"
+                                app:icon="@drawable/ic_close"
+                                app:iconSize="20dp" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="bottom|start"
+                                android:layout_margin="12dp"
+                                android:background="@drawable/bg_pill"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingStart="10dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="14dp"
+                                android:paddingBottom="6dp">
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:importantForAccessibility="no"
+                                    android:src="@drawable/ic_check"
+                                    app:tint="?attr/colorOnPrimaryContainer" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:text="@string/photo_added"
+                                    android:textAppearance="?attr/textAppearanceLabelLarge"
+                                    android:textColor="?attr/colorOnPrimaryContainer" />
+                            </LinearLayout>
+                        </FrameLayout>
+
+                        <FrameLayout
+                            android:id="@+id/loading_overlay"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="?attr/colorSurfaceContainerLow"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:visibility="gone">
+
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@string/loading_photo"
+                                android:indeterminate="true"
+                                app:indicatorSize="40dp" />
+                        </FrameLayout>
+                    </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/replace_button"
+                    style="@style/Widget.AllergyCheck.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/replace_photo"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_upload"
+                    app:iconGravity="textStart" />
+
+                <!-- Photo tips -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="28dp"
+                    android:accessibilityHeading="true"
+                    android:drawablePadding="8dp"
+                    android:gravity="center_vertical"
+                    android:text="@string/photo_tip_title"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface"
+                    app:drawableStartCompat="@drawable/ic_lightbulb"
+                    app:drawableTint="?attr/colorPrimary" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.AllergyCheck.TipRow"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/tip_frame" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.AllergyCheck.TipRow"
+                    android:text="@string/tip_light" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/Widget.AllergyCheck.TipRow"
+                    android:text="@string/tip_focus" />
+
+                <!-- Allergen preferences, with a compact summary of what is selected -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/allergens_button"
+                    style="@style/Widget.AllergyCheck.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/set_allergens"
+                    app:icon="@drawable/ic_person"
+                    app:iconGravity="textStart" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/allergen_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone"
+                    app:chipSpacingHorizontal="6dp"
+                    app:chipSpacingVertical="6dp" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>
