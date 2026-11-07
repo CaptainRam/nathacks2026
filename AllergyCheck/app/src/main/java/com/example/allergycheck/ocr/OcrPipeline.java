@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -17,13 +19,22 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * Turns an image into label text: recognise, then narrow with a {@link TextFilter}.
+ * Turns an image into label text: decode, condition, recognise, then narrow with a {@link TextFilter}.
  *
- * <p>The only OCR entry point the UI needs. {@link #recognize} accepts any readable image
- * {@link Uri}, so a photo-picker URI and a camera-capture URI are handled identically — adding
- * camera capture later requires no change here.
+ * <p>The only OCR entry point the UI needs. {@link #recognize(Context, Uri, Callback)} accepts any
+ * readable image {@link Uri}, so a photo-picker URI and a camera-capture URI are handled
+ * identically; {@link #recognize(Bitmap, Callback)} reads a preview the caller has already decoded.
+ *
+ * <p>Both stages in front of the recogniser are swappable. {@link LabelImageDecoder} normalises the
+ * resolution and {@link ImagePreparer} conditions the pixels; since ML Kit's Latin recogniser has no
+ * quality settings of its own, those two stages are where recognition accuracy is won or lost.
+ *
+ * <p>Decoding and preparation run on a background thread — they are far too slow for the main thread
+ * on a full-resolution photo — but every {@link Callback} method is still invoked on the main thread.
  *
  * <p>Create one per screen and {@link #close()} it in {@code onDestroy}; the underlying recogniser
  * holds native resources.
@@ -48,56 +59,151 @@ public final class OcrPipeline {
 
     private final TextRecognizer recognizer;
     private final TextFilter filter;
+    private final ImagePreparer preparer;
+    private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    /** Uses {@link PassThroughFilter} — every recognised line is reported. */
+    private volatile boolean closed;
+
+    /** Uses {@link PassThroughFilter} and {@link LabelImagePreparer}. */
     public OcrPipeline() {
         this(new PassThroughFilter());
     }
 
     public OcrPipeline(@NonNull TextFilter filter) {
+        this(filter, new LabelImagePreparer());
+    }
+
+    public OcrPipeline(@NonNull TextFilter filter, @NonNull ImagePreparer preparer) {
         this.filter = filter;
+        this.preparer = preparer;
         this.recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
     }
 
     /**
      * Reads {@code imageUri} and recognises Latin-script text on it, off the main thread.
      *
-     * <p>{@link InputImage#fromFilePath} resolves {@code content://} URIs and honours the EXIF
-     * orientation tag, so a photo taken in portrait does not need rotating by hand.
+     * <p>If the prepared image yields no text at all, recognition is retried once on the unmodified
+     * decode before reporting an empty result. Conditioning helps most labels but cannot be proven to
+     * help every one, and that retry bounds the cost of being wrong about a particular photo.
      */
     @MainThread
     public void recognize(@NonNull Context context, @NonNull Uri imageUri, @NonNull Callback callback) {
-        InputImage image;
-        try {
-            image = InputImage.fromFilePath(context, imageUri);
-        } catch (IOException e) {
-            // Surfaced through the same path as recognition errors so callers have one failure branch.
-            callback.onFailure(e);
-            return;
-        }
-
-        recognize(image, callback);
+        Context appContext = context.getApplicationContext();
+        imageExecutor.execute(() -> {
+            if (closed) {
+                return;
+            }
+            Bitmap decoded;
+            Bitmap prepared;
+            try {
+                decoded = LabelImageDecoder.decode(appContext, imageUri);
+                prepared = preparer.prepare(decoded);
+            } catch (IOException | RuntimeException e) {
+                // Surfaced through the same path as recognition errors so callers have one failure branch.
+                mainHandler.post(() -> callback.onFailure(e));
+                return;
+            } catch (OutOfMemoryError e) {
+                // Reported rather than swallowed: silently returning no text here would read as a
+                // clean, allergen-free label, which is the one outcome a failure must never produce.
+                mainHandler.post(() -> callback.onFailure(new IOException("Image too large to process", e)));
+                return;
+            }
+            mainHandler.post(() -> process(decoded, prepared, /* ownsDecoded= */ true, callback));
+        });
     }
 
-    /** Reads an already decoded, upright preview without decoding the photo again on the UI thread. */
+    /**
+     * Reads an already decoded, upright preview without decoding the photo again.
+     *
+     * <p>Conditioning and the retry pass work exactly as on the {@link Uri} path, but {@code bitmap}
+     * stays the caller's: it is never recycled here, so a preview still on screen remains safe to
+     * draw.
+     */
     @MainThread
     public void recognize(@NonNull Bitmap bitmap, @NonNull Callback callback) {
-        try {
-            recognize(InputImage.fromBitmap(bitmap, 0), callback);
-        } catch (RuntimeException error) {
-            callback.onFailure(error);
-        }
+        imageExecutor.execute(() -> {
+            if (closed) {
+                return;
+            }
+            Bitmap prepared;
+            try {
+                prepared = preparer.prepare(bitmap);
+            } catch (RuntimeException e) {
+                mainHandler.post(() -> callback.onFailure(e));
+                return;
+            } catch (OutOfMemoryError e) {
+                mainHandler.post(() -> callback.onFailure(new IOException("Image too large to process", e)));
+                return;
+            }
+            mainHandler.post(() -> process(bitmap, prepared, /* ownsDecoded= */ false, callback));
+        });
     }
 
-    private void recognize(InputImage image, Callback callback) {
-        recognizer.process(image)
-                .addOnSuccessListener(text -> callback.onSuccess(filter.apply(toResult(text))))
-                .addOnFailureListener(callback::onFailure);
-    }
-
-    /** Releases the recogniser. Safe to call more than once. */
+    /** Releases the recogniser and the image thread. Safe to call more than once. */
     public void close() {
+        closed = true;
+        imageExecutor.shutdown();
         recognizer.close();
+    }
+
+    /** First pass: the conditioned image. */
+    @MainThread
+    private void process(@NonNull Bitmap decoded, @NonNull Bitmap prepared, boolean ownsDecoded,
+            @NonNull Callback callback) {
+        if (closed) {
+            recycle(decoded, prepared, ownsDecoded);
+            return;
+        }
+        recognizer.process(InputImage.fromBitmap(prepared, /* rotationDegrees= */ 0))
+                .addOnSuccessListener(text -> {
+                    OcrResult result = filter.apply(toResult(text));
+                    if (result.isEmpty() && prepared != decoded) {
+                        retryOnDecoded(decoded, prepared, ownsDecoded, callback);
+                    } else {
+                        recycle(decoded, prepared, ownsDecoded);
+                        callback.onSuccess(result);
+                    }
+                })
+                .addOnFailureListener(error -> {
+                    recycle(decoded, prepared, ownsDecoded);
+                    callback.onFailure(error);
+                });
+    }
+
+    /** Second and final pass: the image exactly as decoded, in case conditioning cost us the text. */
+    @MainThread
+    private void retryOnDecoded(@NonNull Bitmap decoded, @NonNull Bitmap prepared, boolean ownsDecoded,
+            @NonNull Callback callback) {
+        if (closed) {
+            recycle(decoded, prepared, ownsDecoded);
+            return;
+        }
+        recognizer.process(InputImage.fromBitmap(decoded, /* rotationDegrees= */ 0))
+                .addOnSuccessListener(text -> {
+                    OcrResult result = filter.apply(toResult(text));
+                    recycle(decoded, prepared, ownsDecoded);
+                    callback.onSuccess(result);
+                })
+                .addOnFailureListener(error -> {
+                    recycle(decoded, prepared, ownsDecoded);
+                    callback.onFailure(error);
+                });
+    }
+
+    /**
+     * Called once per {@code recognize} call, after every pass that could read these bitmaps.
+     *
+     * <p>{@code decoded} is only recycled when this pipeline decoded it; on the {@link Bitmap} entry
+     * point it belongs to the caller and may still be on screen.
+     */
+    private static void recycle(@NonNull Bitmap decoded, @NonNull Bitmap prepared, boolean ownsDecoded) {
+        if (prepared != decoded) {
+            prepared.recycle();
+        }
+        if (ownsDecoded) {
+            decoded.recycle();
+        }
     }
 
     /** Flattens ML Kit's block/line tree into our engine-independent {@link OcrResult}. */
