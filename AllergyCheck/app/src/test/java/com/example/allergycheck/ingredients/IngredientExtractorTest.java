@@ -69,9 +69,28 @@ public class IngredientExtractorTest {
     }
 
     @Test
-    public void contains2PercentOrLessIsPartOfTheList() {
-        assertEquals(Arrays.asList("corn", "Contains 2% or less of: salt", "soy lecithin"),
+    public void contains2PercentOrLessPhraseIsRemoved() {
+        assertEquals(Arrays.asList("corn", "salt", "soy lecithin"),
                 extract("Ingredients: corn, Contains 2% or less of: salt, soy lecithin."));
+    }
+
+    @Test
+    public void quantityPhraseVariantsAreRemoved() {
+        for (String phrase : new String[]{
+                "Contains less than 2% of", "Less than 2% of:", "2% or less of:", "and less than 1% of",
+                "Contains 2% or less of each of the following:", "less than 0.5% of"}) {
+            assertEquals(phrase, Arrays.asList("flour", "sugar", "yeast", "salt"),
+                    extract("Ingredients: flour, sugar, " + phrase + " yeast, salt"));
+        }
+        // Without a comma before it, the phrase still separates the two ingredients.
+        assertEquals(Arrays.asList("flour", "yeast"),
+                extract("Ingredients: flour Contains 2% or less of: yeast"));
+    }
+
+    @Test
+    public void quantityPhraseInsideBracketsIsLeftAsWritten() {
+        assertEquals(Arrays.asList("Spice blend (paprika, less than 2% of silicon dioxide)", "rice"),
+                extract("Ingredients: Spice blend (paprika, less than 2% of silicon dioxide), rice"));
     }
 
     @Test

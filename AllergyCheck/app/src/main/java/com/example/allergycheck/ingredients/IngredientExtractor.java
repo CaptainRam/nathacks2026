@@ -37,6 +37,15 @@ public final class IngredientExtractor {
                     + "|(?:produced|made|manufactured|processed|packaged|packed)\\s+(?:in|on)\\s+(?:a|an|the)?\\s*"
                     + "(?:facility|plant|factory|equipment|line))");
 
+    /**
+     * "Contains 2% or less of:", "Less than 2% of", "and 2% or less of each of the following:" …
+     * A label's note about quantities, not an ingredient, so it is removed from the list.
+     */
+    private static final Pattern MINOR_MARKER = Pattern.compile(
+            "(?iu)\\b(?:and\\s+)?(?:contains?\\s+)?"
+                    + "(?:less\\s+than\\s+\\d+(?:[.,]\\d+)?\\s*%|\\d+(?:[.,]\\d+)?\\s*%\\s+or\\s+less)"
+                    + "\\s+of(?:\\s+each\\s+of)?(?:\\s+the\\s+following)?\\s*:?");
+
     private IngredientExtractor() {
     }
 
@@ -61,7 +70,7 @@ public final class IngredientExtractor {
         end = Math.min(end, firstAtDepthZero(TERMINATOR, body));
         end = Math.min(end, firstAtDepthZero(STATEMENT_START, body));
         end = Math.min(end, firstFullStop(body));
-        body = body.substring(0, end);
+        body = removeMinorMarkers(body.substring(0, end));
 
         List<String> items = new ArrayList<>();
         for (String part : splitTopLevel(body)) {
@@ -71,6 +80,24 @@ public final class IngredientExtractor {
             }
         }
         return items;
+    }
+
+    /**
+     * Replaces each "Contains 2% or less of:"-style phrase outside brackets with an item break, so
+     * "corn, Contains 2% or less of: salt" lists "corn" and "salt". Inside brackets the text is left
+     * as written, since it belongs to that one item.
+     */
+    private static String removeMinorMarkers(String body) {
+        Matcher m = MINOR_MARKER.matcher(body);
+        StringBuilder out = new StringBuilder();
+        int last = 0;
+        while (m.find()) {
+            if (depthAt(body, m.start()) == 0) {
+                out.append(body, last, m.start()).append(',');
+                last = m.end();
+            }
+        }
+        return out.append(body.substring(last)).toString();
     }
 
     /** Joins hyphenated line wraps ("pea-\nnut" → "peanut") and flattens newlines to spaces. */
