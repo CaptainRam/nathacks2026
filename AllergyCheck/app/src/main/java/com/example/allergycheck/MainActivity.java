@@ -7,8 +7,10 @@ import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,6 +20,7 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.graphics.Insets;
 import androidx.core.content.FileProvider;
 import androidx.core.view.ViewCompat;
@@ -25,14 +28,19 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.allergycheck.ingredients.IngredientExtractor;
+import com.example.allergycheck.ocr.OcrPipeline;
+import com.example.allergycheck.ocr.OcrResult;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,6 +63,13 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton replaceButton;
     private MaterialButton allergensButton;
     private ChipGroup allergenChips;
+    private OcrPipeline ocrPipeline;
+    private AlertDialog ingredientDialog;
+    private String ingredientDialogTitle;
+    private String ingredientDialogMessage;
+    private boolean ingredientDialogScanning;
+    private boolean ingredientDialogRetry;
+    private boolean activityResumed;
 
     private final ActivityResultLauncher<Intent> settingsLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -113,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
         replaceButton = findViewById(R.id.replace_button);
         allergensButton = findViewById(R.id.allergens_button);
         allergenChips = findViewById(R.id.allergen_chips);
+        ocrPipeline = new OcrPipeline();
 
         importButton.setOnClickListener(view -> openPhotoPicker());
         cameraButton.setOnClickListener(view -> takePhoto());
@@ -185,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadPhoto(Uri uri) {
         final int request = ++imageRequest;
+        clearIngredientDialog();
         pendingPhoto = uri;
         setLoading(true);
         // A camera image can be very large. Decode a bounded preview off the UI thread.
@@ -219,8 +236,10 @@ public class MainActivity extends AppCompatActivity {
                     showPhotoState(true);
                     setLoading(false);
                     photoPreview.announceForAccessibility(getString(R.string.photo_added));
+                    recognizeIngredients(bitmap, request);
                 });
             } catch (IOException | RuntimeException exception) {
+                Log.w("MainActivity", "Unable to decode selected photo", exception);
                 runOnUiThread(() -> {
                     if (isDestroyed() || request != imageRequest) {
                         return;
@@ -250,6 +269,114 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void recognizeIngredients(Bitmap bitmap, int request) {
+        updateIngredientDialog(getString(R.string.reading_ingredients),
+                getString(R.string.reading_ingredients_message), true, false);
+        ocrPipeline.recognize(bitmap, new OcrPipeline.Callback() {
+            @Override
+            public void onSuccess(@NonNull OcrResult result) {
+                if (!isCurrentImageRequest(request)) {
+                    return;
+                }
+                String text = result.fullText();
+                if (text.trim().isEmpty()) {
+                    updateIngredientDialog(getString(R.string.ingredient_result_title),
+                            getString(R.string.ocr_empty_result), false, true);
+                    return;
+                }
+                List<String> ingredients = IngredientExtractor.extract(text);
+                if (ingredients.isEmpty()) {
+                    updateIngredientDialog(getString(R.string.ingredient_result_title),
+                            getString(R.string.no_ingredients_found, text), false, true);
+                    return;
+                }
+                StringBuilder message = new StringBuilder();
+                for (String ingredient : ingredients) {
+                    if (message.length() > 0) {
+                        message.append('\n');
+                    }
+                    message.append("• ").append(ingredient);
+                }
+                updateIngredientDialog(getString(R.string.ingredients_found, ingredients.size()),
+                        message.toString(), false, false);
+            }
+
+            @Override
+            public void onFailure(@NonNull Exception error) {
+                if (isCurrentImageRequest(request)) {
+                    updateIngredientDialog(getString(R.string.ingredient_result_title),
+                            getString(R.string.ingredient_read_error), false, true);
+                }
+            }
+        });
+    }
+
+    private boolean isCurrentImageRequest(int request) {
+        return request == imageRequest && selectedPhoto != null && !isFinishing() && !isDestroyed();
+    }
+
+    private void updateIngredientDialog(String title, String message, boolean scanning,
+                                        boolean retry) {
+        ingredientDialogTitle = title;
+        ingredientDialogMessage = message;
+        ingredientDialogScanning = scanning;
+        ingredientDialogRetry = retry;
+        showIngredientDialog();
+    }
+
+    private void showIngredientDialog() {
+        if (!activityResumed || isFinishing() || isDestroyed() || ingredientDialogTitle == null) {
+            return;
+        }
+        dismissIngredientDialog();
+        boolean scanning = ingredientDialogScanning;
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle(ingredientDialogTitle)
+                .setMessage(ingredientDialogMessage)
+                .setPositiveButton(scanning ? android.R.string.cancel : android.R.string.ok,
+                        (dialog, which) -> {
+                            if (scanning) {
+                                ++imageRequest;
+                            }
+                        })
+                .setOnCancelListener(dialog -> {
+                    if (scanning) {
+                        ++imageRequest;
+                    }
+                });
+        if (ingredientDialogRetry) {
+            builder.setNeutralButton(R.string.try_again, (dialog, which) -> {
+                if (selectedPhoto != null && photoPreview.getDrawable() instanceof BitmapDrawable) {
+                    recognizeIngredients(((BitmapDrawable) photoPreview.getDrawable()).getBitmap(),
+                            imageRequest);
+                }
+            });
+        }
+        ingredientDialog = builder.create();
+        ingredientDialog.setOnDismissListener(dialog -> {
+            if (ingredientDialog == dialog) {
+                ingredientDialog = null;
+                ingredientDialogTitle = null;
+                ingredientDialogMessage = null;
+            }
+        });
+        ingredientDialog.show();
+    }
+
+    private void dismissIngredientDialog() {
+        if (ingredientDialog != null) {
+            ingredientDialog.setOnDismissListener(null);
+            ingredientDialog.dismiss();
+            ingredientDialog = null;
+        }
+    }
+
+    private void clearIngredientDialog() {
+        dismissIngredientDialog();
+        ingredientDialogTitle = null;
+        ingredientDialogMessage = null;
+    }
+
     private void setLoading(boolean loading) {
         loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
         importButton.setEnabled(!loading);
@@ -271,6 +398,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void removePhoto() {
         ++imageRequest;
+        clearIngredientDialog();
         if (selectedPhoto != null) {
             releasePhotoAccess(selectedPhoto);
         }
@@ -384,6 +512,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        activityResumed = true;
+        showIngredientDialog();
+    }
+
+    @Override
+    protected void onPause() {
+        activityResumed = false;
+        dismissIngredientDialog();
+        super.onPause();
+    }
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         if (selectedPhoto != null) {
             outState.putString(PHOTO_STATE, selectedPhoto.toString());
@@ -400,6 +542,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         ++imageRequest;
+        clearIngredientDialog();
+        ocrPipeline.close();
         imageExecutor.shutdownNow();
         super.onDestroy();
     }

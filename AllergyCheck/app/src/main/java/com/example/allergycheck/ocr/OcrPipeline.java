@@ -1,6 +1,7 @@
 package com.example.allergycheck.ocr;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.net.Uri;
 
@@ -75,6 +76,20 @@ public final class OcrPipeline {
             return;
         }
 
+        recognize(image, callback);
+    }
+
+    /** Reads an already decoded, upright preview without decoding the photo again on the UI thread. */
+    @MainThread
+    public void recognize(@NonNull Bitmap bitmap, @NonNull Callback callback) {
+        try {
+            recognize(InputImage.fromBitmap(bitmap, 0), callback);
+        } catch (RuntimeException error) {
+            callback.onFailure(error);
+        }
+    }
+
+    private void recognize(InputImage image, Callback callback) {
         recognizer.process(image)
                 .addOnSuccessListener(text -> callback.onSuccess(filter.apply(toResult(text))))
                 .addOnFailureListener(callback::onFailure);
