@@ -17,9 +17,12 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.allergycheck.ingredients.IngredientExtractor;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
 import com.example.allergycheck.ocr.PassThroughFilter;
+
+import java.util.List;
 
 /**
  * Throwaway screen for exercising {@link OcrPipeline}: pick an image, see the text that comes back.
@@ -91,7 +94,7 @@ public class OcrTestActivity extends AppCompatActivity {
                 if (result.isEmpty()) {
                     ocrOutput.setText(R.string.ocr_empty_result);
                 } else {
-                    ocrOutput.setText(result.fullText());
+                    ocrOutput.setText(formatIngredients(result.fullText()));
                 }
             }
 
@@ -104,6 +107,22 @@ public class OcrTestActivity extends AppCompatActivity {
                 ocrOutput.setText(getString(R.string.ocr_error, message));
             }
         });
+    }
+
+    /**
+     * The ingredients found in {@code ocrText} as a bulleted list. When there is no ingredient
+     * heading, says so and shows the raw text instead, so it is clear what was actually read.
+     */
+    private String formatIngredients(String ocrText) {
+        List<String> ingredients = IngredientExtractor.extract(ocrText);
+        if (ingredients.isEmpty()) {
+            return getString(R.string.no_ingredients_found, ocrText);
+        }
+        StringBuilder out = new StringBuilder(getString(R.string.ingredients_found, ingredients.size()));
+        for (String ingredient : ingredients) {
+            out.append("\n• ").append(ingredient);
+        }
+        return out.toString();
     }
 
     @Override
