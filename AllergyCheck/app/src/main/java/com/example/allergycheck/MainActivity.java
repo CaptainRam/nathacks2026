@@ -78,11 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private final ActivityResultLauncher<Intent> settingsLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
-                    updateAllergenSummary();
-                    Snackbar.make(findViewById(R.id.main), R.string.preferences_saved,
-                            Snackbar.LENGTH_SHORT).show();
-                    // The verdict depends on the chosen allergens, so re-check the current label.
-                    rescanCurrentPhoto();
+                    onAllergenPreferencesSaved();
                 }
             });
 
@@ -137,12 +133,25 @@ public class MainActivity extends AppCompatActivity {
         ocrPipeline = new OcrPipeline();
         modelDownloadController = new ModelDownloadController(this);
 
+        getSupportFragmentManager().setFragmentResultListener(
+                AllergenPreferencesDialogFragment.RESULT_KEY, this, (key, result) ->
+                        findViewById(R.id.main).post(() -> {
+                            if (isFinishing() || isDestroyed()) {
+                                return;
+                            }
+                            if (result.getBoolean(AllergenPreferencesDialogFragment.SAVED)) {
+                                onAllergenPreferencesSaved();
+                            } else {
+                                showIngredientDialog();
+                            }
+                        }));
+
         importButton.setOnClickListener(view -> openPhotoPicker());
         cameraButton.setOnClickListener(view -> takePhoto());
         replaceButton.setOnClickListener(view -> openPhotoPicker());
         findViewById(R.id.remove_button).setOnClickListener(view -> removePhoto());
         findViewById(R.id.settings_button).setOnClickListener(view -> openSettings());
-        allergensButton.setOnClickListener(view -> openSettings());
+        allergensButton.setOnClickListener(view -> openAllergenPreferences());
         updateAllergenSummary();
 
         if (savedInstanceState != null) {
@@ -343,7 +352,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showIngredientDialog() {
-        if (!activityResumed || isFinishing() || isDestroyed() || ingredientDialogTitle == null) {
+        if (!activityResumed || isFinishing() || isDestroyed() || ingredientDialogTitle == null
+                || isAllergenDialogOpen()) {
             return;
         }
         dismissIngredientDialog();
@@ -365,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
         if (ingredientDialogChooseAllergens) {
             // Nothing could be checked yet; send the user straight to the allergen picker.
             builder.setNeutralButton(R.string.choose_allergens_action,
-                    (dialog, which) -> openSettings());
+                    (dialog, which) -> openAllergenPreferences());
         } else if (ingredientDialogRetry) {
             builder.setNeutralButton(R.string.try_again, (dialog, which) -> rescanCurrentPhoto());
         }
@@ -490,6 +500,26 @@ public class MainActivity extends AppCompatActivity {
         settingsLauncher.launch(new Intent(this, SettingsActivity.class));
     }
 
+    private void openAllergenPreferences() {
+        if (!getSupportFragmentManager().isStateSaved() && !isAllergenDialogOpen()) {
+            new AllergenPreferencesDialogFragment().showNow(getSupportFragmentManager(),
+                    AllergenPreferencesDialogFragment.TAG);
+        }
+    }
+
+    private boolean isAllergenDialogOpen() {
+        return getSupportFragmentManager().findFragmentByTag(
+                AllergenPreferencesDialogFragment.TAG) != null;
+    }
+
+    private void onAllergenPreferencesSaved() {
+        updateAllergenSummary();
+        Snackbar.make(findViewById(R.id.main), R.string.preferences_saved,
+                Snackbar.LENGTH_SHORT).show();
+        // The verdict depends on the chosen allergens, so re-check the current label.
+        rescanCurrentPhoto();
+    }
+
     private void updateAllergenSummary() {
         Set<String> saved = AllergenPreferences.selectedAllergens(this);
         int count = saved.size();
@@ -545,7 +575,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         activityResumed = true;
         showIngredientDialog();
-        if (ingredientDialogTitle == null) {
+        if (ingredientDialogTitle == null && !isAllergenDialogOpen()) {
             modelDownloadController.offerIntroduction();
         }
     }
