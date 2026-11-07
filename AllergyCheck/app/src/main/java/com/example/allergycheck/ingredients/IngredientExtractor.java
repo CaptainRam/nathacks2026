@@ -1,6 +1,7 @@
 package com.example.allergycheck.ingredients;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -9,9 +10,8 @@ import java.util.regex.Pattern;
  * Pulls the ingredient list out of a label's OCR text — and does nothing else.
  *
  * <p>No allergen matching, no interpretation: it finds the "Ingredients" heading, takes the list
- * that follows, splits it into items exactly as written, and groups them into main ingredients and
- * additives / chemicals. If there is no heading it returns nothing rather than guessing which text
- * might be ingredients.
+ * that follows, and splits it into items exactly as written. If there is no heading it returns an
+ * empty list rather than guessing which text might be ingredients.
  *
  * <p>Pure Java with no Android dependencies, so it is unit-testable without a device.
  */
@@ -37,64 +37,22 @@ public final class IngredientExtractor {
                     + "|(?:produced|made|manufactured|processed|packaged|packed)\\s+(?:in|on)\\s+(?:a|an|the)?\\s*"
                     + "(?:facility|plant|factory|equipment|line))");
 
-    /**
-     * The label's own split between main ingredients and minor ones: "Contains 2% or less of:",
-     * "and less than 1% of", "2% or less of each of the following:" …
-     */
-    private static final Pattern MINOR_MARKER = Pattern.compile(
-            "(?iu)\\b(?:and\\s+)?(?:contains?\\s+)?"
-                    + "(?:less\\s+than\\s+\\d+(?:[.,]\\d+)?\\s*%|\\d+(?:[.,]\\d+)?\\s*%\\s+or\\s+less)"
-                    + "\\s+of(?:\\s+each\\s+of)?(?:\\s+the\\s+following)?\\s*:?");
-
-    /**
-     * Item names that identify an additive or specialised chemical. Matched only against the part
-     * of an item outside brackets, so "Enriched flour (niacin, reduced iron)" stays an ingredient.
-     */
-    private static final Pattern ADDITIVE = Pattern.compile(
-            "(?iu)\\b(?:"
-                    // E / INS numbers: E330, E 471, INS 322
-                    + "(?:e|ins)\\s?\\d{3,4}[a-z]?"
-                    // mineral salts and acids: sodium acetate, calcium propionate, citric acid …
-                    + "|sodium|potassium|calcium|magnesium|ammonium|iron|zinc"
-                    + "|\\w*(?:phosphate|sulfate|sulphate|sulfite|sulphite|nitrite|nitrate|carbonate|chloride"
-                    + "|hydroxide|oxide|benzoate|sorbate|propionate|acetate|lactate|citrate|glutamate)s?"
-                    + "|acids?"
-                    // named additives
-                    + "|mono\\s*-?\\s*(?:and\\s+)?di\\s*-?\\s*glycerides|diglycerides|lecithin"
-                    + "|(?:xanthan|guar|gellan|locust\\s+bean|cellulose|acacia|arabic)\\s+gum|carrageenan|pectin"
-                    + "|maltodextrin|polysorbate|bha|bht|tbhq|msg|dextrose"
-                    + "|modified\\s+(?:food\\s+|corn\\s+|tapioca\\s+|potato\\s+)?starch"
-                    // functional classes: "Preservative (sodium benzoate)", "Colour (caramel)"
-                    + "|preservatives?|emulsifiers?|stabili[sz]ers?|thickeners?|antioxidants?"
-                    + "|acidity\\s+regulators?|raising\\s+agents?|leavening|colou?rs?|colou?ring"
-                    + "|artificial\\s+flavou?rs?|sweeteners?"
-                    // fortification vitamins
-                    + "|niacin|thiamine?|riboflavin|vitamins?\\s+[a-k]\\d*|vitamins"
-                    + ")\\b");
-
-    /** A whole item that is just an additive code: "E330", "E 471", "INS 322". */
-    private static final Pattern E_NUMBER = Pattern.compile("(?iu)(?:e|ins)\\s?\\d{3,4}[a-z]?");
-
     private IngredientExtractor() {
     }
 
     /**
-     * Returns the ingredients in label order, split into main ingredients and additives /
-     * chemicals, each trimmed but otherwise as written (a bracketed sub-list stays attached to its
-     * parent). Empty when no ingredient heading is found.
-     *
-     * <p>If the label marks its own split ("Contains 2% or less of:"), that is used: everything
-     * after the marker is an additive. Otherwise each item is placed by its name.
+     * Returns the ingredients in label order, each trimmed but otherwise as written (a bracketed
+     * sub-list stays attached to its parent). Empty when no ingredient heading is found.
      */
-    public static IngredientList extract(String rawText) {
+    public static List<String> extract(String rawText) {
         if (rawText == null) {
-            return IngredientList.empty();
+            return Collections.emptyList();
         }
         String text = prepare(rawText);
 
         int bodyStart = findHeadingEnd(text);
         if (bodyStart < 0) {
-            return IngredientList.empty();
+            return Collections.emptyList();
         }
         String body = text.substring(bodyStart);
 
@@ -105,53 +63,14 @@ public final class IngredientExtractor {
         end = Math.min(end, firstFullStop(body));
         body = body.substring(0, end);
 
-        // 1. The label's own split, if it has one.
-        Matcher marker = MINOR_MARKER.matcher(body);
-        while (marker.find()) {
-            if (depthAt(body, marker.start()) == 0) {
-                return new IngredientList(items(body.substring(0, marker.start())),
-                        items(body.substring(marker.end())));
-            }
-        }
-
-        // 2. Otherwise, place each item by its name.
-        List<String> ingredients = new ArrayList<>();
-        List<String> additives = new ArrayList<>();
-        for (String item : items(body)) {
-            if (isAdditive(item)) {
-                additives.add(item);
-            } else {
-                ingredients.add(item);
-            }
-        }
-        return new IngredientList(ingredients, additives);
-    }
-
-    /**
-     * Splits {@code text} into trimmed items, dropping OCR fragments with fewer than two letters —
-     * except E/INS numbers such as "E330", which are real items with only one letter.
-     */
-    private static List<String> items(String text) {
         List<String> items = new ArrayList<>();
-        for (String part : splitTopLevel(text)) {
+        for (String part : splitTopLevel(body)) {
             String item = part.trim().replaceAll("^[\\s:;,\\-–•·*]+|[\\s:;,\\-–•·*.]+$", "");
-            if (letterCount(item) >= 2 || E_NUMBER.matcher(item).matches()) {
+            if (letterCount(item) >= 2) {
                 items.add(item);
             }
         }
         return items;
-    }
-
-    /** Whether the item's own name (the part outside any brackets) names an additive or chemical. */
-    private static boolean isAdditive(String item) {
-        int bracket = item.length();
-        for (int i = 0; i < item.length(); i++) {
-            if (item.charAt(i) == '(' || item.charAt(i) == '[') {
-                bracket = i;
-                break;
-            }
-        }
-        return ADDITIVE.matcher(item.substring(0, bracket)).find();
     }
 
     /** Joins hyphenated line wraps ("pea-\nnut" → "peanut") and flattens newlines to spaces. */

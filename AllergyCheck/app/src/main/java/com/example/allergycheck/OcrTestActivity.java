@@ -18,7 +18,6 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.allergycheck.ingredients.IngredientExtractor;
-import com.example.allergycheck.ingredients.IngredientList;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
 import com.example.allergycheck.ocr.PassThroughFilter;
@@ -115,28 +114,15 @@ public class OcrTestActivity extends AppCompatActivity {
      * heading, says so and shows the raw text instead, so it is clear what was actually read.
      */
     private String formatIngredients(String ocrText) {
-        IngredientList list = IngredientExtractor.extract(ocrText);
-        if (list.isEmpty()) {
+        List<String> ingredients = IngredientExtractor.extract(ocrText);
+        if (ingredients.isEmpty()) {
             return getString(R.string.no_ingredients_found, ocrText);
         }
-        StringBuilder out = new StringBuilder();
-        appendSection(out, R.string.ingredients_found, list.ingredients());
-        appendSection(out, R.string.additives_found, list.additives());
+        StringBuilder out = new StringBuilder(getString(R.string.ingredients_found, ingredients.size()));
+        for (String ingredient : ingredients) {
+            out.append("\n• ").append(ingredient);
+        }
         return out.toString();
-    }
-
-    /** Appends "Title (N):" and one bullet per item; skips the section when it has no items. */
-    private void appendSection(StringBuilder out, int titleRes, List<String> items) {
-        if (items.isEmpty()) {
-            return;
-        }
-        if (out.length() > 0) {
-            out.append("\n\n");
-        }
-        out.append(getString(titleRes, items.size()));
-        for (String item : items) {
-            out.append("\n• ").append(item);
-        }
     }
 
     @Override
