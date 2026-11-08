@@ -537,6 +537,10 @@ public class MainActivity extends AppCompatActivity {
         tipsGroup.setVisibility(enabled ? View.GONE : View.VISIBLE);
         photoStripScroll.setVisibility(enabled ? View.VISIBLE : View.GONE);
         analysisGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        // Pinned outside the analysis group, so it has to leave with it.
+        if (!enabled) {
+            restartButton.setVisibility(View.GONE);
+        }
     }
 
     /**
