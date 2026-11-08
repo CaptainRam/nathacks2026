@@ -9,4 +9,5 @@
     <string name="cancel_analysis">Cancel</string>
     <string name="start_over">Start a new scan</string>
     <string name="result_ready">Result ready: %1$s</string>
+    <string name="result_caution">This app can make mistakes. Please double-check the result against the label.</string>
 </resources>

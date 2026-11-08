@@ -132,6 +132,21 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Always shown right under the verdict: the reading can be wrong. -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/result_caution"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginTop="8dp"
+            android:drawablePadding="6dp"
+            android:gravity="center_vertical"
+            android:text="@string/result_caution"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:drawableStartCompat="@drawable/ic_info_small"
+            app:drawableTint="?attr/colorOnSurfaceVariant" />
+
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/low_confidence_note"
             android:layout_width="match_parent"
