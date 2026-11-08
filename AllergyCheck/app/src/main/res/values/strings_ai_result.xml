@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_ai_incomplete_title">AI check incomplete</string>
+    <string name="status_ai_incomplete_message">Some ingredients could not be checked. Review the ingredients below, check your analysis settings, and try again.</string>
+    <string name="ai_analysis_note">AI flags possible allergen sources for review. Model inferences and scores do not confirm that an allergen is present.</string>
+    <string name="ai_analysis_incomplete_note">AI could not check every ingredient. Ingredients needing review are listed below where available; existing label matches are retained. Check the package and retry the analysis.</string>
+    <string name="evidence_ai_risk">AI flags ingredient \"%1$s\" as a possible source of %2$s</string>
+    <string name="evidence_ai_uncertain">AI is uncertain whether ingredient \"%1$s\" involves %2$s — review its source</string>
+    <string name="evidence_ai_unavailable">AI could not check ingredient \"%1$s\" for %2$s — review manually</string>
+    <string name="evidence_ai_score">Model score: %1$.0f%%</string>
+</resources>

@@ -15,6 +15,8 @@ import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
+import com.example.allergycheck.analysis.AiAnalyzer;
+import com.example.allergycheck.analysis.ai.AiDecision;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,10 +24,12 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.IOException;
 
 /** Which allergen rows the result lists, with and without "show allergens not detected". */
 @RunWith(AndroidJUnit4.class)
@@ -95,6 +99,65 @@ public class AnalysisResultViewTest {
 
         assertEquals(Arrays.asList(eggs.label()), rowNames(root));
         assertEquals(View.VISIBLE, root.findViewById(R.id.allergen_section_title).getVisibility());
+    }
+
+    @Test
+    public void failedAiKeepsUncheckedIngredientsVisibleAndShowsIncompleteMessage() throws Exception {
+        AnalysisReport matching = Analyzer.analyse("Ingredients: mystery protein, sugar, salt.",
+                dictionary, Arrays.asList(milk));
+        AnalysisReport report = AiAnalyzer.analyse(matching, (ingredient, allergen) -> {
+            throw new IOException("Offline");
+        });
+
+        ViewGroup root = render(report, false);
+
+        assertEquals(Arrays.asList(milk.label()), rowNames(root));
+        assertEquals(context.getString(R.string.status_ai_incomplete_title),
+                ((TextView) root.findViewById(R.id.verdict_title)).getText().toString());
+        assertEquals(View.VISIBLE, root.findViewById(R.id.low_confidence_note).getVisibility());
+        assertEquals(View.VISIBLE, root.findViewById(R.id.ingredients_card).getVisibility());
+        String evidence = ((TextView) root.findViewById(R.id.allergen_evidence)).getText().toString();
+        assertTrue(evidence.contains("mystery protein"));
+        assertTrue(evidence.contains("review manually"));
+    }
+
+    @Test
+    public void failedAiRetainsDeterministicEvidenceAndIncompleteNote() throws Exception {
+        AnalysisReport matching = Analyzer.analyse(LABEL, dictionary, Arrays.asList(milk, eggs));
+        AnalysisReport report = AiAnalyzer.analyse(matching, (ingredient, allergen) -> {
+            throw new IOException("Offline");
+        });
+
+        ViewGroup root = render(report, false);
+
+        assertEquals(context.getString(R.string.status_contains_title),
+                ((TextView) root.findViewById(R.id.verdict_title)).getText().toString());
+        assertEquals(View.VISIBLE, root.findViewById(R.id.low_confidence_note).getVisibility());
+        assertTrue(((TextView) root.findViewById(R.id.low_confidence_note)).getText().toString()
+                .contains("could not check every ingredient"));
+        assertTrue(((TextView) root.findViewById(R.id.allergen_evidence)).getText().toString()
+                .contains("matches milk"));
+    }
+
+    @Test
+    public void aiRiskShowsOriginalIngredientAndModelScoreWhenNotDetectedRowsAreHidden() throws Exception {
+        AnalysisReport matching = Analyzer.analyse("Ingredients: mystery protein, sugar, salt.",
+                dictionary, Arrays.asList(milk));
+        AnalysisReport report = AiAnalyzer.analyse(matching, (ingredient, allergen) ->
+                ingredient.equals("mystery protein") ? AiDecision.scored(0.87d, 0.5d)
+                        : AiDecision.of(AiDecision.Verdict.NO_EVIDENCE));
+
+        ViewGroup root = render(report, false);
+
+        assertEquals(Arrays.asList(milk.label()), rowNames(root));
+        String evidence = ((TextView) root.findViewById(R.id.allergen_evidence)).getText().toString();
+        assertTrue(evidence.contains("mystery protein"));
+        assertTrue(evidence.contains("possible source"));
+        assertTrue(evidence.contains("87%"));
+        assertEquals(context.getString(R.string.result_possible),
+                ((TextView) root.findViewById(R.id.allergen_status)).getText().toString());
+        assertEquals(context.getString(R.string.ai_analysis_note),
+                ((TextView) root.findViewById(R.id.low_confidence_note)).getText().toString());
     }
 
     private ViewGroup render(AnalysisReport report, boolean showNotDetected) {

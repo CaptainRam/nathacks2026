@@ -55,8 +55,10 @@ public class LocalModelUiTest {
     private Context context;
     private SharedPreferences modelPreferences;
     private SharedPreferences allergenPreferences;
+    private SharedPreferences analysisPreferences;
     private Map<String, ?> originalModelPreferences;
     private String originalPhoto;
+    private String originalAnalysisMode;
     private File modelDirectory;
     private File backupDirectory;
     private boolean isolatedModelDirectory;
@@ -76,6 +78,8 @@ public class LocalModelUiTest {
         originalModelPreferences = copyPreferences(modelPreferences);
         allergenPreferences = AllergenPreferences.preferences(context);
         originalPhoto = allergenPreferences.getString(PHOTO_STATE, null);
+        analysisPreferences = context.getSharedPreferences("analysis_preferences", Context.MODE_PRIVATE);
+        originalAnalysisMode = analysisPreferences.getString("mode", null);
         modelDirectory = LocalModelManager.modelDirectory(context);
         backupDirectory = new File(modelDirectory.getParentFile(),
                 "llm-ui-test-backup-" + UUID.randomUUID());
@@ -88,6 +92,7 @@ public class LocalModelUiTest {
         preferencesChanged = true;
         assertTrue(modelPreferences.edit().clear().commit());
         assertTrue(allergenPreferences.edit().remove(PHOTO_STATE).commit());
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.LOCAL_AI);
         refreshManager();
     }
 
@@ -111,6 +116,13 @@ public class LocalModelUiTest {
                     editor.putString(PHOTO_STATE, originalPhoto);
                 }
                 assertTrue(editor.commit());
+                SharedPreferences.Editor analysisEditor = analysisPreferences.edit();
+                if (originalAnalysisMode == null) {
+                    analysisEditor.remove("mode");
+                } else {
+                    analysisEditor.putString("mode", originalAnalysisMode);
+                }
+                assertTrue(analysisEditor.commit());
                 refreshManager();
             }
         }
@@ -152,6 +164,35 @@ public class LocalModelUiTest {
                 assertTrue("Later must persist across launches", dialog == null || !dialog.isShowing());
                 assertEquals(View.VISIBLE, activity.findViewById(R.id.model_download_card).getVisibility());
                 assertTrue(activity.findViewById(R.id.model_status_action).isEnabled());
+            });
+        }
+    }
+
+    @Test
+    public void matchingAndCloudHideLocalModelOfferWithoutConsumingIntroduction() {
+        for (AnalysisPreferences.Mode mode : new AnalysisPreferences.Mode[] {
+                AnalysisPreferences.Mode.MATCHING,
+                AnalysisPreferences.Mode.OPENROUTER,
+                AnalysisPreferences.Mode.DECISIONS}) {
+            AnalysisPreferences.saveMode(context, mode);
+            try (TestActivity<MainActivity> screen = TestActivity.launch(context, MainActivity.class)) {
+                screen.onActivity(activity -> {
+                    AlertDialog dialog = introduction(activity);
+                    assertTrue("The local-model prompt is irrelevant in " + mode,
+                            dialog == null || !dialog.isShowing());
+                    assertEquals(View.GONE, activity.findViewById(R.id.model_download_card).getVisibility());
+                });
+            }
+            assertFalse("Switching to Local AI later should still offer the model",
+                    modelPreferences.getBoolean("intro_shown", false));
+        }
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.LOCAL_AI);
+        try (TestActivity<MainActivity> screen = TestActivity.launch(context, MainActivity.class)) {
+            screen.onActivity(activity -> {
+                assertNotNull(introduction(activity));
+                assertTrue(introduction(activity).isShowing());
+                assertTrue(activity.findViewById(R.id.model_download_card).isShown());
+                introduction(activity).getButton(DialogInterface.BUTTON_NEGATIVE).performClick();
             });
         }
     }

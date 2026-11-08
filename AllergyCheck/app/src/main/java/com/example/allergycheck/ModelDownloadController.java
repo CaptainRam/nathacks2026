@@ -13,11 +13,14 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import java.util.function.BooleanSupplier;
+
 /** Shared missing-model/download entry point for both launcher screens. */
 final class ModelDownloadController {
     private final AppCompatActivity activity;
     /** Opens Settings on the model section through the host's result launcher. */
     private final Runnable openModelSettings;
+    private final BooleanSupplier modelNeeded;
     private final LocalModelManager manager;
     private final View card;
     private final TextView title;
@@ -28,8 +31,14 @@ final class ModelDownloadController {
     private AlertDialog introduction;
 
     ModelDownloadController(AppCompatActivity activity, Runnable openModelSettings) {
+        this(activity, openModelSettings, () -> true);
+    }
+
+    ModelDownloadController(AppCompatActivity activity, Runnable openModelSettings,
+                            BooleanSupplier modelNeeded) {
         this.activity = activity;
         this.openModelSettings = openModelSettings;
+        this.modelNeeded = modelNeeded;
         manager = LocalModelManager.get(activity);
         card = activity.findViewById(R.id.model_download_card);
         title = activity.findViewById(R.id.model_status_title);
@@ -58,14 +67,15 @@ final class ModelDownloadController {
     }
 
     void offerIntroduction() {
-        if (manager.shouldShowIntroduction()) {
+        if (modelNeeded.getAsBoolean() && manager.shouldShowIntroduction()) {
             manager.markIntroductionShown();
             showDownloadPrompt();
         }
     }
 
     private void showDownloadPrompt() {
-        if (introduction != null || activity.isFinishing() || activity.isDestroyed()) {
+        if (!modelNeeded.getAsBoolean() || introduction != null
+                || activity.isFinishing() || activity.isDestroyed()) {
             return;
         }
         SpannableStringBuilder content = new SpannableStringBuilder()
@@ -86,6 +96,14 @@ final class ModelDownloadController {
     }
 
     private void render(LocalModelManager.Status status) {
+        if (!modelNeeded.getAsBoolean()) {
+            card.setVisibility(View.GONE);
+            if (introduction != null) {
+                introduction.dismiss();
+                introduction = null;
+            }
+            return;
+        }
         card.setVisibility(status.isInstalled() ? View.GONE : View.VISIBLE);
         title.setText(status.state == LocalModelManager.State.MISSING
                 || status.state == LocalModelManager.State.FAILED

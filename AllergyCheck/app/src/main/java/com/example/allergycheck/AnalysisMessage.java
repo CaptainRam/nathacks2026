@@ -31,6 +31,9 @@ final class AnalysisMessage {
     /** The verdict headline, e.g. "Contains an allergen". */
     @NonNull
     String title(@NonNull AnalysisReport report) {
+        if (onlyIncompleteAi(report)) {
+            return resources.getString(R.string.status_ai_incomplete_title);
+        }
         switch (report.overall()) {
             case CONTAINS:
                 return resources.getString(R.string.status_contains_title);
@@ -50,6 +53,9 @@ final class AnalysisMessage {
     /** The verdict explanation shown under the headline. */
     @NonNull
     String verdict(@NonNull AnalysisReport report) {
+        if (onlyIncompleteAi(report)) {
+            return resources.getString(R.string.status_ai_incomplete_message);
+        }
         AnalysisReport.Status overall = report.overall();
         switch (overall) {
             case CONTAINS:
@@ -72,9 +78,43 @@ final class AnalysisMessage {
         return report.lowConfidence() && report.overall() != AnalysisReport.Status.UNREADABLE;
     }
 
-    /** The ingredient list is only meaningful when the label could be read at all. */
+    /** Model inferences and failed checks stay visible even when unmatched allergens are hidden. */
+    @NonNull
+    String reportNote(@NonNull AnalysisReport report) {
+        List<String> notes = new ArrayList<>();
+        if (report.aiAnalysis()) {
+            notes.add(resources.getString(report.aiIncomplete()
+                    ? R.string.ai_analysis_incomplete_note : R.string.ai_analysis_note));
+        }
+        if (showLowConfidence(report)) {
+            notes.add(resources.getString(R.string.low_confidence_warning));
+        }
+        return String.join("\n\n", notes);
+    }
+
+    /** An unavailable model must not produce an empty "might involve:" allergen list. */
+    private static boolean onlyIncompleteAi(AnalysisReport report) {
+        if (!report.aiIncomplete()) {
+            return false;
+        }
+        switch (report.overall()) {
+            case UNREADABLE:
+                return true;
+            case POSSIBLE:
+                for (AllergenResult result : report.results()) {
+                    if (result.status() == AnalysisReport.Status.POSSIBLE) {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /** A failed model check still shows every ingredient that was successfully read. */
     static boolean showIngredients(@NonNull AnalysisReport report) {
-        return report.overall() != AnalysisReport.Status.UNREADABLE;
+        return report.aiIncomplete() || report.overall() != AnalysisReport.Status.UNREADABLE;
     }
 
     /** Heading for the ingredient list, with the number of top-level ingredients. */
@@ -151,6 +191,27 @@ final class AnalysisMessage {
     }
 
     private String describe(Finding finding) {
+        int aiTemplate = 0;
+        switch (finding.reason()) {
+            case AI_RISK:
+                aiTemplate = R.string.evidence_ai_risk;
+                break;
+            case AI_UNCERTAIN:
+                aiTemplate = R.string.evidence_ai_uncertain;
+                break;
+            case AI_UNAVAILABLE:
+                aiTemplate = R.string.evidence_ai_unavailable;
+                break;
+            default:
+                break;
+        }
+        if (aiTemplate != 0) {
+            String line = resources.getString(aiTemplate, finding.evidence(), finding.allergen().label());
+            if (finding.score() != null) {
+                line += " — " + resources.getString(R.string.evidence_ai_score, finding.score() * 100d);
+            }
+            return line;
+        }
         int template;
         switch (finding.source()) {
             case CONTAINS_STATEMENT:

@@ -31,7 +31,7 @@ final class AnalysisResultView {
     private final ImageView verdictIcon;
     private final TextView verdictTitle;
     private final TextView verdictMessage;
-    private final View lowConfidenceNote;
+    private final TextView lowConfidenceNote;
     private final View allergenTitle;
     private final LinearLayout allergenRows;
     private final TextView ingredientsTitle;
@@ -60,8 +60,9 @@ final class AnalysisResultView {
      */
     void showReport(@NonNull AnalysisReport report, boolean showNotDetected) {
         bindVerdict(report.overall(), message.title(report), message.verdict(report));
-        lowConfidenceNote.setVisibility(
-                AnalysisMessage.showLowConfidence(report) ? View.VISIBLE : View.GONE);
+        String reportNote = message.reportNote(report);
+        lowConfidenceNote.setText(reportNote);
+        lowConfidenceNote.setVisibility(reportNote.isEmpty() ? View.GONE : View.VISIBLE);
 
         allergenRows.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(root.getContext());

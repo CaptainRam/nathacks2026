@@ -37,10 +37,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.analysis.AiAnalyzer;
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.ingredients.IngredientExtractor;
+import com.example.allergycheck.ingredients.LocalModelManager;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
 import com.google.android.material.button.MaterialButton;
@@ -63,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String PENDING_PHOTO_STATE = "pending_photo";
     private static final String CAMERA_STATE = "pending_camera_photo";
     private static final String ANALYSIS_STATE = "analysis_mode";
+    private static final String SETTINGS_OPEN_STATE = "settings_open";
+    private static final String SETTINGS_INTERRUPTED_STATE = "settings_interrupted_scan";
     private static final int MAX_PREVIEW_SIZE = 1600;
 
     private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
@@ -94,6 +98,9 @@ public class MainActivity extends AppCompatActivity {
     private View restartButton;
     private AnalysisResultView resultView;
     private OcrPipeline ocrPipeline;
+    private AiAnalysisRunner aiRunner;
+    private boolean settingsOpen;
+    private boolean settingsInterruptedScan;
     /** True while the page shows a check (in progress or finished) instead of the home. */
     private boolean analysisMode;
     private ResultAction resultAction = ResultAction.NONE;
@@ -103,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
     private ModelDownloadController modelDownloadController;
 
     /** The extra button under a result, when the result needs one. */
-    private enum ResultAction { NONE, RETRY, CHOOSE_ALLERGENS }
+    private enum ResultAction { NONE, RETRY, CHOOSE_ALLERGENS, CONFIGURE_AI }
 
     /** Back during a check returns to the photo instead of leaving the app. */
     private final OnBackPressedCallback analysisBackCallback = new OnBackPressedCallback(false) {
@@ -115,8 +122,13 @@ public class MainActivity extends AppCompatActivity {
 
     private final ActivityResultLauncher<Intent> settingsLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                boolean resume = settingsInterruptedScan;
+                settingsOpen = false;
+                settingsInterruptedScan = false;
                 if (result.getResultCode() == RESULT_OK) {
                     onAllergenPreferencesSaved();
+                } else if (resume && analysisMode) {
+                    rescanCurrentPhoto();
                 }
             });
 
@@ -145,6 +157,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        settingsOpen = savedInstanceState != null && savedInstanceState.getBoolean(SETTINGS_OPEN_STATE);
+        settingsInterruptedScan = savedInstanceState != null
+                && savedInstanceState.getBoolean(SETTINGS_INTERRUPTED_STATE);
         WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_main);
         boolean darkTheme = (getResources().getConfiguration().uiMode
@@ -185,8 +200,10 @@ public class MainActivity extends AppCompatActivity {
         restartButton = findViewById(R.id.restart_button);
         resultView = new AnalysisResultView(analysisResult);
         ocrPipeline = new OcrPipeline();
+        aiRunner = new AiAnalysisRunner(this);
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
-        modelDownloadController = new ModelDownloadController(this, () -> openSettings(true));
+        modelDownloadController = new ModelDownloadController(this, () -> openSettings(true),
+                () -> AnalysisPreferences.mode(this) == AnalysisPreferences.Mode.LOCAL_AI);
 
         getSupportFragmentManager().setFragmentResultListener(
                 AllergenPreferencesDialogFragment.RESULT_KEY, this, (key, result) ->
@@ -279,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadPhoto(Uri uri) {
+        aiRunner.cancel();
         final int request = ++imageRequest;
         pendingPhoto = uri;
         setLoading(true);
@@ -373,6 +391,11 @@ public class MainActivity extends AppCompatActivity {
      * give it instead of whatever happened to be big enough to draw.
      */
     private void recognizeIngredients(Uri photo, int request) {
+        if (settingsOpen) {
+            settingsInterruptedScan = true;
+            return;
+        }
+        aiRunner.cancel();
         showAnalysisLoading();
         ocrPipeline.recognize(this, photo, new OcrPipeline.Callback() {
             @Override
@@ -392,18 +415,37 @@ public class MainActivity extends AppCompatActivity {
                 AllergenDictionary dictionary = AllergenDictionaryProvider.get(MainActivity.this);
                 AnalysisReport report = Analyzer.analyse(ingredients, text, dictionary,
                         AllergenPreferences.selectedAllergenSet(MainActivity.this, dictionary));
-                if (ingredients.isEmpty() && report.label().statements().isEmpty()) {
+                if (report.label().isEmpty()) {
                     // Nothing to analyse at all: show the raw text so the user can see what was read.
                     showMessageResult(getString(R.string.ingredient_result_title),
                             getString(R.string.no_ingredients_found, text));
                     return;
                 }
-                resultView.showReport(report,
-                        AllergenPreferences.showNotDetected(MainActivity.this));
-                showResult(report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED
-                        ? ResultAction.CHOOSE_ALLERGENS
-                        : report.overall() == AnalysisReport.Status.UNREADABLE
-                        ? ResultAction.RETRY : ResultAction.NONE);
+                AnalysisPreferences.Mode mode = AnalysisPreferences.mode(MainActivity.this);
+                if (mode == AnalysisPreferences.Mode.MATCHING || report.results().isEmpty()) {
+                    showAnalysisReport(report, null);
+                } else if (report.label().ingredients().isEmpty()) {
+                    showAnalysisReport(AiAnalyzer.incompleteReport(report), null);
+                } else if (!hasAiConfiguration(mode)) {
+                    showAnalysisReport(AiAnalyzer.incompleteReport(report), ResultAction.CONFIGURE_AI);
+                } else {
+                    aiRunner.check(report, new AiAnalysisRunner.Callback() {
+                        @Override
+                        public void onProgress(int completed, int total) {
+                            if (isCurrentImageRequest(request)) {
+                                ((TextView) findViewById(R.id.analysis_loading_title)).setText(
+                                        getString(R.string.ai_check_progress, completed, total));
+                            }
+                        }
+
+                        @Override
+                        public void onResult(AnalysisReport checked) {
+                            if (isCurrentImageRequest(request)) {
+                                showAnalysisReport(checked, null);
+                            }
+                        }
+                    });
+                }
             }
 
             @Override
@@ -414,6 +456,24 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private boolean hasAiConfiguration(AnalysisPreferences.Mode mode) {
+        if (mode == AnalysisPreferences.Mode.LOCAL_AI) {
+            return LocalModelManager.installedModel(this) != null;
+        }
+        String model = mode == AnalysisPreferences.Mode.DECISIONS
+                ? AnalysisPreferences.decisionsModel(this) : AnalysisPreferences.openRouterModel(this);
+        return !AnalysisPreferences.openRouterApiKey(this).trim().isEmpty() && !model.trim().isEmpty();
+    }
+
+    private void showAnalysisReport(AnalysisReport report, ResultAction action) {
+        resultView.showReport(report, AllergenPreferences.showNotDetected(this));
+        showResult(action != null ? action
+                : report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED
+                ? ResultAction.CHOOSE_ALLERGENS
+                : report.aiIncomplete() || report.overall() == AnalysisReport.Status.UNREADABLE
+                ? ResultAction.RETRY : ResultAction.NONE);
     }
 
     /** Re-reads the photo already on screen, if any; a no-op when nothing is loaded. */
@@ -428,7 +488,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isCurrentImageRequest(int request) {
         return request == imageRequest && selectedPhoto != null && analysisMode
-                && !isFinishing() && !isDestroyed();
+                && !settingsOpen && !isFinishing() && !isDestroyed();
     }
 
     private Bitmap currentBitmap() {
@@ -494,6 +554,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void leaveAnalysisMode(boolean animate) {
         ++imageRequest;
+        aiRunner.cancel();
         endPhotoFlight();
         stopScanning();
         // A replacement photo may still be decoding; its result is now dropped, so undo its
@@ -616,6 +677,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAnalysisLoading() {
         resultAction = ResultAction.NONE;
+        ((TextView) findViewById(R.id.analysis_loading_title)).setText(R.string.reading_ingredients);
         if (analysisLoading.getVisibility() != View.VISIBLE) {
             TransitionManager.beginDelayedTransition(contentColumn,
                     HomeMotion.pageTransition(photoCard, photoStripScroll));
@@ -642,7 +704,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             resultSecondaryButton.setVisibility(View.VISIBLE);
             resultSecondaryButton.setText(action == ResultAction.CHOOSE_ALLERGENS
-                    ? R.string.choose_allergens_action : R.string.try_again);
+                    ? R.string.choose_allergens_action : action == ResultAction.CONFIGURE_AI
+                    ? R.string.configure_ai_action : R.string.try_again);
         }
         analysisLoading.setVisibility(View.GONE);
         analysisResult.setVisibility(View.VISIBLE);
@@ -659,6 +722,8 @@ public class MainActivity extends AppCompatActivity {
     private void onResultAction() {
         if (resultAction == ResultAction.CHOOSE_ALLERGENS) {
             openAllergenPreferences();
+        } else if (resultAction == ResultAction.CONFIGURE_AI) {
+            openSettings(true);
         } else if (resultAction == ResultAction.RETRY) {
             rescanCurrentPhoto();
         }
@@ -710,6 +775,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void removePhoto() {
         ++imageRequest;
+        aiRunner.cancel();
         if (selectedPhoto != null) {
             releasePhotoAccess(selectedPhoto);
         }
@@ -793,6 +859,11 @@ public class MainActivity extends AppCompatActivity {
 
     /** Always through the launcher, so a save from either section refreshes this screen. */
     private void openSettings(boolean showModel) {
+        settingsOpen = true;
+        if (analysisMode && analysisLoading.getVisibility() == View.VISIBLE) {
+            settingsInterruptedScan = true;
+            aiRunner.cancel();
+        }
         settingsLauncher.launch(new Intent(this, SettingsActivity.class)
                 .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, showModel));
     }
@@ -891,6 +962,8 @@ public class MainActivity extends AppCompatActivity {
             outState.putString(CAMERA_STATE, pendingCameraPhoto.toString());
         }
         outState.putBoolean(ANALYSIS_STATE, analysisMode);
+        outState.putBoolean(SETTINGS_OPEN_STATE, settingsOpen);
+        outState.putBoolean(SETTINGS_INTERRUPTED_STATE, settingsInterruptedScan);
         super.onSaveInstanceState(outState);
     }
 
@@ -904,6 +977,7 @@ public class MainActivity extends AppCompatActivity {
         }
         scanAnimators.clear();
         ocrPipeline.close();
+        aiRunner.close();
         imageExecutor.shutdownNow();
         super.onDestroy();
     }

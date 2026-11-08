@@ -31,12 +31,21 @@ public final class AnalysisReport implements Serializable {
     private final List<AllergenResult> results;
     private final ParsedLabel label;
     private final boolean lowConfidence;
+    private final boolean aiAnalysis;
+    private final boolean aiIncomplete;
 
     AnalysisReport(Status overall, List<AllergenResult> results, ParsedLabel label, boolean lowConfidence) {
+        this(overall, results, label, lowConfidence, false, false);
+    }
+
+    AnalysisReport(Status overall, List<AllergenResult> results, ParsedLabel label,
+                   boolean lowConfidence, boolean aiAnalysis, boolean aiIncomplete) {
         this.overall = overall;
         this.results = Collections.unmodifiableList(results);
         this.label = label;
         this.lowConfidence = lowConfidence;
+        this.aiAnalysis = aiAnalysis;
+        this.aiIncomplete = aiIncomplete;
     }
 
     /** The most serious status across all selected allergens. */
@@ -59,5 +68,14 @@ public final class AnalysisReport implements Serializable {
      */
     public boolean lowConfidence() {
         return lowConfidence;
+    }
+
+    public boolean aiAnalysis() {
+        return aiAnalysis;
+    }
+
+    /** At least one ingredient/allergen pair was not successfully checked. */
+    public boolean aiIncomplete() {
+        return aiIncomplete;
     }
 }

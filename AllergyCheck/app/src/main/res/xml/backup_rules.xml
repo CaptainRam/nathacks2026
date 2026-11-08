@@ -9,6 +9,7 @@
     <exclude domain="external" path="llm/" />
     <exclude domain="file" path="llm/" />
     <exclude domain="sharedpref" path="local_model.xml" />
+    <exclude domain="sharedpref" path="analysis_credentials.xml" />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>

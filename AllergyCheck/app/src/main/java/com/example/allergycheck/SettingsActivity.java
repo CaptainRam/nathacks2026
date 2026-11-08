@@ -4,11 +4,15 @@ import android.app.Dialog;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.format.Formatter;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.EditText;
+import android.widget.RadioGroup;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -21,6 +25,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenDictionary;
@@ -34,9 +40,13 @@ import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.android.material.textfield.TextInputLayout;
 
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -46,6 +56,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String MODEL_DETAILS_EXPANDED = "model_details_expanded";
     private static final String MODEL_SECTION_SHOWN = "model_section_shown";
     private static final String DRAFT_SHOW_NOT_DETECTED = "draft_show_not_detected";
+    private static final String ANALYSIS_CONFIGURATION_CHANGED = "analysis_configuration_changed";
 
     /**
      * Allergen ids. Only ids the dictionary defines ever enter this set, so its size is the
@@ -72,6 +83,18 @@ public class SettingsActivity extends AppCompatActivity {
     private View modelDetails;
     private View modelTerms;
     private MaterialButton modelDetailsButton;
+    private EditText apiKeyInput;
+    private EditText openRouterModelInput;
+    private EditText decisionsModelInput;
+    private EditText decisionsThresholdInput;
+    private EditText cloudConcurrencyInput;
+    private boolean renderingDetectionMode;
+    private boolean analysisConfigurationChanged;
+
+    /** Keeps the unsaved key through rotation without putting credentials into saved state. */
+    public static final class CloudDraft extends ViewModel {
+        String apiKey;
+    }
     /** Pill colors, resolved once: they only differ between FAILED and every other state. */
     private ColorStateList pillBackground;
     private ColorStateList pillFailedBackground;
@@ -115,6 +138,9 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_settings);
+        analysisConfigurationChanged = savedInstanceState != null
+                && savedInstanceState.getBoolean(ANALYSIS_CONFIGURATION_CHANGED);
+        if (analysisConfigurationChanged) setResult(RESULT_OK);
 
         boolean darkTheme = (getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
@@ -177,6 +203,7 @@ public class SettingsActivity extends AppCompatActivity {
                                 (dialog, which) -> modelManager.delete())
                         .show());
         renderModelStatus(modelManager.getStatus());
+        initializeDetectionSettings();
 
         AllergenDictionary dictionary = AllergenDictionaryProvider.get(this);
         savedAllergens.addAll(AllergenPreferences.selectedAllergenIds(this, dictionary));
@@ -262,10 +289,233 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void savePreferences() {
+        if (cloudSettingsChanged() && !saveCloudConfiguration()) {
+            ((MaterialButtonToggleGroup) findViewById(R.id.settings_section_toggle))
+                    .check(R.id.section_model_button);
+            return;
+        }
         AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
         AllergenPreferences.saveShowNotDetected(this, showNotDetected);
         setResult(RESULT_OK);
         finish();
+    }
+
+    private void initializeDetectionSettings() {
+        apiKeyInput = findViewById(R.id.detection_api_key);
+        openRouterModelInput = findViewById(R.id.detection_model_id);
+        decisionsModelInput = findViewById(R.id.detection_decisions_model_id);
+        decisionsThresholdInput = findViewById(R.id.detection_threshold);
+        cloudConcurrencyInput = findViewById(R.id.detection_concurrency);
+        CloudDraft draft = new ViewModelProvider(this).get(CloudDraft.class);
+        if (draft.apiKey == null) draft.apiKey = AnalysisPreferences.openRouterApiKey(this);
+        apiKeyInput.setText(draft.apiKey);
+        openRouterModelInput.setText(AnalysisPreferences.openRouterModel(this));
+        decisionsModelInput.setText(AnalysisPreferences.decisionsModel(this));
+        decisionsThresholdInput.setText(formatThreshold(AnalysisPreferences.decisionsThreshold(this),
+                getResources().getConfiguration().getLocales().get(0)));
+        cloudConcurrencyInput.setText(formatConcurrency(AnalysisPreferences.cloudConcurrency(this)));
+        TextWatcher watcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence text, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence text, int start, int before, int count) { }
+            @Override public void afterTextChanged(Editable text) {
+                draft.apiKey = apiKeyInput.getText().toString();
+                findViewById(R.id.detection_cloud_save_status).setVisibility(View.GONE);
+                updateUnsavedChanges();
+            }
+        };
+        apiKeyInput.addTextChangedListener(watcher);
+        openRouterModelInput.addTextChangedListener(watcher);
+        decisionsModelInput.addTextChangedListener(watcher);
+        decisionsThresholdInput.addTextChangedListener(watcher);
+        cloudConcurrencyInput.addTextChangedListener(watcher);
+        renderDetectionMode();
+        RadioGroup location = findViewById(R.id.detection_location);
+        location.setOnCheckedChangeListener((group, checkedId) -> {
+            if (!renderingDetectionMode) {
+                AnalysisPreferences.Mode previous = AnalysisPreferences.mode(this);
+                boolean wasCloud = previous == AnalysisPreferences.Mode.OPENROUTER
+                        || previous == AnalysisPreferences.Mode.DECISIONS;
+                boolean cloud = checkedId == R.id.detection_location_cloud;
+                if (cloud != wasCloud) {
+                    selectDetectionMode(cloud ? AnalysisPreferences.Mode.OPENROUTER
+                            : AnalysisPreferences.Mode.MATCHING);
+                }
+            }
+        });
+        ((RadioGroup) findViewById(R.id.detection_local_modes)).setOnCheckedChangeListener(
+                (group, checkedId) -> {
+                    if (!renderingDetectionMode) selectDetectionMode(
+                            checkedId == R.id.detection_mode_local_ai
+                                    ? AnalysisPreferences.Mode.LOCAL_AI : AnalysisPreferences.Mode.MATCHING);
+                });
+        ((RadioGroup) findViewById(R.id.detection_cloud_modes)).setOnCheckedChangeListener(
+                (group, checkedId) -> {
+                    if (!renderingDetectionMode) selectDetectionMode(
+                            checkedId == R.id.detection_mode_decisions
+                                    ? AnalysisPreferences.Mode.DECISIONS : AnalysisPreferences.Mode.OPENROUTER);
+                });
+        findViewById(R.id.detection_save_cloud).setOnClickListener(view -> saveCloudConfiguration());
+    }
+
+    private void selectDetectionMode(AnalysisPreferences.Mode mode) {
+        AnalysisPreferences.saveMode(this, mode);
+        analysisConfigurationChanged = true;
+        setResult(RESULT_OK);
+        renderDetectionMode();
+    }
+
+    private void renderDetectionMode() {
+        AnalysisPreferences.Mode mode = AnalysisPreferences.mode(this);
+        boolean cloud = mode == AnalysisPreferences.Mode.OPENROUTER
+                || mode == AnalysisPreferences.Mode.DECISIONS;
+        boolean decisions = mode == AnalysisPreferences.Mode.DECISIONS;
+        renderingDetectionMode = true;
+        ((RadioGroup) findViewById(R.id.detection_location)).check(cloud
+                ? R.id.detection_location_cloud : R.id.detection_location_local);
+        ((RadioGroup) findViewById(R.id.detection_local_modes)).check(
+                mode == AnalysisPreferences.Mode.LOCAL_AI
+                        ? R.id.detection_mode_local_ai : R.id.detection_mode_matching);
+        ((RadioGroup) findViewById(R.id.detection_cloud_modes)).check(decisions
+                ? R.id.detection_mode_decisions : R.id.detection_mode_openrouter);
+        renderingDetectionMode = false;
+        findViewById(R.id.detection_local_modes).setVisibility(cloud ? View.GONE : View.VISIBLE);
+        findViewById(R.id.detection_cloud_modes).setVisibility(cloud ? View.VISIBLE : View.GONE);
+        findViewById(R.id.local_model_section).setVisibility(cloud ? View.GONE : View.VISIBLE);
+        findViewById(R.id.local_model_title).setVisibility(cloud ? View.GONE : View.VISIBLE);
+        findViewById(R.id.local_model_hint).setVisibility(cloud ? View.GONE : View.VISIBLE);
+        findViewById(R.id.detection_cloud_configuration).setVisibility(cloud ? View.VISIBLE : View.GONE);
+        findViewById(R.id.detection_model_layout).setVisibility(decisions ? View.GONE : View.VISIBLE);
+        findViewById(R.id.detection_decisions_model_layout).setVisibility(decisions ? View.VISIBLE : View.GONE);
+        findViewById(R.id.detection_threshold_layout).setVisibility(decisions ? View.VISIBLE : View.GONE);
+        ((TextView) findViewById(R.id.detection_mode_description)).setText(decisions
+                ? R.string.detection_decisions_hint : cloud ? R.string.detection_openrouter_hint
+                : mode == AnalysisPreferences.Mode.LOCAL_AI
+                        ? R.string.detection_local_ai_hint : R.string.detection_matching_hint);
+    }
+
+    private boolean saveCloudConfiguration() {
+        AnalysisPreferences.Mode mode = AnalysisPreferences.mode(this);
+        boolean cloud = mode == AnalysisPreferences.Mode.OPENROUTER
+                || mode == AnalysisPreferences.Mode.DECISIONS;
+        String key = input(apiKeyInput);
+        String llmModel = input(openRouterModelInput);
+        String decisionsModel = input(decisionsModelInput);
+        TextInputLayout keyLayout = findViewById(R.id.detection_api_key_layout);
+        TextInputLayout llmLayout = findViewById(R.id.detection_model_layout);
+        TextInputLayout decisionsLayout = findViewById(R.id.detection_decisions_model_layout);
+        TextInputLayout thresholdLayout = findViewById(R.id.detection_threshold_layout);
+        TextInputLayout concurrencyLayout = findViewById(R.id.detection_concurrency_layout);
+        keyLayout.setError(null);
+        llmLayout.setError(null);
+        decisionsLayout.setError(null);
+        thresholdLayout.setError(null);
+        concurrencyLayout.setError(null);
+        int concurrency;
+        try {
+            concurrency = parseConcurrency(input(cloudConcurrencyInput));
+        } catch (NumberFormatException exception) {
+            concurrencyLayout.setError(getString(R.string.detection_concurrency_invalid));
+            cloudConcurrencyInput.requestFocus();
+            return false;
+        }
+        if (cloud && (key.isEmpty() || key.matches(".*\\s+.*"))) {
+            keyLayout.setError(getString(R.string.detection_key_required));
+            apiKeyInput.requestFocus();
+            return false;
+        }
+        if (mode == AnalysisPreferences.Mode.OPENROUTER && !validModelId(llmModel)) {
+            llmLayout.setError(getString(R.string.detection_model_required));
+            openRouterModelInput.requestFocus();
+            return false;
+        }
+        if (mode == AnalysisPreferences.Mode.DECISIONS && !validModelId(decisionsModel)) {
+            decisionsLayout.setError(getString(R.string.detection_model_required));
+            decisionsModelInput.requestFocus();
+            return false;
+        }
+        double threshold = AnalysisPreferences.decisionsThreshold(this);
+        try {
+            threshold = parseThreshold(input(decisionsThresholdInput),
+                    getResources().getConfiguration().getLocales().get(0));
+        } catch (NumberFormatException exception) {
+            if (mode == AnalysisPreferences.Mode.DECISIONS) {
+                thresholdLayout.setError(getString(R.string.detection_threshold_invalid));
+                decisionsThresholdInput.requestFocus();
+                return false;
+            }
+            decisionsThresholdInput.setText(formatThreshold(threshold,
+                    getResources().getConfiguration().getLocales().get(0)));
+        }
+        AnalysisPreferences.saveOpenRouterApiKey(this, key);
+        AnalysisPreferences.saveOpenRouterModel(this, llmModel);
+        AnalysisPreferences.saveDecisionsModel(this, decisionsModel);
+        AnalysisPreferences.saveDecisionsThreshold(this, threshold);
+        AnalysisPreferences.saveCloudConcurrency(this, concurrency);
+        cloudConcurrencyInput.setText(formatConcurrency(concurrency));
+        analysisConfigurationChanged = true;
+        setResult(RESULT_OK);
+        findViewById(R.id.detection_cloud_save_status).setVisibility(View.VISIBLE);
+        updateUnsavedChanges();
+        return true;
+    }
+
+    private static boolean validModelId(String value) {
+        return value.matches("[^\\s/]+/[^\\s]+");
+    }
+
+    private String formatConcurrency(int concurrency) {
+        NumberFormat format = NumberFormat.getIntegerInstance(
+                getResources().getConfiguration().getLocales().get(0));
+        format.setGroupingUsed(false);
+        return format.format(concurrency);
+    }
+
+    static int parseConcurrency(String text) {
+        int concurrency = Integer.parseInt(text);
+        if (concurrency < AnalysisPreferences.MIN_CLOUD_CONCURRENCY
+                || concurrency > AnalysisPreferences.MAX_CLOUD_CONCURRENCY) {
+            throw new NumberFormatException("Cloud concurrency must be between 1 and 8");
+        }
+        return concurrency;
+    }
+
+    private static String input(EditText field) {
+        return field.getText().toString().trim();
+    }
+
+    private static NumberFormat thresholdNumberFormat(Locale locale) {
+        NumberFormat format = NumberFormat.getNumberInstance(locale);
+        format.setGroupingUsed(false);
+        format.setMaximumFractionDigits(340);
+        return format;
+    }
+
+    static String formatThreshold(double threshold, Locale locale) {
+        return thresholdNumberFormat(locale).format(threshold);
+    }
+
+    static double parseThreshold(String text, Locale locale) {
+        ParsePosition position = new ParsePosition(0);
+        Number number = thresholdNumberFormat(locale).parse(text, position);
+        if (number == null || position.getIndex() != text.length()) {
+            throw new NumberFormatException("Enter a complete number");
+        }
+        double threshold = number.doubleValue();
+        if (!Double.isFinite(threshold) || threshold < 0 || threshold > 1) {
+            throw new NumberFormatException("Threshold must be between 0 and 1");
+        }
+        return threshold;
+    }
+
+    private boolean cloudSettingsChanged() {
+        return apiKeyInput != null && (!input(apiKeyInput).equals(AnalysisPreferences.openRouterApiKey(this))
+                || !input(openRouterModelInput).equals(AnalysisPreferences.openRouterModel(this))
+                || !input(decisionsModelInput).equals(AnalysisPreferences.decisionsModel(this))
+                || !input(cloudConcurrencyInput).equals(
+                        formatConcurrency(AnalysisPreferences.cloudConcurrency(this)))
+                || !input(decisionsThresholdInput).equals(
+                        formatThreshold(AnalysisPreferences.decisionsThreshold(this),
+                                getResources().getConfiguration().getLocales().get(0))));
     }
 
     private void renderModelStatus(LocalModelManager.Status status) {
@@ -369,11 +619,12 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void updateUnsavedChanges() {
         unsavedChangesCallback.setEnabled(!selectedAllergens.equals(savedAllergens)
-                || showNotDetected != savedShowNotDetected);
+                || showNotDetected != savedShowNotDetected || cloudSettingsChanged());
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putBoolean(ANALYSIS_CONFIGURATION_CHANGED, analysisConfigurationChanged);
         outState.putStringArrayList(DRAFT_ALLERGENS, new ArrayList<>(selectedAllergens));
         outState.putBoolean(DRAFT_SHOW_NOT_DETECTED, showNotDetected);
         outState.putBoolean(MODEL_DETAILS_EXPANDED, modelDetails.getVisibility() == View.VISIBLE);
