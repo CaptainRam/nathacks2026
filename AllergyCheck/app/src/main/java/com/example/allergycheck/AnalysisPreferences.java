@@ -9,7 +9,6 @@ public final class AnalysisPreferences {
 
     public static final int DEFAULT_CLOUD_CONCURRENCY = 1;
     public static final int MIN_CLOUD_CONCURRENCY = 1;
-    public static final int MAX_CLOUD_CONCURRENCY = 8;
 
     private static final String CONFIGURATION = "analysis_preferences";
     private static final String CREDENTIALS = "analysis_credentials";
@@ -81,7 +80,7 @@ public final class AnalysisPreferences {
         try {
             int concurrency = Integer.parseInt(configuration(context)
                     .getString("cloud_concurrency", "1"));
-            return concurrency >= MIN_CLOUD_CONCURRENCY && concurrency <= MAX_CLOUD_CONCURRENCY
+            return concurrency >= MIN_CLOUD_CONCURRENCY
                     ? concurrency : DEFAULT_CLOUD_CONCURRENCY;
         } catch (NumberFormatException | ClassCastException exception) {
             return DEFAULT_CLOUD_CONCURRENCY;
@@ -89,8 +88,8 @@ public final class AnalysisPreferences {
     }
 
     public static void saveCloudConcurrency(Context context, int concurrency) {
-        if (concurrency < MIN_CLOUD_CONCURRENCY || concurrency > MAX_CLOUD_CONCURRENCY) {
-            throw new IllegalArgumentException("Cloud concurrency must be between 1 and 8");
+        if (concurrency < MIN_CLOUD_CONCURRENCY) {
+            throw new IllegalArgumentException("Cloud concurrency must be positive");
         }
         configuration(context).edit().putString("cloud_concurrency", Integer.toString(concurrency)).apply();
     }

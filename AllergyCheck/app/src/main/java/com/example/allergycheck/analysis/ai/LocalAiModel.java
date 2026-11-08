@@ -39,7 +39,7 @@ public final class LocalAiModel implements AiModel {
                 session.addQueryChunk(prompt);
                 String reply = session.generateResponse();
                 if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
-                return AllergenPrompt.parse(reply);
+                return AllergenPrompt.parseLocal(reply);
             } finally {
                 session.close();
             }

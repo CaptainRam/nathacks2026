@@ -433,8 +433,9 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onProgress(int completed, int total) {
                             if (isCurrentImageRequest(request)) {
+                                int percentage = total > 0 ? (int) (completed * 100L / total) : 0;
                                 ((TextView) findViewById(R.id.analysis_loading_title)).setText(
-                                        getString(R.string.ai_check_progress, completed, total));
+                                        getString(R.string.ai_check_progress, percentage));
                             }
                         }
 

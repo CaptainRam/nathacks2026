@@ -31,14 +31,18 @@ public class AiAnalyzerConcurrencyTest {
     public void configuredParallelismBoundsActualRequestsIncludingSerialMode() throws Exception {
         assertBoundedRequests(1);
         assertBoundedRequests(3);
+        assertBoundedRequests(9);
+        assertBoundedRequests(Integer.MAX_VALUE);
     }
 
     private void assertBoundedRequests(int limit) throws Exception {
-        AnalysisReport matching = matching(
-                "Ingredients: alpha, beta, gamma, delta, epsilon, zeta.", "MILK");
-        CountDownLatch firstWave = new CountDownLatch(limit);
+        List<String> ingredients = Arrays.asList("alpha", "beta", "gamma", "delta", "epsilon",
+                "zeta", "eta", "theta", "iota", "kappa", "lambda", "omicron");
+        AnalysisReport matching = matching("Ingredients: " + String.join(", ", ingredients) + ".", "MILK");
+        int expectedParallelism = Math.min(limit, ingredients.size());
+        CountDownLatch firstWave = new CountDownLatch(expectedParallelism);
         CountDownLatch release = new CountDownLatch(1);
-        CountDownLatch closed = new CountDownLatch(6);
+        CountDownLatch closed = new CountDownLatch(ingredients.size());
         AtomicInteger active = new AtomicInteger();
         AtomicInteger maximum = new AtomicInteger();
         AtomicInteger calls = new AtomicInteger();
@@ -69,13 +73,13 @@ public class AiAnalyzerConcurrencyTest {
                         return client;
                     }, () -> false, (completed, total, partial) -> { }));
             await(firstWave, "Configured request slots did not run concurrently");
-            assertEquals(limit, calls.get());
-            assertEquals(limit, maximum.get());
+            assertEquals(expectedParallelism, calls.get());
+            assertEquals(expectedParallelism, maximum.get());
             release.countDown();
             AnalysisReport report = result.get(5, TimeUnit.SECONDS);
             await(closed, "Completed clients were not closed");
-            assertEquals(6, calls.get());
-            assertEquals(6, clients.size());
+            assertEquals(ingredients.size(), calls.get());
+            assertEquals(ingredients.size(), clients.size());
             assertTrue(maximum.get() <= limit);
             assertEquals(0, active.get());
             assertFalse(report.aiIncomplete());
@@ -284,7 +288,7 @@ public class AiAnalyzerConcurrencyTest {
 
     @Test
     public void invalidConcurrencyIsRejectedBeforeCreatingAClient() {
-        for (int concurrency : new int[]{0, 9}) {
+        for (int concurrency : new int[]{Integer.MIN_VALUE, -1, 0}) {
             assertThrows(IllegalArgumentException.class, () -> AiAnalyzer.analyseConcurrent(
                     matching("Ingredients: alpha, beta.", "MILK"), false, concurrency,
                     () -> { throw new AssertionError("Invalid concurrency must not start a request"); },

@@ -2,6 +2,7 @@ package com.example.allergycheck.analysis;
 
 import com.example.allergycheck.analysis.ai.AiDecision;
 import com.example.allergycheck.analysis.ai.AiModel;
+import com.example.allergycheck.analysis.ai.AiResponseFormatException;
 
 import org.junit.Test;
 
@@ -126,6 +127,77 @@ public class AiAnalyzerTest {
         assertEquals(3, calls[0]);
         assertEquals(5, report.results().get(0).findings().size());
         assertEquals(AnalysisReport.Status.UNREADABLE, report.overall());
+    }
+
+    @Test
+    public void consecutiveFormatErrorsDoNotSkipLaterIngredientsOrAllergens() throws Exception {
+        List<String> calls = new ArrayList<>();
+        AnalysisReport report = AiAnalyzer.analyse(
+                matching("Ingredients: alpha, beta, gamma, delta, epsilon.", "MILK", "SOY"),
+                (ingredient, allergen) -> {
+                    calls.add(allergen.id() + ":" + ingredient);
+                    if (allergen.id().equals("MILK") && !ingredient.equals("epsilon")) {
+                        throw new AiResponseFormatException("Invalid local verdict");
+                    }
+                    return AiDecision.of(allergen.id().equals("MILK")
+                            ? AiDecision.Verdict.RISK : AiDecision.Verdict.NO_EVIDENCE);
+                });
+
+        assertEquals(10, calls.size());
+        assertTrue(calls.contains("MILK:epsilon"));
+        assertTrue(calls.contains("SOY:epsilon"));
+        assertTrue(report.aiIncomplete());
+        AllergenResult milk = report.results().stream()
+                .filter(r -> r.allergen().id().equals("MILK")).findFirst().get();
+        assertEquals(AnalysisReport.Status.POSSIBLE, milk.status());
+        assertEquals(4, milk.findings().stream()
+                .filter(f -> f.reason() == Finding.Reason.AI_UNAVAILABLE).count());
+        assertTrue(milk.findings().stream().anyMatch(f -> f.evidence().equals("epsilon")
+                && f.reason() == Finding.Reason.AI_RISK));
+        AllergenResult soy = report.results().stream()
+                .filter(r -> r.allergen().id().equals("SOY")).findFirst().get();
+        assertEquals(AnalysisReport.Status.NOT_DETECTED, soy.status());
+        assertTrue(soy.findings().isEmpty());
+    }
+
+    @Test
+    public void allFormatErrorsRemainUncheckedAndEveryInputIsAttempted() throws Exception {
+        int[] calls = {0};
+        AnalysisReport report = AiAnalyzer.analyse(
+                matching("Ingredients: alpha, beta, gamma, delta, epsilon.", "MILK"),
+                (ingredient, allergen) -> {
+                    calls[0]++;
+                    throw new AiResponseFormatException("Invalid local verdict");
+                });
+
+        assertEquals(5, calls[0]);
+        assertTrue(report.aiIncomplete());
+        assertEquals(AnalysisReport.Status.UNREADABLE, report.overall());
+        assertEquals(5, report.results().get(0).findings().size());
+        assertTrue(report.results().get(0).findings().stream()
+                .allMatch(f -> f.reason() == Finding.Reason.AI_UNAVAILABLE));
+    }
+
+    @Test
+    public void formatRepliesBreakTheRunOfEngineFailures() throws Exception {
+        int[] calls = {0};
+        AnalysisReport report = AiAnalyzer.analyse(
+                matching("Ingredients: alpha, beta, gamma, delta, epsilon, zeta.", "MILK"),
+                (ingredient, allergen) -> {
+                    int call = ++calls[0];
+                    if (call == 3) {
+                        throw new AiResponseFormatException("Invalid local verdict");
+                    }
+                    if (call < 6) throw new IOException("Engine unavailable");
+                    return AiDecision.of(AiDecision.Verdict.RISK);
+                });
+
+        // Two runtime failures, one unusable reply, then two runtime failures still allow zeta.
+        assertEquals(6, calls[0]);
+        assertTrue(report.aiIncomplete());
+        assertEquals(AnalysisReport.Status.POSSIBLE, report.overall());
+        assertTrue(report.results().get(0).findings().stream()
+                .anyMatch(f -> f.evidence().equals("zeta") && f.reason() == Finding.Reason.AI_RISK));
     }
 
     @Test

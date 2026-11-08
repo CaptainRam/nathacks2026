@@ -539,9 +539,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     static int parseConcurrency(String text) {
         int concurrency = Integer.parseInt(text);
-        if (concurrency < AnalysisPreferences.MIN_CLOUD_CONCURRENCY
-                || concurrency > AnalysisPreferences.MAX_CLOUD_CONCURRENCY) {
-            throw new NumberFormatException("Cloud concurrency must be between 1 and 8");
+        if (concurrency < AnalysisPreferences.MIN_CLOUD_CONCURRENCY) {
+            throw new NumberFormatException("Cloud concurrency must be positive");
         }
         return concurrency;
     }

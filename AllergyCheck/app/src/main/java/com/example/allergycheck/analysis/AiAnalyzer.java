@@ -2,6 +2,7 @@ package com.example.allergycheck.analysis;
 
 import com.example.allergycheck.analysis.ai.AiDecision;
 import com.example.allergycheck.analysis.ai.AiModel;
+import com.example.allergycheck.analysis.ai.AiResponseFormatException;
 import com.example.allergycheck.analysis.ai.OpenRouterAiModel;
 
 import java.util.ArrayList;
@@ -65,6 +66,10 @@ public final class AiAnalyzer {
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
                 throw interrupted;
+            } catch (AiResponseFormatException invalidResponse) {
+                // The engine answered, but this ingredient's reply was unusable. Leave it
+                // unchecked without treating the model as unavailable for subsequent inputs.
+                consecutiveFailures = 0;
             } catch (Exception | LinkageError failure) {
                 // Failures stay attached to the input ingredient. A failed check is never clear.
                 consecutiveFailures++;
@@ -96,8 +101,8 @@ public final class AiAnalyzer {
                                                    int concurrency, ModelFactory factory,
                                                    BooleanSupplier cancelled, ProgressListener progress,
                                                    long requestTimeoutMs) throws InterruptedException {
-        if (concurrency < 1 || concurrency > 8 || requestTimeoutMs <= 0) {
-            throw new IllegalArgumentException("Cloud concurrency must be 1–8 and timeout positive");
+        if (concurrency < 1 || requestTimeoutMs <= 0) {
+            throw new IllegalArgumentException("Cloud concurrency and timeout must be positive");
         }
         Map<String, Check> checks = checksFor(matching);
         List<List<Check>> requests = requestsFor(checks, batch);

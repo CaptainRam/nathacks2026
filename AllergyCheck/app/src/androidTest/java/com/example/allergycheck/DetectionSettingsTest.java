@@ -160,7 +160,7 @@ public class DetectionSettingsTest {
             scenario.onActivity(activity -> {
                 input(activity, R.id.detection_api_key).setText("test-concurrency-key");
                 input(activity, R.id.detection_model_id).setText("example/model");
-                for (String invalid : new String[] {"0", "9", "2.5", ""}) {
+                for (String invalid : new String[] {"0", "2.5", "", "2147483648"}) {
                     input(activity, R.id.detection_concurrency).setText(invalid);
                     activity.findViewById(R.id.detection_save_cloud).performClick();
                     assertNotNull(((TextInputLayout) activity.findViewById(
@@ -181,22 +181,22 @@ public class DetectionSettingsTest {
         try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
             scenario.onActivity(activity -> {
                 assertEquals("1", input(activity, R.id.detection_concurrency).getText().toString());
-                input(activity, R.id.detection_concurrency).setText("3");
+                input(activity, R.id.detection_concurrency).setText("16");
                 assertTrue(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
                 assertEquals(1, AnalysisPreferences.cloudConcurrency(context));
             });
             scenario.recreate();
             scenario.onActivity(activity -> {
-                assertEquals("3", input(activity, R.id.detection_concurrency).getText().toString());
+                assertEquals("16", input(activity, R.id.detection_concurrency).getText().toString());
                 assertTrue(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
                 activity.findViewById(R.id.detection_save_cloud).performClick();
                 assertNull(((TextInputLayout) activity.findViewById(
                         R.id.detection_concurrency_layout)).getError());
-                assertEquals(3, AnalysisPreferences.cloudConcurrency(context));
+                assertEquals(16, AnalysisPreferences.cloudConcurrency(context));
                 assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
             });
             scenario.recreate();
-            scenario.onActivity(activity -> assertEquals("3",
+            scenario.onActivity(activity -> assertEquals("16",
                     input(activity, R.id.detection_concurrency).getText().toString()));
         }
     }
@@ -207,8 +207,8 @@ public class DetectionSettingsTest {
         assertThrows(IllegalArgumentException.class,
                 () -> AnalysisPreferences.saveCloudConcurrency(context, 0));
         assertThrows(IllegalArgumentException.class,
-                () -> AnalysisPreferences.saveCloudConcurrency(context, 9));
-        for (String corrupt : new String[] {"0", "9", "2.5", "invalid"}) {
+                () -> AnalysisPreferences.saveCloudConcurrency(context, -1));
+        for (String corrupt : new String[] {"0", "-1", "2.5", "invalid", "2147483648"}) {
             assertTrue(context.getSharedPreferences("analysis_preferences", Context.MODE_PRIVATE)
                     .edit().putString("cloud_concurrency", corrupt).commit());
             assertEquals(1, AnalysisPreferences.cloudConcurrency(context));
@@ -216,11 +216,15 @@ public class DetectionSettingsTest {
         assertTrue(context.getSharedPreferences("analysis_preferences", Context.MODE_PRIVATE)
                 .edit().putInt("cloud_concurrency", 2).commit());
         assertEquals(1, AnalysisPreferences.cloudConcurrency(context));
-        AnalysisPreferences.saveCloudConcurrency(context, 8);
-        assertEquals(8, AnalysisPreferences.cloudConcurrency(context));
-        assertEquals(1, SettingsActivity.parseConcurrency("1"));
-        assertEquals(8, SettingsActivity.parseConcurrency("8"));
+        for (int valid : new int[] {1, 9, 16, Integer.MAX_VALUE}) {
+            AnalysisPreferences.saveCloudConcurrency(context, valid);
+            assertEquals(valid, AnalysisPreferences.cloudConcurrency(context));
+            assertEquals(valid, SettingsActivity.parseConcurrency(Integer.toString(valid)));
+        }
+        assertThrows(NumberFormatException.class, () -> SettingsActivity.parseConcurrency("0"));
+        assertThrows(NumberFormatException.class, () -> SettingsActivity.parseConcurrency("-1"));
         assertThrows(NumberFormatException.class, () -> SettingsActivity.parseConcurrency("2.5"));
+        assertThrows(NumberFormatException.class, () -> SettingsActivity.parseConcurrency("2147483648"));
     }
 
     private static EditText input(SettingsActivity activity, int id) {
