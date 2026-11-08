@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One label photo in the strip at the top of a check. Tapping it offers to change the photo.
+     The image width is set in code from the photo's aspect ratio. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:paddingHorizontal="6dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/thumbnail_card"
+        style="@style/Widget.Material3.CardView.Filled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+        app:cardElevation="0dp"
+        app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/thumbnail_image"
+                android:layout_width="96dp"
+                android:layout_height="@dimen/photo_thumbnail_height"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop" />
+
+            <!-- Sweeps over the photo while it is being read. -->
+            <View
+                android:id="@+id/thumbnail_scan_line"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_scan_line"
+                android:importantForAccessibility="no"
+                android:visibility="invisible" />
+        </FrameLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Edit badge: tells the user the photo can be changed. -->
+    <ImageView
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="bottom|end"
+        android:background="@drawable/circle_primary"
+        android:elevation="2dp"
+        android:importantForAccessibility="no"
+        android:padding="6dp"
+        android:src="@drawable/ic_edit"
+        app:tint="?attr/colorOnPrimaryContainer" />
+</FrameLayout>

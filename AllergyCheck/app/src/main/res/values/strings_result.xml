@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the in-page check flow: start, progress and the result shown under the photo. -->
+<resources>
+    <string name="start_analysis">Check ingredients</string>
+    <string name="tap_photo_to_change">Tap the photo to change it</string>
+    <string name="thumbnail_description">Label photo %1$d</string>
+    <string name="change_photo_choose">Choose another photo</string>
+    <string name="change_photo_camera">Take a new photo</string>
+    <string name="cancel_analysis">Cancel</string>
+    <string name="start_over">Start a new scan</string>
+    <string name="result_ready">Result ready: %1$s</string>
+    <string name="result_caution">This app can make mistakes. Please double-check the result against the label.</string>
+</resources>

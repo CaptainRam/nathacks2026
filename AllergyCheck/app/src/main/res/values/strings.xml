@@ -25,7 +25,7 @@
     <string name="photo_tip_title">Tips for a clear photo</string>
     <string name="preview_eyebrow">YOUR INGREDIENT LABEL</string>
     <string name="preview_title">Looking good?</string>
-    <string name="preview_subtitle">Make sure every ingredient is clear and easy to read.</string>
+    <string name="preview_subtitle">Make sure every ingredient is clear and easy to read, then start the check.</string>
     <string name="photo_added">Ingredient photo added</string>
     <string name="photo_preview_description">Preview of your selected ingredient label</string>
     <string name="loading_photo">Loading your photo</string>

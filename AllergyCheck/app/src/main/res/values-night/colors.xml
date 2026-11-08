@@ -18,4 +18,9 @@
     <color name="md_theme_outline_variant">#3D493E</color>
     <color name="md_theme_error">#FFB4AB</color>
     <color name="md_theme_on_error">#690005</color>
+    <color name="md_theme_error_container">#93000A</color>
+    <color name="md_theme_on_error_container">#FFDAD6</color>
+    <color name="status_warning_container">#5C4300</color>
+    <color name="status_on_warning_container">#FFDEA6</color>
+    <color name="scan_line_center">#809ED4AE</color>
 </resources>
