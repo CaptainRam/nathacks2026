@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Finds evidence for one {@link Allergen} in a {@link ParsedLabel}.
+ * Finds evidence for one {@link Allergen} in a {@link ParsedLabel}, using the vocabulary that
+ * {@link AllergenDictionary} holds for it.
  *
  * <p>Matching works on word tokens, never substrings, so "buckwheat" is not "wheat" and
  * "eggplant" is not "egg". Three outcomes per piece of text, strongest first:
@@ -30,11 +31,12 @@ final class AllergenMatcher {
     private AllergenMatcher() {
     }
 
-    static List<Finding> match(ParsedLabel label, Allergen allergen) {
+    static List<Finding> match(ParsedLabel label, Allergen allergen, AllergenDictionary dictionary) {
         List<Finding> findings = new ArrayList<>();
 
         for (IngredientItem item : label.ingredients()) {
-            Finding finding = matchText(allergen, item.matchText(), item.original(), Finding.Source.INGREDIENT);
+            Finding finding = matchText(allergen, item.matchText(), item.original(),
+                    Finding.Source.INGREDIENT, dictionary);
             if (finding != null) {
                 findings.add(finding);
             }
@@ -43,7 +45,7 @@ final class AllergenMatcher {
             Finding.Source source = statement.kind() == ParsedLabel.Kind.CONTAINS
                     ? Finding.Source.CONTAINS_STATEMENT
                     : Finding.Source.MAY_CONTAIN_STATEMENT;
-            Finding finding = matchText(allergen, statement.text(), statement.text(), source);
+            Finding finding = matchText(allergen, statement.text(), statement.text(), source, dictionary);
             if (finding != null) {
                 findings.add(finding);
             }
@@ -51,18 +53,19 @@ final class AllergenMatcher {
         return findings;
     }
 
-    private static Finding matchText(Allergen allergen, String text, String evidence, Finding.Source source) {
+    private static Finding matchText(Allergen allergen, String text, String evidence,
+                                     Finding.Source source, AllergenDictionary dictionary) {
         List<String> tokens = TextUtil.tokens(text);
         if (tokens.isEmpty()) {
             return null;
         }
         boolean[] excluded = new boolean[tokens.size()];
-        for (String[] phrase : allergen.exclusions()) {
+        for (String[] phrase : dictionary.exclusions(allergen)) {
             markPhrase(tokens, phrase, excluded);
         }
 
         // 1. Exact terms.
-        for (String[] term : allergen.terms()) {
+        for (String[] term : dictionary.terms(allergen)) {
             int at = indexOfPhrase(tokens, term, excluded);
             if (at >= 0) {
                 Finding.Level level = source == Finding.Source.MAY_CONTAIN_STATEMENT
@@ -73,7 +76,7 @@ final class AllergenMatcher {
 
         // 2. Ambiguous terms — meaningful only in an ingredient list, where they are an ingredient.
         if (source == Finding.Source.INGREDIENT) {
-            for (String[] term : allergen.ambiguousTerms()) {
+            for (String[] term : dictionary.ambiguousTerms(allergen)) {
                 int at = indexOfPhrase(tokens, term, excluded);
                 if (at >= 0) {
                     return new Finding(allergen, Finding.Level.POSSIBLE, source,
@@ -83,15 +86,16 @@ final class AllergenMatcher {
         }
 
         // 3. Near misses, to survive OCR typos ("peanu1", "pean ut").
-        String near = nearMiss(allergen, tokens, excluded);
+        String near = nearMiss(allergen, tokens, excluded, dictionary);
         if (near != null) {
             return new Finding(allergen, Finding.Level.POSSIBLE, source, Finding.Reason.UNCERTAIN_READ, near, evidence);
         }
         return null;
     }
 
-    private static String nearMiss(Allergen allergen, List<String> tokens, boolean[] excluded) {
-        for (String[] term : allergen.terms()) {
+    private static String nearMiss(Allergen allergen, List<String> tokens, boolean[] excluded,
+                                   AllergenDictionary dictionary) {
+        for (String[] term : dictionary.terms(allergen)) {
             if (term.length != 1 || term[0].length() < FUZZY_MIN_LENGTH) {
                 continue;
             }

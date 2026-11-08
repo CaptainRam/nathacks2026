@@ -13,7 +13,7 @@ import java.util.List;
  */
 public final class AnalysisReport implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /** Severity, strongest first, so {@code compareTo} orders by how much attention is needed. */
     public enum Status {

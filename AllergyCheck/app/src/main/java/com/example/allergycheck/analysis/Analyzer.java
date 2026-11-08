@@ -8,9 +8,9 @@ import com.example.allergycheck.ocr.OcrResult;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Entry point for label analysis: raw OCR text + the user's allergens → an {@link AnalysisReport}.
@@ -27,12 +27,14 @@ public final class Analyzer {
     private Analyzer() {
     }
 
-    public static AnalysisReport analyse(@NonNull OcrResult ocr, @Nullable Collection<Allergen> selected) {
-        return analyse(ocr.fullText(), selected);
+    public static AnalysisReport analyse(@NonNull OcrResult ocr, @NonNull AllergenDictionary dictionary,
+                                         @Nullable Collection<Allergen> selected) {
+        return analyse(ocr.fullText(), dictionary, selected);
     }
 
-    public static AnalysisReport analyse(@Nullable String rawText, @Nullable Collection<Allergen> selected) {
-        return analyse(LabelParser.parse(rawText), selected);
+    public static AnalysisReport analyse(@Nullable String rawText, @NonNull AllergenDictionary dictionary,
+                                         @Nullable Collection<Allergen> selected) {
+        return analyse(LabelParser.parse(rawText), dictionary, selected);
     }
 
     /**
@@ -41,17 +43,26 @@ public final class Analyzer {
      * text, so a "may contain" warning outside the list is not lost.
      */
     public static AnalysisReport analyse(@Nullable List<String> ingredients, @Nullable String rawText,
+                                         @NonNull AllergenDictionary dictionary,
                                          @Nullable Collection<Allergen> selected) {
-        return analyse(LabelParser.fromIngredients(rawText, ingredients), selected);
+        return analyse(LabelParser.fromIngredients(rawText, ingredients), dictionary, selected);
     }
 
-    public static AnalysisReport analyse(@NonNull ParsedLabel label, @Nullable Collection<Allergen> selected) {
+    public static AnalysisReport analyse(@NonNull ParsedLabel label, @NonNull AllergenDictionary dictionary,
+                                         @Nullable Collection<Allergen> selected) {
         Set<Allergen> allergens = selected == null || selected.isEmpty()
-                ? EnumSet.noneOf(Allergen.class) : EnumSet.copyOf(selected);
+                ? Collections.<Allergen>emptySet() : new TreeSet<>(selected);
 
         if (allergens.isEmpty()) {
             return new AnalysisReport(AnalysisReport.Status.NO_ALLERGENS_SELECTED,
                     Collections.<AllergenResult>emptyList(), label, false);
+        }
+        // An allergen the dictionary does not know has no vocabulary to match, which would come
+        // out as "not detected" — a wiring bug must not look like a clear label.
+        for (Allergen allergen : allergens) {
+            if (!dictionary.contains(allergen)) {
+                throw new IllegalArgumentException("allergen is not in this dictionary: " + allergen);
+            }
         }
 
         boolean unreadable = label.isEmpty() || TextUtil.letterCount(label.rawText()) < MIN_LETTERS;
@@ -62,7 +73,7 @@ public final class Analyzer {
                         Collections.<Finding>emptyList()));
                 continue;
             }
-            List<Finding> findings = AllergenMatcher.match(label, allergen);
+            List<Finding> findings = AllergenMatcher.match(label, allergen, dictionary);
             findings.sort((a, b) -> a.level().compareTo(b.level()));
             results.add(new AllergenResult(allergen, statusOf(findings), findings));
         }

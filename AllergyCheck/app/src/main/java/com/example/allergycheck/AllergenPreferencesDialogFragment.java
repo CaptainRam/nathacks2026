@@ -7,10 +7,12 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
+import com.example.allergycheck.analysis.Allergen;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /** A focused allergen picker that keeps edits local until Save is pressed. */
@@ -32,7 +34,11 @@ public class AllergenPreferencesDialogFragment extends DialogFragment {
         selectedAllergens.clear();
         selectedAllergens.addAll(draft == null
                 ? AllergenPreferences.selectedAllergens(requireContext()) : draft);
-        String[] options = getResources().getStringArray(R.array.allergen_options);
+        List<Allergen> allergens = AllergenDictionaryProvider.get(requireContext()).allergens();
+        String[] options = new String[allergens.size()];
+        for (int i = 0; i < options.length; i++) {
+            options[i] = allergens.get(i).label();
+        }
         boolean[] checked = new boolean[options.length];
         for (int i = 0; i < options.length; i++) {
             checked[i] = selectedAllergens.contains(options[i]);

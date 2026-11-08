@@ -12,33 +12,36 @@ import java.util.regex.Pattern;
  * <p>Pure and deterministic — no I/O, no Android — so every rule can be unit-tested. Design bias:
  * when unsure, <em>keep</em> text. Dropping a line could hide an allergen; keeping noise only
  * costs a harmless extra list entry.
+ *
+ * <p>English only. Another language's panel is not recognised as a panel, so its text is kept as
+ * ordinary list entries that simply do not match anything.
  */
 public final class LabelParser {
 
     private static final char BREAK = '\u0001';
 
-    /** "Ingredients:", "Ingrédients", "Ingredient list" … */
+    /** "Ingredients:", "INGREDIENTS", "Ingredient list" … English only. */
     private static final Pattern HEADING = Pattern.compile(
-            "(?i)\\b(?:ingr[eé]dients?|ingredientes)\\b(?:\\s+list)?\\s*[:\\-–]?");
+            "(?i)\\bingredients?\\b(?:\\s+list)?\\s*[:\\-–]?");
 
     /** Where a statement begins mid-text, so it can be split off from the ingredients before it. */
     private static final Pattern STATEMENT_START = Pattern.compile(
-            "(?i)\\b(?:may contain|might contain|peut contenir|contains?\\s*:|contient\\s*:"
+            "(?i)\\b(?:may contain|might contain|contains?\\s*:"
                     + "|(?:produced|made|manufactured|processed|packaged|packed)\\s+(?:in|on)\\s+(?:a|an|the)?\\s*"
-                    + "(?:facility|plant|factory|equipment|line)|traces? (?:of|de))");
+                    + "(?:facility|plant|factory|equipment|line)|traces? of)");
 
     private static final Pattern MAY_CONTAIN = Pattern.compile(
-            "^(?:may contain|might contain|could contain|peut contenir|traces? (?:of|de)"
+            "^(?:may contain|might contain|could contain|traces? of"
                     + "|(?:produced|made|manufactured|processed|packaged|packed) (?:in|on) (?:a |an |the )?"
                     + "(?:facility|plant|factory|equipment|line)).*");
 
-    /** "Contains:" / "Contient" — but not "Contains 2% or less of:", which is an ingredient prefix. */
-    private static final Pattern CONTAINS = Pattern.compile("^(?:contains?|contient)(?:\\s+(?!\\d).*)?$");
+    /** "Contains:" — but not "Contains 2% or less of:", which is an ingredient prefix. */
+    private static final Pattern CONTAINS = Pattern.compile("^contains?(?:\\s+(?!\\d).*)?$");
 
     /** Everything from here on belongs to a different panel of the package. */
     private static final Pattern TERMINATOR = Pattern.compile(
-            "(?i)\\b(?:nutrition(?:al)? (?:facts|information)|valeur nutritive|distributed by|distribu[eé] par"
-                    + "|manufactured (?:by|for)|best before|meilleur avant|net w(?:eigh)?t|keep refrigerated"
+            "(?i)\\b(?:nutrition(?:al)? (?:facts|information)|distributed by"
+                    + "|manufactured (?:by|for)|best before|net w(?:eigh)?t|keep refrigerated"
                     + "|store in)\\b");
 
     private static final Pattern ALLERGEN_PREFIX = Pattern.compile(
@@ -51,7 +54,8 @@ public final class LabelParser {
         String raw = rawText == null ? "" : rawText;
         String text = prepare(raw);
 
-        // Heading: keep what follows the first one; later ones (a second language) become breaks.
+        // Heading: keep what follows the first one; later ones become breaks, so a repeated
+        // "Ingredients:" starts a new segment instead of restarting the list.
         Matcher heading = HEADING.matcher(text);
         boolean headingFound = heading.find();
         int ingredientsStart = headingFound ? heading.end() : 0;

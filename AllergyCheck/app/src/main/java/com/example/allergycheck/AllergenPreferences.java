@@ -4,10 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.analysis.AllergenDictionary;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 final class AllergenPreferences {
@@ -27,15 +28,15 @@ final class AllergenPreferences {
     }
 
     /**
-     * The saved allergens as the analysis engine's enum, in enum order. Names the engine does not
-     * know (an option added to the picker but not to {@link Allergen}) are skipped, so a stale
-     * preference cannot break a scan.
+     * The saved allergens as the analysis engine's objects, in dictionary order. Preferences are
+     * keyed on the user-facing label; one the dictionary does not know (saved by an older build,
+     * or dropped from the dictionary since) is skipped, so a stale preference cannot break a scan.
      */
-    static EnumSet<Allergen> selectedAllergenSet(Context context) {
-        EnumSet<Allergen> allergens = EnumSet.noneOf(Allergen.class);
-        for (String label : selectedAllergens(context)) {
-            Allergen allergen = Allergen.fromLabel(label);
-            if (allergen != null) {
+    static Set<Allergen> selectedAllergenSet(Context context, AllergenDictionary dictionary) {
+        Set<String> saved = selectedAllergens(context);
+        Set<Allergen> allergens = new LinkedHashSet<>();
+        for (Allergen allergen : dictionary.allergens()) {
+            if (saved.contains(allergen.label())) {
                 allergens.add(allergen);
             }
         }

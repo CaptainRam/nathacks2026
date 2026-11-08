@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -20,14 +19,25 @@ import java.util.List;
  */
 public class ExtractedIngredientsAnalysisTest {
 
+    private static final AllergenDictionary DICT = TestDictionaries.shipped();
+
+    private static Allergen a(String id) {
+        Allergen allergen = DICT.byId(id);
+        if (allergen == null) {
+            throw new AssertionError("no allergen " + id + " in the shipped dictionary");
+        }
+        return allergen;
+    }
+
     private static AnalysisReport analyseExtracted(String text, Allergen... allergens) {
-        return Analyzer.analyse(IngredientExtractor.extract(text), text, Arrays.asList(allergens));
+        return Analyzer.analyse(IngredientExtractor.extract(text), text, DICT,
+                Arrays.asList(allergens));
     }
 
     @Test
     public void findsAllergenInExtractedIngredients() {
         String label = "INGREDIENTS: Wheat flour, sugar, whey powder, salt.";
-        AnalysisReport report = analyseExtracted(label, Allergen.MILK, Allergen.WHEAT);
+        AnalysisReport report = analyseExtracted(label, a("MILK"), a("WHEAT"));
 
         assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
         assertEquals(2, report.results().size());
@@ -42,11 +52,11 @@ public class ExtractedIngredientsAnalysisTest {
     public void matchesTheVerdictFromTheRawText() {
         String label = "INGREDIENTS: Sugar, chocolate (cocoa butter, soy lecithin), salt. "
                 + "May contain peanuts.";
-        EnumSet<Allergen> allergens = EnumSet.of(Allergen.SOY, Allergen.PEANUTS, Allergen.MILK);
+        List<Allergen> allergens = Arrays.asList(a("SOY"), a("PEANUTS"), a("MILK"));
 
-        AnalysisReport fromText = Analyzer.analyse(label, allergens);
-        AnalysisReport fromExtraction = analyseExtracted(label, Allergen.SOY, Allergen.PEANUTS,
-                Allergen.MILK);
+        AnalysisReport fromText = Analyzer.analyse(label, DICT, allergens);
+        AnalysisReport fromExtraction = analyseExtracted(label, a("SOY"), a("PEANUTS"),
+                a("MILK"));
 
         assertEquals(fromText.overall(), fromExtraction.overall());
         assertEquals(fromText.results().size(), fromExtraction.results().size());
@@ -61,14 +71,14 @@ public class ExtractedIngredientsAnalysisTest {
     @Test
     public void keepsSubIngredientsFromBracketedItems() {
         String label = "INGREDIENTS: Sugar, chocolate (cocoa butter, soy lecithin).";
-        AnalysisReport report = analyseExtracted(label, Allergen.SOY);
+        AnalysisReport report = analyseExtracted(label, a("SOY"));
 
         assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
         assertEquals("soy lecithin",
                 report.results().get(0).findings().get(0).evidence().toLowerCase());
         // "cocoa butter" is an exclusion, so dairy is never asserted; "chocolate" is ambiguous,
         // which is only ever a "possible".
-        AnalysisReport milk = analyseExtracted(label, Allergen.MILK);
+        AnalysisReport milk = analyseExtracted(label, a("MILK"));
         assertEquals(AnalysisReport.Status.POSSIBLE, milk.overall());
         assertEquals(Finding.Reason.AMBIGUOUS_INGREDIENT,
                 milk.results().get(0).findings().get(0).reason());
@@ -77,7 +87,7 @@ public class ExtractedIngredientsAnalysisTest {
     @Test
     public void precautionaryStatementOutsideTheListStillCounts() {
         String label = "INGREDIENTS: Oats, sugar. May contain traces of almonds.";
-        AnalysisReport report = analyseExtracted(label, Allergen.TREE_NUTS);
+        AnalysisReport report = analyseExtracted(label, a("TREE_NUTS"));
 
         assertEquals(AnalysisReport.Status.MAY_CONTAIN, report.overall());
         assertEquals(Finding.Source.MAY_CONTAIN_STATEMENT,
@@ -90,7 +100,7 @@ public class ExtractedIngredientsAnalysisTest {
         String label = "CONTAINS: MILK AND SOY.";
         assertTrue(IngredientExtractor.extract(label).isEmpty());
 
-        AnalysisReport report = analyseExtracted(label, Allergen.MILK);
+        AnalysisReport report = analyseExtracted(label, a("MILK"));
         assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
         assertEquals(Finding.Source.CONTAINS_STATEMENT,
                 report.results().get(0).findings().get(0).source());
@@ -98,7 +108,7 @@ public class ExtractedIngredientsAnalysisTest {
 
     @Test
     public void unreadableLabelIsNeverReportedAsClear() {
-        AnalysisReport report = analyseExtracted("ING", Allergen.MILK);
+        AnalysisReport report = analyseExtracted("ING", a("MILK"));
 
         assertEquals(AnalysisReport.Status.UNREADABLE, report.overall());
         assertTrue(report.lowConfidence());
@@ -108,7 +118,7 @@ public class ExtractedIngredientsAnalysisTest {
     public void noAllergensSelectedIsItsOwnVerdict() {
         AnalysisReport report = Analyzer.analyse(
                 IngredientExtractor.extract("INGREDIENTS: Wheat flour, salt."),
-                "INGREDIENTS: Wheat flour, salt.", Collections.<Allergen>emptyList());
+                "INGREDIENTS: Wheat flour, salt.", DICT, Collections.<Allergen>emptyList());
 
         assertEquals(AnalysisReport.Status.NO_ALLERGENS_SELECTED, report.overall());
         assertTrue(report.results().isEmpty());

@@ -104,14 +104,9 @@ public class IngredientExtractorTest {
     }
 
     @Test
-    public void secondLanguageListIsNotAppended() {
+    public void secondListIsNotAppended() {
         assertEquals(Arrays.asList("sugar", "milk"),
-                extract("Ingredients: sugar, milk Ingrédients : sucre, lait"));
-    }
-
-    @Test
-    public void frenchOnlyHeadingWorks() {
-        assertEquals(Arrays.asList("sucre", "lait"), extract("INGRÉDIENTS : sucre, lait."));
+                extract("Ingredients: sugar, milk Ingredients : cocoa, salt"));
     }
 
     @Test

@@ -28,6 +28,8 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.ingredients.IngredientExtractor;
@@ -303,8 +305,9 @@ public class MainActivity extends AppCompatActivity {
                 List<String> ingredients = IngredientExtractor.extract(text);
                 // The extracted list is what gets analysed; statements such as "may contain nuts"
                 // are printed outside the list, so the analyser also sees the full text.
-                AnalysisReport report = Analyzer.analyse(ingredients, text,
-                        AllergenPreferences.selectedAllergenSet(MainActivity.this));
+                AllergenDictionary dictionary = AllergenDictionaryProvider.get(MainActivity.this);
+                AnalysisReport report = Analyzer.analyse(ingredients, text, dictionary,
+                        AllergenPreferences.selectedAllergenSet(MainActivity.this, dictionary));
                 if (ingredients.isEmpty() && report.label().statements().isEmpty()) {
                     // Nothing to analyse at all: show the raw text so the user can see what was read.
                     updateIngredientDialog(getString(R.string.ingredient_result_title),
@@ -528,12 +531,12 @@ public class MainActivity extends AppCompatActivity {
 
         allergenChips.removeAllViews();
         // Keep chips in the same order as the picker rather than HashSet order.
-        for (String option : getResources().getStringArray(R.array.allergen_options)) {
-            if (!saved.contains(option)) {
+        for (Allergen allergen : AllergenDictionaryProvider.get(this).allergens()) {
+            if (!saved.contains(allergen.label())) {
                 continue;
             }
             Chip chip = new Chip(this);
-            chip.setText(option);
+            chip.setText(allergen.label());
             chip.setClickable(false);
             chip.setFocusable(false);
             chip.setEnsureMinTouchTargetSize(false);

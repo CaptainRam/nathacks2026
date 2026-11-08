@@ -16,6 +16,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.ingredients.LocalModelManager;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -99,7 +100,8 @@ public class SettingsActivity extends AppCompatActivity {
                 ? AllergenPreferences.selectedAllergens(this) : draft);
 
         LinearLayout options = findViewById(R.id.allergen_options_container);
-        for (String option : getResources().getStringArray(R.array.allergen_options)) {
+        for (Allergen allergen : AllergenDictionaryProvider.get(this).allergens()) {
+            final String option = allergen.label();
             MaterialCheckBox checkBox = new MaterialCheckBox(this);
             checkBox.setText(option);
             checkBox.setTextAppearance(

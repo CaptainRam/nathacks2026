@@ -17,14 +17,14 @@ import java.util.regex.Pattern;
  */
 public final class IngredientExtractor {
 
-    /** "Ingredients:", "INGREDIENTS", "Ingrédients :", "Ingredient list -", "Ingredientes". */
+    /** "Ingredients:", "INGREDIENTS", "Ingredient list -". English only. */
     private static final Pattern HEADING = Pattern.compile(
-            "(?iu)\\b(?:ingr[eé]dients?|ingredientes)\\b(?:\\s+list)?(\\s*[:\\-–])?");
+            "(?iu)\\bingredients?\\b(?:\\s+list)?(\\s*[:\\-–])?");
 
     /** Phrases that start a different panel of the package; the list ends before them. */
     private static final Pattern TERMINATOR = Pattern.compile(
-            "(?iu)\\b(?:nutrition(?:al)? (?:facts|information)|valeur nutritive|distributed by|distribu[eé] par"
-                    + "|manufactured (?:by|for)|best before|meilleur avant|net w(?:eigh)?t|keep refrigerated"
+            "(?iu)\\b(?:nutrition(?:al)? (?:facts|information)|distributed by"
+                    + "|manufactured (?:by|for)|best before|net w(?:eigh)?t|keep refrigerated"
                     + "|store in)\\b");
 
     /**
@@ -33,7 +33,7 @@ public final class IngredientExtractor {
      * straight after "contains" and so does not match — it is part of the list.
      */
     private static final Pattern STATEMENT_START = Pattern.compile(
-            "(?iu)\\b(?:may contain|might contain|peut contenir|contains?\\s*:|contient\\s*:"
+            "(?iu)\\b(?:may contain|might contain|contains?\\s*:"
                     + "|(?:produced|made|manufactured|processed|packaged|packed)\\s+(?:in|on)\\s+(?:a|an|the)?\\s*"
                     + "(?:facility|plant|factory|equipment|line))");
 

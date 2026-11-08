@@ -9,17 +9,27 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 
 public class AnalyzerTest {
 
+    private static final AllergenDictionary DICT = TestDictionaries.shipped();
+
+    /** The shipped dictionary's allergen with this id, e.g. {@code a("TREE_NUTS")}. */
+    private static Allergen a(String id) {
+        Allergen allergen = DICT.byId(id);
+        if (allergen == null) {
+            throw new AssertionError("no allergen " + id + " in the shipped dictionary");
+        }
+        return allergen;
+    }
+
     private static AnalysisReport run(String text, Allergen... allergens) {
-        return Analyzer.analyse(text, Arrays.asList(allergens));
+        return Analyzer.analyse(text, DICT, Arrays.asList(allergens));
     }
 
     private static AllergenResult resultFor(AnalysisReport report, Allergen allergen) {
         for (AllergenResult r : report.results()) {
-            if (r.allergen() == allergen) {
+            if (allergen.equals(r.allergen())) {
                 return r;
             }
         }
@@ -110,17 +120,26 @@ public class AnalyzerTest {
     }
 
     @Test
-    public void bilingualLabelParsesBothLanguages() {
-        AnalysisReport report = run("Ingredients: sugar, milk. Ingrédients: sucre, lait.", Allergen.MILK);
-        assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
+    public void secondIngredientsHeadingDoesNotRestartTheList() {
+        ParsedLabel label = LabelParser.parse("Ingredients: sugar, milk. Ingredients: cocoa, salt.");
+        assertEquals(4, label.ingredients().size());
+        assertEquals(AnalysisReport.Status.CONTAINS,
+                run("Ingredients: sugar, milk. Ingredients: cocoa, salt.", a("MILK")).overall());
+    }
+
+    /** Matching is English-only by design; a French panel is kept as text but recognises nothing. */
+    @Test
+    public void frenchOnlyLabelIsNotAnalysed() {
+        AnalysisReport report = run("Ingrédients : sucre, lait, beurre et fromage.", a("MILK"));
+        assertNotEquals(AnalysisReport.Status.CONTAINS, report.overall());
     }
 
     // ---- matching ----------------------------------------------------------------------------
 
     @Test
     public void ingredientMatchIsContains() {
-        AnalysisReport report = run("Ingredients: sugar, whey powder, salt", Allergen.MILK);
-        AllergenResult milk = resultFor(report, Allergen.MILK);
+        AnalysisReport report = run("Ingredients: sugar, whey powder, salt", a("MILK"));
+        AllergenResult milk = resultFor(report, a("MILK"));
         assertEquals(AnalysisReport.Status.CONTAINS, milk.status());
         assertEquals("whey", milk.findings().get(0).matchedTerm());
         assertEquals(Finding.Source.INGREDIENT, milk.findings().get(0).source());
@@ -129,7 +148,7 @@ public class AnalyzerTest {
     @Test
     public void mayContainStatementIsMayContainNotContains() {
         AnalysisReport report = run(
-                "Ingredients: sugar, cocoa, salt. May contain peanuts.", Allergen.PEANUTS);
+                "Ingredients: sugar, cocoa, salt. May contain peanuts.", a("PEANUTS"));
         assertEquals(AnalysisReport.Status.MAY_CONTAIN, report.overall());
         assertEquals(Finding.Source.MAY_CONTAIN_STATEMENT, report.results().get(0).findings().get(0).source());
     }
@@ -138,97 +157,97 @@ public class AnalyzerTest {
     public void facilityStatementCountsAsMayContain() {
         AnalysisReport report = run(
                 "Ingredients: oats, sugar, salt. Produced in a facility that also processes tree nuts and soy.",
-                Allergen.SOY, Allergen.TREE_NUTS);
-        assertEquals(AnalysisReport.Status.MAY_CONTAIN, resultFor(report, Allergen.SOY).status());
-        assertEquals(AnalysisReport.Status.MAY_CONTAIN, resultFor(report, Allergen.TREE_NUTS).status());
+                a("SOY"), a("TREE_NUTS"));
+        assertEquals(AnalysisReport.Status.MAY_CONTAIN, resultFor(report, a("SOY")).status());
+        assertEquals(AnalysisReport.Status.MAY_CONTAIN, resultFor(report, a("TREE_NUTS")).status());
     }
 
     @Test
     public void containsStatementIsContains() {
         AnalysisReport report = run("Ingredients: flour, sugar, salt. Contains: wheat, milk.",
-                Allergen.WHEAT, Allergen.EGGS);
-        assertEquals(AnalysisReport.Status.CONTAINS, resultFor(report, Allergen.WHEAT).status());
-        assertEquals(AnalysisReport.Status.NOT_DETECTED, resultFor(report, Allergen.EGGS).status());
+                a("WHEAT"), a("EGGS"));
+        assertEquals(AnalysisReport.Status.CONTAINS, resultFor(report, a("WHEAT")).status());
+        assertEquals(AnalysisReport.Status.NOT_DETECTED, resultFor(report, a("EGGS")).status());
     }
 
     @Test
     public void cocoaButterAndPeanutButterAreNotDairy() {
         AnalysisReport report = run("Ingredients: sugar, cocoa butter, shea butter, peanut butter, salt",
-                Allergen.MILK);
+                a("MILK"));
         assertEquals(AnalysisReport.Status.NOT_DETECTED, report.overall());
     }
 
     @Test
     public void plantMilksAreNotDairy() {
         AnalysisReport report = run("Ingredients: water, almond milk, coconut milk, oat milk, salt",
-                Allergen.MILK);
+                a("MILK"));
         assertEquals(AnalysisReport.Status.NOT_DETECTED, report.overall());
     }
 
     @Test
     public void wordsContainingAllergenNamesDoNotMatch() {
         AnalysisReport report = run("Ingredients: buckwheat flour, eggplant, butternut squash, water, salt",
-                Allergen.WHEAT, Allergen.EGGS, Allergen.MILK);
+                a("WHEAT"), a("EGGS"), a("MILK"));
         assertEquals(AnalysisReport.Status.NOT_DETECTED, report.overall());
     }
 
     @Test
     public void glutenFreeClaimIsNotWheat() {
-        AnalysisReport report = run("Ingredients: rice flour, corn starch, sugar. Gluten free.", Allergen.WHEAT);
+        AnalysisReport report = run("Ingredients: rice flour, corn starch, sugar. Gluten free.", a("WHEAT"));
         assertNotEquals(AnalysisReport.Status.CONTAINS, report.overall());
     }
 
     @Test
     public void nestedAllergenIsFound() {
         AnalysisReport report = run(
-                "Ingredients: Chocolate (sugar, cocoa butter, soy lecithin), salt, water", Allergen.SOY);
-        AllergenResult soy = resultFor(report, Allergen.SOY);
+                "Ingredients: Chocolate (sugar, cocoa butter, soy lecithin), salt, water", a("SOY"));
+        AllergenResult soy = resultFor(report, a("SOY"));
         assertEquals(AnalysisReport.Status.CONTAINS, soy.status());
         assertEquals("soy lecithin", soy.findings().get(0).evidence());
     }
 
     @Test
     public void plainLecithinIsOnlyPossibleSoy() {
-        AnalysisReport report = run("Ingredients: sugar, cocoa butter, lecithin, vanilla", Allergen.SOY);
-        AllergenResult soy = resultFor(report, Allergen.SOY);
+        AnalysisReport report = run("Ingredients: sugar, cocoa butter, lecithin, vanilla", a("SOY"));
+        AllergenResult soy = resultFor(report, a("SOY"));
         assertEquals(AnalysisReport.Status.POSSIBLE, soy.status());
         assertEquals(Finding.Reason.AMBIGUOUS_INGREDIENT, soy.findings().get(0).reason());
     }
 
     @Test
     public void sunflowerLecithinIsNotFlaggedAsSoy() {
-        AnalysisReport report = run("Ingredients: sugar, cocoa, sunflower lecithin, vanilla", Allergen.SOY);
+        AnalysisReport report = run("Ingredients: sugar, cocoa, sunflower lecithin, vanilla", a("SOY"));
         assertEquals(AnalysisReport.Status.NOT_DETECTED, report.overall());
     }
 
     @Test
     public void ocrTypoIsFlaggedAsPossibleNotMissed() {
-        AnalysisReport report = run("Ingredients: sugar, peanu1 oil, salt, water", Allergen.PEANUTS);
-        AllergenResult peanuts = resultFor(report, Allergen.PEANUTS);
+        AnalysisReport report = run("Ingredients: sugar, peanu1 oil, salt, water", a("PEANUTS"));
+        AllergenResult peanuts = resultFor(report, a("PEANUTS"));
         assertEquals(AnalysisReport.Status.POSSIBLE, peanuts.status());
         assertEquals(Finding.Reason.UNCERTAIN_READ, peanuts.findings().get(0).reason());
     }
 
     @Test
     public void wordSplitByOcrIsFlaggedAsPossible() {
-        AnalysisReport report = run("Ingredients: sugar, pean ut oil, salt, water", Allergen.PEANUTS);
+        AnalysisReport report = run("Ingredients: sugar, pean ut oil, salt, water", a("PEANUTS"));
         assertEquals(AnalysisReport.Status.POSSIBLE, report.overall());
     }
 
     @Test
     public void batterIsNotButter() {
-        AnalysisReport report = run("Ingredients: batter, better flour, water, salt", Allergen.MILK);
+        AnalysisReport report = run("Ingredients: batter, better flour, water, salt", a("MILK"));
         assertEquals(AnalysisReport.Status.NOT_DETECTED, report.overall());
     }
 
     @Test
     public void strongestEvidenceDecidesOverallStatusAndOrdering() {
         AnalysisReport report = run(
-                "Ingredients: milk, sugar, salt. May contain peanuts.", Allergen.PEANUTS, Allergen.MILK, Allergen.EGGS);
+                "Ingredients: milk, sugar, salt. May contain peanuts.", a("PEANUTS"), a("MILK"), a("EGGS"));
         assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
-        assertEquals(Allergen.MILK, report.results().get(0).allergen());
-        assertEquals(Allergen.PEANUTS, report.results().get(1).allergen());
-        assertEquals(Allergen.EGGS, report.results().get(2).allergen());
+        assertEquals(a("MILK"), report.results().get(0).allergen());
+        assertEquals(a("PEANUTS"), report.results().get(1).allergen());
+        assertEquals(a("EGGS"), report.results().get(2).allergen());
     }
 
     // ---- safety: never "clear" when we can't tell ---------------------------------------------
@@ -236,7 +255,7 @@ public class AnalyzerTest {
     @Test
     public void emptyTextIsUnreadableNeverNotDetected() {
         for (String text : new String[]{"", "   ", null, "\n\n"}) {
-            AnalysisReport report = run(text, Allergen.PEANUTS);
+            AnalysisReport report = run(text, a("PEANUTS"));
             assertEquals(AnalysisReport.Status.UNREADABLE, report.overall());
             assertEquals(AnalysisReport.Status.UNREADABLE, report.results().get(0).status());
         }
@@ -244,34 +263,35 @@ public class AnalyzerTest {
 
     @Test
     public void garbageTextIsUnreadable() {
-        AnalysisReport report = run("@@ ## 12 %%", Allergen.MILK);
+        AnalysisReport report = run("@@ ## 12 %%", a("MILK"));
         assertEquals(AnalysisReport.Status.UNREADABLE, report.overall());
     }
 
     @Test
     public void tooLittleTextIsUnreadable() {
-        AnalysisReport report = run("salt", Allergen.MILK);
+        AnalysisReport report = run("salt", a("MILK"));
         assertEquals(AnalysisReport.Status.UNREADABLE, report.overall());
     }
 
     @Test
     public void noSelectedAllergensIsReportedExplicitly() {
         assertEquals(AnalysisReport.Status.NO_ALLERGENS_SELECTED,
-                Analyzer.analyse("Ingredients: milk, sugar, salt", Collections.<Allergen>emptyList()).overall());
+                Analyzer.analyse("Ingredients: milk, sugar, salt", DICT,
+                        Collections.<Allergen>emptyList()).overall());
         assertEquals(AnalysisReport.Status.NO_ALLERGENS_SELECTED,
-                Analyzer.analyse("Ingredients: milk, sugar, salt", null).overall());
+                Analyzer.analyse("Ingredients: milk, sugar, salt", DICT, null).overall());
     }
 
     @Test
     public void croppedPanelWithoutHeadingStillMatchesButIsLowConfidence() {
-        AnalysisReport report = run("sugar, wheat flour, salt, yeast, water", Allergen.WHEAT);
+        AnalysisReport report = run("sugar, wheat flour, salt, yeast, water", a("WHEAT"));
         assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
         assertFalse(report.label().ingredientHeadingFound());
     }
 
     @Test
     public void sparseTextWithoutHeadingFlagsLowConfidence() {
-        AnalysisReport report = run("sugar and some other long words here", Allergen.WHEAT);
+        AnalysisReport report = run("sugar and some other long words here", a("WHEAT"));
         assertTrue(report.lowConfidence());
     }
 
@@ -279,8 +299,8 @@ public class AnalyzerTest {
     public void allAllergensCanBeSelectedTogether() {
         AnalysisReport report = Analyzer.analyse(
                 "Ingredients: wheat flour, milk, egg, peanut oil, almonds, soy, sesame, salmon, shrimp, mustard.",
-                EnumSet.allOf(Allergen.class));
-        assertEquals(Allergen.values().length, report.results().size());
+                DICT, DICT.allergens());
+        assertEquals(DICT.allergens().size(), report.results().size());
         for (AllergenResult r : report.results()) {
             assertEquals(r.allergen().toString(), AnalysisReport.Status.CONTAINS, r.status());
         }
@@ -288,9 +308,9 @@ public class AnalyzerTest {
 
     @Test
     public void allergenLabelsRoundTrip() {
-        for (Allergen allergen : Allergen.values()) {
-            assertEquals(allergen, Allergen.fromLabel(allergen.label()));
+        for (Allergen allergen : DICT.allergens()) {
+            assertEquals(allergen, DICT.byLabel(allergen.label()));
         }
-        assertEquals(Allergen.TREE_NUTS, Allergen.fromLabel("tree nuts"));
+        assertEquals(a("TREE_NUTS"), DICT.byLabel("tree nuts"));
     }
 }
