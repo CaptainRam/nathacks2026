@@ -46,6 +46,8 @@
     <string name="results_settings_title">Results</string>
     <string name="show_not_detected">Show allergens not detected</string>
     <string name="show_not_detected_hint">Also list your allergens that weren’t found on the label.</string>
+    <string name="may_contain_red_warning">Show “May contain” warnings in red</string>
+    <string name="may_contain_red_warning_hint">Use red for precautionary label warnings. Turn off to use yellow.</string>
     <string name="discard">Discard</string>
     <string name="keep_editing">Keep editing</string>
     <string name="tip_frame">Fit the whole ingredient list in the frame</string>

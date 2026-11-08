@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -33,9 +34,12 @@ import java.util.Set;
 /** The settings section switch, its entry points, the unsaved-draft guard and the results switch. */
 @RunWith(AndroidJUnit4.class)
 public class SettingsLayoutUiTest {
+    private static final String MAY_CONTAIN_RED_WARNING = "may_contain_red_warning";
     private final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
     private Set<String> originalAllergens;
     private boolean originalShowNotDetected;
+    private boolean hadMayContainRedWarning;
+    private boolean originalMayContainRedWarning;
 
     @Before
     public void clearAllergens() {
@@ -44,12 +48,23 @@ public class SettingsLayoutUiTest {
         AllergenPreferences.saveSelectedAllergenIds(context, Collections.emptySet());
         originalShowNotDetected = AllergenPreferences.showNotDetected(context);
         AllergenPreferences.saveShowNotDetected(context, false);
+        SharedPreferences preferences = AllergenPreferences.preferences(context);
+        hadMayContainRedWarning = preferences.contains(MAY_CONTAIN_RED_WARNING);
+        originalMayContainRedWarning = AllergenPreferences.mayContainRedWarning(context);
+        assertTrue(preferences.edit().remove(MAY_CONTAIN_RED_WARNING).commit());
     }
 
     @After
     public void restoreAllergens() {
         AllergenPreferences.saveSelectedAllergenIds(context, originalAllergens);
         AllergenPreferences.saveShowNotDetected(context, originalShowNotDetected);
+        SharedPreferences.Editor editor = AllergenPreferences.preferences(context).edit();
+        if (hadMayContainRedWarning) {
+            editor.putBoolean(MAY_CONTAIN_RED_WARNING, originalMayContainRedWarning);
+        } else {
+            editor.remove(MAY_CONTAIN_RED_WARNING);
+        }
+        assertTrue(editor.commit());
     }
 
     @Test
@@ -207,8 +222,82 @@ public class SettingsLayoutUiTest {
         assertFalse(AllergenPreferences.showNotDetected(context));
     }
 
+    @Test
+    public void mayContainRedWarningIsOnByDefault() {
+        assertFalse(AllergenPreferences.preferences(context).contains(MAY_CONTAIN_RED_WARNING));
+        assertTrue(AllergenPreferences.mayContainRedWarning(context));
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> assertTrue(mayContainRedWarningSwitch(activity).isChecked()));
+        }
+    }
+
+    @Test
+    public void mayContainRedWarningSwitchIsPartOfTheDraft() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                MaterialSwitch toggle = mayContainRedWarningSwitch(activity);
+                assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+                ((View) toggle.getParent()).performClick();
+                assertFalse(toggle.isChecked());
+                assertTrue(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+                toggle.performClick();
+                assertTrue(toggle.isChecked());
+                assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+                toggle.performClick();
+            });
+            scenario.recreate();
+            scenario.onActivity(activity -> {
+                assertFalse(mayContainRedWarningSwitch(activity).isChecked());
+                assertTrue(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+            });
+        }
+        assertTrue(AllergenPreferences.mayContainRedWarning(context));
+        assertFalse(AllergenPreferences.preferences(context).contains(MAY_CONTAIN_RED_WARNING));
+    }
+
+    @Test
+    public void saveStoresMayContainRedWarningAndRestoresItWhenReopened() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                mayContainRedWarningSwitch(activity).performClick();
+                activity.findViewById(R.id.save_preferences_button).performClick();
+            });
+            assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+        }
+        assertFalse(AllergenPreferences.mayContainRedWarning(context));
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                assertFalse(mayContainRedWarningSwitch(activity).isChecked());
+                assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+            });
+        }
+    }
+
+    @Test
+    public void discardKeepsMayContainRedWarningOn() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                mayContainRedWarningSwitch(activity).performClick();
+                activity.getOnBackPressedDispatcher().onBackPressed();
+                click(activity, DialogInterface.BUTTON_NEGATIVE);
+            });
+            assertEquals(Activity.RESULT_CANCELED, scenario.getResult().getResultCode());
+        }
+        assertTrue(AllergenPreferences.mayContainRedWarning(context));
+        assertFalse(AllergenPreferences.preferences(context).contains(MAY_CONTAIN_RED_WARNING));
+    }
+
     private static MaterialSwitch notDetectedSwitch(SettingsActivity activity) {
         return activity.findViewById(R.id.show_not_detected_switch);
+    }
+
+    private static MaterialSwitch mayContainRedWarningSwitch(SettingsActivity activity) {
+        return activity.findViewById(R.id.may_contain_red_warning_switch);
     }
 
     /** Checks the first allergen chip, then asks to leave, which must raise the question. */

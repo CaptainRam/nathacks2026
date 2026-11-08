@@ -62,6 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String MODEL_DETAILS_EXPANDED = "model_details_expanded";
     private static final String MODEL_SECTION_SHOWN = "model_section_shown";
     private static final String DRAFT_SHOW_NOT_DETECTED = "draft_show_not_detected";
+    private static final String DRAFT_MAY_CONTAIN_RED_WARNING = "draft_may_contain_red_warning";
     private static final String ANALYSIS_CONFIGURATION_CHANGED = "analysis_configuration_changed";
 
     /**
@@ -74,6 +75,8 @@ public class SettingsActivity extends AppCompatActivity {
     /** Draft and stored value of the "show allergens not detected" switch. */
     private boolean showNotDetected;
     private boolean savedShowNotDetected;
+    private boolean mayContainRedWarning;
+    private boolean savedMayContainRedWarning;
     private TextView selectionSummary;
     private NestedScrollView scroll;
     private View headerDivider;
@@ -247,14 +250,26 @@ public class SettingsActivity extends AppCompatActivity {
         MaterialSwitch notDetectedSwitch = findViewById(R.id.show_not_detected_switch);
         notDetectedSwitch.setSaveEnabled(false);
         notDetectedSwitch.setChecked(showNotDetected);
-        // updateSelectionSummary ran before this draft was restored, so re-check it now.
-        updateUnsavedChanges();
         notDetectedSwitch.setOnCheckedChangeListener((button, checked) -> {
             showNotDetected = checked;
             updateUnsavedChanges();
         });
         // The whole row toggles, not only the small switch.
         ((View) notDetectedSwitch.getParent()).setOnClickListener(view -> notDetectedSwitch.toggle());
+
+        savedMayContainRedWarning = AllergenPreferences.mayContainRedWarning(this);
+        mayContainRedWarning = savedInstanceState == null ? savedMayContainRedWarning
+                : savedInstanceState.getBoolean(DRAFT_MAY_CONTAIN_RED_WARNING, savedMayContainRedWarning);
+        MaterialSwitch redWarningSwitch = findViewById(R.id.may_contain_red_warning_switch);
+        redWarningSwitch.setSaveEnabled(false);
+        redWarningSwitch.setChecked(mayContainRedWarning);
+        redWarningSwitch.setOnCheckedChangeListener((button, checked) -> {
+            mayContainRedWarning = checked;
+            updateUnsavedChanges();
+        });
+        ((View) redWarningSwitch.getParent()).setOnClickListener(view -> redWarningSwitch.toggle());
+        // updateSelectionSummary ran before these drafts were restored, so re-check them now.
+        updateUnsavedChanges();
 
         findViewById(R.id.save_preferences_button).setOnClickListener(view -> savePreferences());
 
@@ -304,6 +319,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
         AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
         AllergenPreferences.saveShowNotDetected(this, showNotDetected);
+        AllergenPreferences.saveMayContainRedWarning(this, mayContainRedWarning);
         setResult(RESULT_OK);
         finish();
     }
@@ -685,7 +701,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void updateUnsavedChanges() {
         unsavedChangesCallback.setEnabled(!selectedAllergens.equals(savedAllergens)
-                || showNotDetected != savedShowNotDetected || cloudSettingsChanged());
+                || showNotDetected != savedShowNotDetected
+                || mayContainRedWarning != savedMayContainRedWarning || cloudSettingsChanged());
     }
 
     @Override
@@ -693,6 +710,7 @@ public class SettingsActivity extends AppCompatActivity {
         outState.putBoolean(ANALYSIS_CONFIGURATION_CHANGED, analysisConfigurationChanged);
         outState.putStringArrayList(DRAFT_ALLERGENS, new ArrayList<>(selectedAllergens));
         outState.putBoolean(DRAFT_SHOW_NOT_DETECTED, showNotDetected);
+        outState.putBoolean(DRAFT_MAY_CONTAIN_RED_WARNING, mayContainRedWarning);
         outState.putBoolean(MODEL_DETAILS_EXPANDED, modelDetails.getVisibility() == View.VISIBLE);
         outState.putBoolean(MODEL_SECTION_SHOWN, modelSection.getVisibility() == View.VISIBLE);
         super.onSaveInstanceState(outState);

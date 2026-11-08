@@ -27,6 +27,7 @@ final class AllergenPreferences {
     private static final String PREFERENCES = "allergy_preferences";
     private static final String ALLERGENS = "selected_allergens";
     private static final String SHOW_NOT_DETECTED = "show_not_detected";
+    private static final String MAY_CONTAIN_RED_WARNING = "may_contain_red_warning";
 
     private AllergenPreferences() {
     }
@@ -91,6 +92,15 @@ final class AllergenPreferences {
 
     static void saveShowNotDetected(Context context, boolean show) {
         preferences(context).edit().putBoolean(SHOW_NOT_DETECTED, show).apply();
+    }
+
+    /** Use a red warning for precautionary findings unless the user chooses yellow. */
+    static boolean mayContainRedWarning(Context context) {
+        return preferences(context).getBoolean(MAY_CONTAIN_RED_WARNING, true);
+    }
+
+    static void saveMayContainRedWarning(Context context, boolean enabled) {
+        preferences(context).edit().putBoolean(MAY_CONTAIN_RED_WARNING, enabled).apply();
     }
 
     private static Set<String> idsOf(Set<Allergen> allergens) {
