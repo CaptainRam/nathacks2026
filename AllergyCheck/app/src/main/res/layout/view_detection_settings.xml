@@ -95,13 +95,12 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Cloud connection: its own section, like the local model below for Local. -->
+    <!-- Shared cloud credentials are also used by the optional front-photo check in Local mode. -->
     <LinearLayout
         android:id="@+id/detection_cloud_configuration"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:orientation="vertical">
 
         <com.google.android.material.textview.MaterialTextView
             style="@style/Widget.AllergyCheck.SettingsSectionTitle"
@@ -140,6 +139,22 @@
                         android:inputType="textPassword"
                         android:maxLines="1"
                         android:saveEnabled="false" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/food_type_model_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="@string/crosscheck_model_id"
+                    app:helperText="@string/crosscheck_model_hint">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/food_type_model_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textVisiblePassword"
+                        android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout

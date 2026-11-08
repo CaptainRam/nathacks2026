@@ -69,7 +69,10 @@ public class DetectionSettingsTest {
             scenario.onActivity(activity -> {
                 assertEquals(AnalysisPreferences.Mode.MATCHING, AnalysisPreferences.mode(context));
                 assertEquals(View.VISIBLE, activity.findViewById(R.id.detection_local_modes).getVisibility());
-                assertEquals(View.GONE, activity.findViewById(R.id.detection_cloud_configuration).getVisibility());
+                // Cloud credentials remain available for optional front-photo reminders.
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.detection_cloud_configuration).getVisibility());
+                assertEquals(View.GONE, activity.findViewById(R.id.detection_model_layout).getVisibility());
+                assertEquals(View.GONE, activity.findViewById(R.id.detection_concurrency_layout).getVisibility());
                 activity.findViewById(R.id.detection_mode_local_ai).performClick();
                 assertEquals(AnalysisPreferences.Mode.LOCAL_AI, AnalysisPreferences.mode(context));
                 activity.findViewById(R.id.detection_location_cloud).performClick();
@@ -229,5 +232,64 @@ public class DetectionSettingsTest {
 
     private static EditText input(SettingsActivity activity, int id) {
         return activity.findViewById(id);
+    }
+
+    @Test
+    public void frontPhotoModelCanBeConfiguredWithoutChangingLocalDetection() {
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                assertEquals(AnalysisPreferences.Mode.MATCHING, AnalysisPreferences.mode(context));
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.food_type_model_layout).getVisibility());
+                input(activity, R.id.detection_api_key).setText("test-front-photo-key");
+                input(activity, R.id.food_type_model_id).setText("example/vision-model");
+                activity.findViewById(R.id.detection_save_cloud).performClick();
+                assertEquals(AnalysisPreferences.Mode.MATCHING, AnalysisPreferences.mode(context));
+                assertEquals("test-front-photo-key", AnalysisPreferences.openRouterApiKey(context));
+                assertEquals("example/vision-model", AnalysisPreferences.foodTypeModel(context));
+                assertEquals("", AnalysisPreferences.openRouterModel(context));
+                assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+            });
+        }
+    }
+
+    @Test
+    public void frontPhotoModelRequiresKeyAndValidModelBeforeSaving() {
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                input(activity, R.id.food_type_model_id).setText("example/vision-model");
+                activity.findViewById(R.id.detection_save_cloud).performClick();
+                assertNotNull(((TextInputLayout) activity.findViewById(R.id.detection_api_key_layout)).getError());
+                assertEquals("", AnalysisPreferences.foodTypeModel(context));
+                input(activity, R.id.detection_api_key).setText("test-front-photo-key");
+                input(activity, R.id.food_type_model_id).setText("invalid model");
+                activity.findViewById(R.id.detection_save_cloud).performClick();
+                assertNotNull(((TextInputLayout) activity.findViewById(R.id.food_type_model_layout)).getError());
+                assertEquals("", AnalysisPreferences.openRouterApiKey(context));
+                assertEquals("", AnalysisPreferences.foodTypeModel(context));
+            });
+        }
+    }
+
+    @Test
+    public void frontPhotoModelDraftSurvivesRotationAndIsOptionalForCloudDetection() {
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.OPENROUTER);
+        AnalysisPreferences.saveOpenRouterApiKey(context, "test-front-photo-key");
+        AnalysisPreferences.saveOpenRouterModel(context, "example/ingredient-model");
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                input(activity, R.id.food_type_model_id).setText("example/vision-model");
+                assertEquals("", AnalysisPreferences.foodTypeModel(context));
+            });
+            scenario.recreate();
+            scenario.onActivity(activity -> {
+                assertEquals("example/vision-model", input(activity, R.id.food_type_model_id).getText().toString());
+                activity.findViewById(R.id.detection_save_cloud).performClick();
+                assertEquals("example/vision-model", AnalysisPreferences.foodTypeModel(context));
+                input(activity, R.id.food_type_model_id).setText("");
+                activity.findViewById(R.id.detection_save_cloud).performClick();
+                assertEquals("", AnalysisPreferences.foodTypeModel(context));
+                assertEquals("example/ingredient-model", AnalysisPreferences.openRouterModel(context));
+            });
+        }
     }
 }

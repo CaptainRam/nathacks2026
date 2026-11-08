@@ -49,6 +49,15 @@ public final class AnalysisPreferences {
         configuration(context).edit().putString("openrouter_model", model.trim()).apply();
     }
 
+    /** Image-capable chat model used only for optional food-type reminders. */
+    public static String foodTypeModel(Context context) {
+        return configuration(context).getString("food_type_model", "");
+    }
+
+    public static void saveFoodTypeModel(Context context, String model) {
+        configuration(context).edit().putString("food_type_model", model.trim()).apply();
+    }
+
     public static String decisionsModel(Context context) {
         return configuration(context).getString("decisions_model", "");
     }

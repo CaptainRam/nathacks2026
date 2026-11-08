@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="photo_role_ingredients">Ingredient label</string>
+    <string name="photo_role_front">Front photo</string>
+    <string name="crosscheck_front_photo_label">Front photo</string>
+    <string name="crosscheck_label_photo_label">Ingredient label</string>
+    <string name="crosscheck_photo_menu_remove">Remove front photo</string>
+    <string name="crosscheck_add_menu_title">Front photo</string>
+    <string name="crosscheck_photo_optional">Optional</string>
+    <string name="crosscheck_photo_hint">Optional front photos are sent to the cloud for food-type reminders. Allergen results still come from the ingredient label.</string>
+    <string name="crosscheck_change_photo">Change front photo</string>
+    <string name="crosscheck_title">Optional food-type cross-check</string>
+    <string name="crosscheck_description">Adding a front photo of the same food starts an optional cloud cross-check once ingredient analysis is ready. The photo is sent to an AI model to estimate the food type and its common allergens. Reminders do not confirm or add allergens; your results still come from the ingredient label.</string>
+    <string name="crosscheck_add_photo">Add front photo</string>
+    <string name="crosscheck_camera">Take front photo</string>
+    <string name="crosscheck_photo_description">Front photo for the optional food-type cross-check</string>
+    <string name="crosscheck_remove_photo">Remove front photo</string>
+    <string name="crosscheck_run">Run cross-check</string>
+    <string name="crosscheck_settings">Cloud settings</string>
+    <string name="crosscheck_config_missing">Save an OpenRouter API key and an image-capable food-type model in Cloud settings to use this optional check.</string>
+    <string name="crosscheck_waiting_photo">Add a front photo of the same product for optional reminders, or continue with the ingredient-label results.</string>
+    <string name="crosscheck_awaiting_analysis">Check the ingredient label first. The selected front photo will be compared once the label results are ready.</string>
+    <string name="crosscheck_ready">Ready to compare this front photo with the ingredient-label results.</string>
+    <string name="crosscheck_photo_loading">Loading the front photo…</string>
+    <string name="crosscheck_running">Checking the food type and comparing common allergens…</string>
+    <string name="crosscheck_unknown_food">The model could not identify a food type from this photo. Try a clearer front photo of the same product. Ingredient-label results are unchanged.</string>
+    <string name="crosscheck_error">The optional cloud check could not be completed. Check the connection and image-capable model settings, then retry. Ingredient-label results are unchanged.</string>
+    <string name="crosscheck_missing_allergens">Estimated food type: %1$s.\n\nCommon allergens to review: %2$s. These were not identified in the ingredient-label analysis. Check the complete label again. This reminder does not confirm their presence or add them to your results.</string>
+    <string name="crosscheck_no_missing">Estimated food type: %1$s. No additional reminders for your selected allergens. This does not establish that the product is allergen-free. Ingredient-label results are unchanged.</string>
+    <string name="crosscheck_label_unavailable">A readable ingredient-label result is needed for this comparison. Retry the label photo first.</string>
+    <string name="crosscheck_no_allergens">Select allergens and check the ingredient label before running this comparison.</string>
+    <string name="crosscheck_retry">Retry cross-check</string>
+    <string name="crosscheck_photo_error">The front photo could not be opened. Choose another photo or try again.</string>
+    <string name="crosscheck_model_id">Food-type vision model ID (optional)</string>
+    <string name="crosscheck_model_hint">Choose an OpenRouter model that accepts images, in provider/model format. Used only for front-photo reminders, in any detection mode.</string>
+</resources>

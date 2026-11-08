@@ -91,6 +91,7 @@ public class SettingsActivity extends AppCompatActivity {
     private MaterialButton modelDetailsButton;
     private EditText apiKeyInput;
     private EditText openRouterModelInput;
+    private EditText foodTypeModelInput;
     private EditText decisionsModelInput;
     private EditText decisionsThresholdInput;
     private EditText cloudConcurrencyInput;
@@ -311,6 +312,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void initializeDetectionSettings() {
         apiKeyInput = findViewById(R.id.detection_api_key);
         openRouterModelInput = findViewById(R.id.detection_model_id);
+        foodTypeModelInput = findViewById(R.id.food_type_model_id);
         decisionsModelInput = findViewById(R.id.detection_decisions_model_id);
         decisionsThresholdInput = findViewById(R.id.detection_threshold);
         cloudConcurrencyInput = findViewById(R.id.detection_concurrency);
@@ -318,6 +320,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (draft.apiKey == null) draft.apiKey = AnalysisPreferences.openRouterApiKey(this);
         apiKeyInput.setText(draft.apiKey);
         openRouterModelInput.setText(AnalysisPreferences.openRouterModel(this));
+        foodTypeModelInput.setText(AnalysisPreferences.foodTypeModel(this));
         decisionsModelInput.setText(AnalysisPreferences.decisionsModel(this));
         decisionsThresholdInput.setText(formatThreshold(AnalysisPreferences.decisionsThreshold(this),
                 getResources().getConfiguration().getLocales().get(0)));
@@ -334,6 +337,7 @@ public class SettingsActivity extends AppCompatActivity {
         };
         apiKeyInput.addTextChangedListener(watcher);
         openRouterModelInput.addTextChangedListener(watcher);
+        foodTypeModelInput.addTextChangedListener(watcher);
         decisionsModelInput.addTextChangedListener(watcher);
         decisionsThresholdInput.addTextChangedListener(watcher);
         cloudConcurrencyInput.addTextChangedListener(watcher);
@@ -400,10 +404,11 @@ public class SettingsActivity extends AppCompatActivity {
         findViewById(R.id.local_model_section).setVisibility(cloud ? View.GONE : View.VISIBLE);
         findViewById(R.id.local_model_title).setVisibility(cloud ? View.GONE : View.VISIBLE);
         findViewById(R.id.local_model_hint).setVisibility(cloud ? View.GONE : View.VISIBLE);
-        findViewById(R.id.detection_cloud_configuration).setVisibility(cloud ? View.VISIBLE : View.GONE);
-        findViewById(R.id.detection_model_layout).setVisibility(decisions ? View.GONE : View.VISIBLE);
+        findViewById(R.id.detection_cloud_configuration).setVisibility(View.VISIBLE);
+        findViewById(R.id.detection_model_layout).setVisibility(cloud && !decisions ? View.VISIBLE : View.GONE);
         findViewById(R.id.detection_decisions_model_layout).setVisibility(decisions ? View.VISIBLE : View.GONE);
         findViewById(R.id.detection_threshold_layout).setVisibility(decisions ? View.VISIBLE : View.GONE);
+        findViewById(R.id.detection_concurrency_layout).setVisibility(cloud ? View.VISIBLE : View.GONE);
         renderCloudStatus();
     }
 
@@ -465,14 +470,17 @@ public class SettingsActivity extends AppCompatActivity {
                 || mode == AnalysisPreferences.Mode.DECISIONS;
         String key = input(apiKeyInput);
         String llmModel = input(openRouterModelInput);
+        String foodTypeModel = input(foodTypeModelInput);
         String decisionsModel = input(decisionsModelInput);
         TextInputLayout keyLayout = findViewById(R.id.detection_api_key_layout);
         TextInputLayout llmLayout = findViewById(R.id.detection_model_layout);
+        TextInputLayout foodTypeLayout = findViewById(R.id.food_type_model_layout);
         TextInputLayout decisionsLayout = findViewById(R.id.detection_decisions_model_layout);
         TextInputLayout thresholdLayout = findViewById(R.id.detection_threshold_layout);
         TextInputLayout concurrencyLayout = findViewById(R.id.detection_concurrency_layout);
         keyLayout.setError(null);
         llmLayout.setError(null);
+        foodTypeLayout.setError(null);
         decisionsLayout.setError(null);
         thresholdLayout.setError(null);
         concurrencyLayout.setError(null);
@@ -484,7 +492,7 @@ public class SettingsActivity extends AppCompatActivity {
             cloudConcurrencyInput.requestFocus();
             return false;
         }
-        if (cloud && (key.isEmpty() || key.matches(".*\\s+.*"))) {
+        if ((cloud || !foodTypeModel.isEmpty()) && (key.isEmpty() || key.matches(".*\\s+.*"))) {
             keyLayout.setError(getString(R.string.detection_key_required));
             apiKeyInput.requestFocus();
             return false;
@@ -492,6 +500,11 @@ public class SettingsActivity extends AppCompatActivity {
         if (mode == AnalysisPreferences.Mode.OPENROUTER && !validModelId(llmModel)) {
             llmLayout.setError(getString(R.string.detection_model_required));
             openRouterModelInput.requestFocus();
+            return false;
+        }
+        if (!foodTypeModel.isEmpty() && !validModelId(foodTypeModel)) {
+            foodTypeLayout.setError(getString(R.string.detection_model_required));
+            foodTypeModelInput.requestFocus();
             return false;
         }
         if (mode == AnalysisPreferences.Mode.DECISIONS && !validModelId(decisionsModel)) {
@@ -514,6 +527,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
         AnalysisPreferences.saveOpenRouterApiKey(this, key);
         AnalysisPreferences.saveOpenRouterModel(this, llmModel);
+        AnalysisPreferences.saveFoodTypeModel(this, foodTypeModel);
         AnalysisPreferences.saveDecisionsModel(this, decisionsModel);
         AnalysisPreferences.saveDecisionsThreshold(this, threshold);
         AnalysisPreferences.saveCloudConcurrency(this, concurrency);
@@ -576,6 +590,7 @@ public class SettingsActivity extends AppCompatActivity {
     private boolean cloudSettingsChanged() {
         return apiKeyInput != null && (!input(apiKeyInput).equals(AnalysisPreferences.openRouterApiKey(this))
                 || !input(openRouterModelInput).equals(AnalysisPreferences.openRouterModel(this))
+                || !input(foodTypeModelInput).equals(AnalysisPreferences.foodTypeModel(this))
                 || !input(decisionsModelInput).equals(AnalysisPreferences.decisionsModel(this))
                 || !input(cloudConcurrencyInput).equals(
                         formatConcurrency(AnalysisPreferences.cloudConcurrency(this)))
