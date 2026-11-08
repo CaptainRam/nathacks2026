@@ -54,11 +54,26 @@ public final class CloudAllergenPrompt {
         return new JSONObject().put("ingredients", items).put("allergen", allergen.label());
     }
 
-    public static List<AiDecision> parse(String reply, int ingredientCount) throws JSONException {
-        if (ingredientCount <= 0 || ingredientCount > MAX_INGREDIENTS || reply == null
-                || reply.trim().isEmpty() || reply.length() > MAX_REPLY_CHARS) {
-            throw new IllegalArgumentException("Invalid cloud ingredient response");
+    /**
+     * Every unusable reply raises {@link AiResponseFormatException}: the model answered, so a
+     * malformed answer for this list must not count as the service being unavailable.
+     */
+    public static List<AiDecision> parse(String reply, int ingredientCount)
+            throws AiResponseFormatException {
+        if (ingredientCount <= 0 || ingredientCount > MAX_INGREDIENTS) {
+            throw new IllegalArgumentException("Invalid cloud ingredient count");
         }
+        if (reply == null || reply.trim().isEmpty() || reply.length() > MAX_REPLY_CHARS) {
+            throw new AiResponseFormatException("The model returned an empty or oversized reply");
+        }
+        try {
+            return parseResults(reply, ingredientCount);
+        } catch (JSONException | IllegalArgumentException invalid) {
+            throw new AiResponseFormatException("The model returned invalid ingredient results", invalid);
+        }
+    }
+
+    private static List<AiDecision> parseResults(String reply, int ingredientCount) throws JSONException {
         JSONTokener tokener = new JSONTokener(reply.trim());
         Object value = tokener.nextValue();
         if (!(value instanceof JSONObject) || tokener.nextClean() != 0) {

@@ -18,6 +18,8 @@ public final class LocalAiModel implements AiModel {
     private final Context context;
     private LlmInference engine;
     private LlmInferenceSession.LlmInferenceSessionOptions sessionOptions;
+    /** Set once the model cannot run; every later pair fails fast with the same cause. */
+    private AiUnavailableException unavailable;
     private boolean closed;
 
     public LocalAiModel(Context context) {
@@ -29,8 +31,8 @@ public final class LocalAiModel implements AiModel {
         if (closed) throw new IllegalStateException("The local model has been closed");
         if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
         String prompt = AllergenPrompt.local(ingredient, allergen);
+        LlmInference llm = engine();
         try {
-            LlmInference llm = engine();
             if (llm.sizeInTokens(prompt) > MAX_TOKENS - REPLY_TOKENS) {
                 throw new IOException("This ingredient is too long for the local model");
             }
@@ -44,9 +46,11 @@ public final class LocalAiModel implements AiModel {
                 session.close();
             }
         } catch (LinkageError error) {
-            throw new IOException("The local model cannot run on this device", error);
+            throw unavailable("The local model cannot run on this device", error);
         } catch (OutOfMemoryError error) {
-            throw new IOException("Not enough memory to run the local model", error);
+            // Every pair uses the same token budget, so the next one would run out of memory
+            // again while the app is already under pressure. Stop rather than retry per pair.
+            throw unavailable("Not enough memory to run the local model", error);
         }
     }
 
@@ -67,17 +71,35 @@ public final class LocalAiModel implements AiModel {
         return sessionOptions;
     }
 
-    private LlmInference engine() throws IOException {
+    /**
+     * A failed load of the multi-GB model would fail the same way for every pair, so it is
+     * remembered and reported as unavailable instead of being reloaded for each request.
+     */
+    private LlmInference engine() throws AiUnavailableException {
+        if (unavailable != null) throw unavailable;
         if (engine == null) {
             File model = LocalModelManager.installedModel(context);
-            if (model == null) throw new IOException("Download the local model in Settings first");
-            engine = LlmInference.createFromOptions(context,
-                    LlmInference.LlmInferenceOptions.builder()
-                            .setModelPath(model.getAbsolutePath())
-                            .setMaxTokens(MAX_TOKENS)
-                            .build());
+            if (model == null) throw unavailable("Download the local model in Settings first", null);
+            try {
+                engine = LlmInference.createFromOptions(context,
+                        LlmInference.LlmInferenceOptions.builder()
+                                .setModelPath(model.getAbsolutePath())
+                                .setMaxTokens(MAX_TOKENS)
+                                .build());
+            } catch (LinkageError error) {
+                throw unavailable("The local model cannot run on this device", error);
+            } catch (OutOfMemoryError error) {
+                throw unavailable("Not enough memory to load the local model", error);
+            } catch (Exception error) {
+                throw unavailable("The local model could not be loaded", error);
+            }
         }
         return engine;
+    }
+
+    private AiUnavailableException unavailable(String message, Throwable cause) {
+        unavailable = new AiUnavailableException(message, cause);
+        return unavailable;
     }
 
     @Override

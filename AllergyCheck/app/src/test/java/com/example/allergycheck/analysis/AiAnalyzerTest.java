@@ -3,6 +3,7 @@ package com.example.allergycheck.analysis;
 import com.example.allergycheck.analysis.ai.AiDecision;
 import com.example.allergycheck.analysis.ai.AiModel;
 import com.example.allergycheck.analysis.ai.AiResponseFormatException;
+import com.example.allergycheck.analysis.ai.AiUnavailableException;
 
 import org.junit.Test;
 
@@ -198,6 +199,43 @@ public class AiAnalyzerTest {
         assertEquals(AnalysisReport.Status.POSSIBLE, report.overall());
         assertTrue(report.results().get(0).findings().stream()
                 .anyMatch(f -> f.evidence().equals("zeta") && f.reason() == Finding.Reason.AI_RISK));
+    }
+
+    @Test
+    public void unavailableModelStopsAfterTheFirstPair() throws Exception {
+        int[] calls = {0};
+        AnalysisReport report = AiAnalyzer.analyse(
+                matching("Ingredients: alpha, beta, gamma, delta, epsilon.", "MILK"),
+                (ingredient, allergen) -> {
+                    calls[0]++;
+                    throw new AiUnavailableException("The local model could not be loaded");
+                });
+        // A failed engine load repeats for every pair, so it must not be retried three times.
+        assertEquals(1, calls[0]);
+        assertTrue(report.aiIncomplete());
+        assertEquals(5, report.results().get(0).findings().size());
+    }
+
+    @Test
+    public void namelessBracketGroupIsNeitherCheckedNorReportedUnchecked() throws Exception {
+        AnalysisReport base = matching("Ingredients: sugar, (soy lecithin), salt.", "MILK");
+        // The group has no name of its own; its contents are a separate item.
+        assertTrue(base.label().ingredients().stream()
+                .anyMatch(item -> item.original().equals("(soy lecithin)")
+                        && item.matchText().trim().isEmpty()));
+        assertTrue(base.label().ingredients().stream()
+                .anyMatch(item -> item.original().equals("soy lecithin")));
+        List<String> calls = new ArrayList<>();
+        AnalysisReport report = AiAnalyzer.analyse(base, (ingredient, allergen) -> {
+            calls.add(ingredient);
+            return AiDecision.of(AiDecision.Verdict.NO_EVIDENCE);
+        });
+        assertEquals(Arrays.asList("sugar", "soy lecithin", "salt"), calls);
+        assertFalse(report.aiIncomplete());
+        assertEquals(AnalysisReport.Status.NOT_DETECTED, report.overall());
+        assertTrue(report.results().get(0).findings().isEmpty());
+        assertFalse(AiAnalyzer.incompleteReport(base).results().get(0).findings().stream()
+                .anyMatch(f -> f.evidence().isEmpty()));
     }
 
     @Test

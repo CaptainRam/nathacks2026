@@ -64,11 +64,20 @@ final class AiAnalysisRunner {
                 || mode == AnalysisPreferences.Mode.DECISIONS;
         Job job = new Job(AiAnalyzer.incompleteReport(matching), callback);
         current = job;
-        main.postDelayed(job.timeout, pairTimeoutMs);
+        // The timer starts when the worker reaches this job, not now: a cancelled scan's native
+        // generation cannot be interrupted and would otherwise eat this scan's budget. While that
+        // old call drains this job has no timer; it is bounded only by the model, and no answer
+        // could arrive sooner anyway. Model loading happens after the first progress, so it is timed.
         worker.execute(() -> {
             if (job.cancelled) {
                 return;
             }
+            main.post(() -> {
+                if (!job.cancelled && !job.answered && !closed && current == job) {
+                    main.removeCallbacks(job.timeout);
+                    main.postDelayed(job.timeout, pairTimeoutMs);
+                }
+            });
             AiModel model = null;
             try {
                 AiAnalyzer.ProgressListener progress = (completed, total, partial) -> main.post(() -> {

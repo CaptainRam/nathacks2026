@@ -3,6 +3,7 @@ package com.example.allergycheck.analysis;
 import com.example.allergycheck.analysis.ai.AiDecision;
 import com.example.allergycheck.analysis.ai.AiModel;
 import com.example.allergycheck.analysis.ai.AiResponseFormatException;
+import com.example.allergycheck.analysis.ai.AiUnavailableException;
 import com.example.allergycheck.analysis.ai.OpenRouterAiModel;
 
 import java.util.ArrayList;
@@ -21,10 +22,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
 /** Adds per-allergen AI checks without letting a model erase matching evidence. */
 public final class AiAnalyzer {
+    /** Each slot is a thread and an open OpenRouter request; more mostly earns rate-limit errors. */
+    public static final int MAX_CLOUD_CONCURRENCY = 8;
+
     /** Each cloud request owns a separate client so connections are never shared concurrently. */
     public interface ModelFactory {
         AiModel create() throws Exception;
@@ -101,8 +106,11 @@ public final class AiAnalyzer {
                                                    int concurrency, ModelFactory factory,
                                                    BooleanSupplier cancelled, ProgressListener progress,
                                                    long requestTimeoutMs) throws InterruptedException {
-        if (concurrency < 1 || requestTimeoutMs <= 0) {
-            throw new IllegalArgumentException("Cloud concurrency and timeout must be positive");
+        // Enforced here too, so a caller that skips the clamped preference cannot open one
+        // thread and request per ingredient.
+        if (concurrency < 1 || concurrency > MAX_CLOUD_CONCURRENCY || requestTimeoutMs <= 0) {
+            throw new IllegalArgumentException("Cloud concurrency must be 1–" + MAX_CLOUD_CONCURRENCY
+                    + " and timeout positive");
         }
         Map<String, Check> checks = checksFor(matching);
         List<List<Check>> requests = requestsFor(checks, batch);
@@ -129,20 +137,20 @@ public final class AiAnalyzer {
                     CloudRequest request = new CloudRequest(requests.get(next++));
                     Future<RequestResult> future = completions.submit(() -> {
                         try {
-                            if (request.abandoned.get() || cancelled.getAsBoolean()) {
+                            if (request.released() || cancelled.getAsBoolean()) {
                                 throw new InterruptedException("AI check cancelled");
                             }
-                            request.setModel(factory.create());
-                            if (request.abandoned.get() || cancelled.getAsBoolean()
+                            AiModel model = request.attach(factory.create());
+                            if (request.released() || cancelled.getAsBoolean()
                                     || Thread.currentThread().isInterrupted()) {
                                 throw new InterruptedException("AI check cancelled");
                             }
-                            return new RequestResult(evaluate(request.checks, request.model(), batch), null);
+                            return new RequestResult(evaluate(request.checks, model, batch), null);
                         } catch (Exception | LinkageError failure) {
                             if (isPermanent(failure)) stopSubmitting.set(true);
                             return new RequestResult(null, failure);
                         } finally {
-                            request.closeModel();
+                            request.release();
                         }
                     });
                     active.put(future, request);
@@ -161,6 +169,10 @@ public final class AiAnalyzer {
                     }
                     if (outcome.failure == null) {
                         apply(finished.checks, outcome.decisions);
+                        consecutiveFailures = 0;
+                    } else if (outcome.failure instanceof AiResponseFormatException) {
+                        // As in the serial path: the service answered, only this reply was
+                        // unusable. Its checks stay unchecked without stopping other requests.
                         consecutiveFailures = 0;
                     } else {
                         consecutiveFailures++;
@@ -219,9 +231,11 @@ public final class AiAnalyzer {
         }
     }
 
+    /** A failure that would repeat for every remaining request, so the run stops at once. */
     private static boolean isPermanent(Throwable failure) {
-        return failure instanceof OpenRouterAiModel.ApiException
-                && ((OpenRouterAiModel.ApiException) failure).permanent();
+        return failure instanceof AiUnavailableException
+                || (failure instanceof OpenRouterAiModel.ApiException
+                && ((OpenRouterAiModel.ApiException) failure).permanent());
     }
 
     private static final class RequestResult {
@@ -234,54 +248,53 @@ public final class AiAnalyzer {
         }
     }
 
+    /**
+     * The coordinator and the worker both release the client: whichever runs first closes it, and
+     * a client created after cancellation is closed as soon as it is attached.
+     */
     private static final class CloudRequest {
+        /** Marks a released request; it is never handed to a model call or closed. */
+        private static final AiModel RELEASED = (ingredient, allergen) -> {
+            throw new InterruptedException("AI check cancelled");
+        };
         final List<Check> checks;
         final long submittedAt = System.nanoTime();
-        final AtomicBoolean abandoned = new AtomicBoolean();
-        private AiModel model;
+        private final AtomicReference<AiModel> model = new AtomicReference<>();
 
         CloudRequest(List<Check> checks) {
             this.checks = checks;
         }
 
-        void setModel(AiModel created) {
-            synchronized (this) {
-                if (!abandoned.get()) {
-                    model = created;
-                    return;
-                }
-            }
-            close(created);
+        boolean released() {
+            return model.get() == RELEASED;
         }
 
-        synchronized AiModel model() throws InterruptedException {
-            if (model == null) throw new InterruptedException("AI check cancelled");
-            return model;
+        AiModel attach(AiModel created) throws InterruptedException {
+            if (!model.compareAndSet(null, created)) {
+                close(created);
+                throw new InterruptedException("AI check cancelled");
+            }
+            return created;
         }
 
-        void closeModel() {
-            AiModel closing;
-            synchronized (this) {
-                closing = model;
-                model = null;
-            }
-            close(closing);
+        void release() {
+            close(model.getAndSet(RELEASED));
+        }
+
+        /** Closing first disconnects a socket read that ignores the interrupt. */
+        void cancel(Future<?> future) {
+            release();
+            future.cancel(true);
         }
 
         private static void close(AiModel closing) {
-            if (closing != null) {
+            if (closing != null && closing != RELEASED) {
                 try {
                     closing.close();
                 } catch (Exception | LinkageError ignored) {
                     // A release failure must not discard a completed report.
                 }
             }
-        }
-
-        void cancel(Future<?> future) {
-            abandoned.set(true);
-            future.cancel(true);
-            closeModel();
         }
     }
 
@@ -311,8 +324,8 @@ public final class AiAnalyzer {
         for (AllergenResult result : matching.results()) {
             Set<String> matched = matchedIngredients(result);
             for (IngredientItem item : matching.label().ingredients()) {
-                String ingredient = item.matchText().trim();
-                if (!ingredient.isEmpty() && !matched.contains(item.original())) {
+                String ingredient = aiInput(item, matched);
+                if (ingredient != null) {
                     checks.putIfAbsent(key(result.allergen(), ingredient),
                             new Check(ingredient, result.allergen()));
                 }
@@ -335,6 +348,17 @@ public final class AiAnalyzer {
         return matched;
     }
 
+    /**
+     * The text sent to the model for this item, or null when it needs no check: already matched,
+     * or a bracketed group with no name of its own, such as "(soy lecithin)", whose contents are
+     * separate items. Requests and the report both use this, so a skipped item never shows as
+     * an unchecked one.
+     */
+    private static String aiInput(IngredientItem item, Set<String> matched) {
+        String ingredient = item.matchText().trim();
+        return ingredient.isEmpty() || matched.contains(item.original()) ? null : ingredient;
+    }
+
     private static String key(Allergen allergen, String ingredient) {
         return allergen.id() + "\u0000" + ingredient;
     }
@@ -351,10 +375,11 @@ public final class AiAnalyzer {
             Set<String> matched = matchedIngredients(base);
             boolean allergenIncomplete = noIngredients;
             for (IngredientItem item : matching.label().ingredients()) {
-                if (matched.contains(item.original())) {
+                String ingredient = aiInput(item, matched);
+                if (ingredient == null) {
                     continue;
                 }
-                Check check = checks.get(key(base.allergen(), item.matchText().trim()));
+                Check check = checks.get(key(base.allergen(), ingredient));
                 AiDecision decision = check == null ? null : check.decision;
                 Finding.Reason reason;
                 if (decision == null) {

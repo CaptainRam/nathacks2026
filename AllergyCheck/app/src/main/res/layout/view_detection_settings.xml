@@ -196,7 +196,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:hint="@string/detection_concurrency"
-                    app:helperText="@string/detection_concurrency_hint">
+                    app:helperTextEnabled="true">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/detection_concurrency"

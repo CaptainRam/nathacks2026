@@ -187,6 +187,68 @@ public class AiAnalysisRunnerTest {
     }
 
     @Test
+    public void queuedScanDoesNotTimeOutWhileCancelledNativeCallDrains() throws Exception {
+        CountDownLatch slowEntered = new CountDownLatch(1);
+        CountDownLatch releaseSlow = new CountDownLatch(1);
+        CountDownLatch delivered = new CountDownLatch(1);
+        CountDownLatch bothClosed = new CountDownLatch(2);
+        AtomicInteger factories = new AtomicInteger();
+        AtomicInteger staleResults = new AtomicInteger();
+        AtomicReference<AnalysisReport> result = new AtomicReference<>();
+        AiAnalysisRunner[] runner = new AiAnalysisRunner[1];
+        try {
+            onMain(() -> {
+                runner[0] = new AiAnalysisRunner(context, () -> {
+                    boolean slow = factories.incrementAndGet() == 1;
+                    return new AiModel() {
+                        @Override
+                        public AiDecision evaluate(String ingredient, Allergen allergen) throws Exception {
+                            if (slow) {
+                                slowEntered.countDown();
+                                if (!releaseSlow.await(10, TimeUnit.SECONDS)) {
+                                    throw new IllegalStateException("Test did not release slow model");
+                                }
+                            }
+                            return AiDecision.of(AiDecision.Verdict.NO_EVIDENCE);
+                        }
+
+                        @Override public void close() { bothClosed.countDown(); }
+                    };
+                }, 1_000);
+                runner[0].check(matching(), new AiAnalysisRunner.Callback() {
+                    @Override public void onProgress(int completed, int total) { }
+                    @Override public void onResult(AnalysisReport report) { staleResults.incrementAndGet(); }
+                });
+            });
+            assertTrue("The slow evaluation never started", slowEntered.await(5, TimeUnit.SECONDS));
+
+            // A rescan queues behind the uninterruptible call for longer than its own timeout.
+            onMain(() -> runner[0].check(matching(), new AiAnalysisRunner.Callback() {
+                @Override public void onProgress(int completed, int total) { }
+
+                @Override
+                public void onResult(AnalysisReport report) {
+                    result.set(report);
+                    delivered.countDown();
+                }
+            }));
+            assertFalse("The queued scan timed out before its first check",
+                    delivered.await(2_500, TimeUnit.MILLISECONDS));
+
+            releaseSlow.countDown();
+            assertTrue("The queued scan was not delivered", delivered.await(5, TimeUnit.SECONDS));
+            assertTrue("Models were not released", bothClosed.await(5, TimeUnit.SECONDS));
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            assertFalse(result.get().aiIncomplete());
+            assertEquals(0, staleResults.get());
+            assertEquals(2, factories.get());
+        } finally {
+            releaseSlow.countDown();
+            onMain(() -> { if (runner[0] != null) runner[0].close(); });
+        }
+    }
+
+    @Test
     public void cloudRunnerUsesConfiguredConcurrentRequestCountAndIndependentClients() throws Exception {
         AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.DECISIONS);
         AnalysisPreferences.saveCloudConcurrency(context, 2);

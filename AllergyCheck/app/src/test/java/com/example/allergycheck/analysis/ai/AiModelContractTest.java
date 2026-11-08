@@ -159,22 +159,42 @@ public class AiModelContractTest {
     }
 
     @Test
-    public void invalidDecisionsScoresAndRefusalsAreFailures() throws Exception {
-        for (String answer : new String[]{"{\"type\":\"refusal\"}",
-                "{\"type\":\"score\",\"score\":\"0.9\"}",
-                "{\"type\":\"score\",\"score\":2}", "{\"type\":\"score\"}"}) {
-            try {
-                OpenRouterAiModel.parseDecisions(new JSONObject("{\"answers\":{\"allergen_risk\":" + answer + "}}"), 0.5);
-                fail("Accepted malformed score: " + answer);
-            } catch (IllegalArgumentException | java.io.IOException | org.json.JSONException expected) { }
+    public void invalidDecisionsScoresAndRefusalsAreFormatFailures() throws Exception {
+        for (String answers : new String[]{"{\"allergen_risk\":{\"type\":\"refusal\"}}",
+                "{\"allergen_risk\":{\"type\":\"score\",\"score\":\"0.9\"}}",
+                "{\"allergen_risk\":{\"type\":\"score\",\"score\":2}}",
+                "{\"allergen_risk\":{\"type\":\"score\"}}", "{}",
+                "{\"other\":{\"type\":\"score\",\"score\":0.9}}"}) {
+            JSONObject response = new JSONObject("{\"answers\":" + answers + "}");
+            // The model answered unusably: this input stays unchecked, the service is not down.
+            assertThrows("Accepted malformed score: " + answers, AiResponseFormatException.class,
+                    () -> OpenRouterAiModel.parseDecisions(response, 0.5));
         }
     }
 
     @Test
     public void truncatedChatReplyCannotBecomeNegative() throws Exception {
-        JSONObject reply = new JSONObject("{\"choices\":[{\"finish_reason\":\"length\",\"message\":{"
-                + "\"content\":\"{\\\"verdict\\\":\\\"no_evidence\\\"}\"}}]}");
-        assertThrows(java.io.IOException.class, () -> OpenRouterAiModel.parseChat(reply, 1));
+        for (String finish : new String[]{"length", "content_filter"}) {
+            JSONObject reply = new JSONObject("{\"choices\":[{\"finish_reason\":\"" + finish
+                    + "\",\"message\":{\"content\":\"{\\\"verdict\\\":\\\"no_evidence\\\"}\"}}]}");
+            assertThrows(AiResponseFormatException.class, () -> OpenRouterAiModel.parseChat(reply, 1));
+        }
+        JSONObject refused = new JSONObject("{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{"
+                + "\"content\":null,\"refusal\":\"no\"}}]}");
+        assertThrows(AiResponseFormatException.class, () -> OpenRouterAiModel.parseChat(refused, 1));
+    }
+
+    @Test
+    public void providerErrorsAndBrokenEnvelopesRemainAvailabilityFailures() throws Exception {
+        JSONObject providerError = new JSONObject("{\"choices\":[{\"finish_reason\":\"error\","
+                + "\"message\":{\"content\":\"\"}}]}");
+        assertThrows(java.io.IOException.class, () -> OpenRouterAiModel.parseChat(providerError, 1));
+        assertThrows(java.io.IOException.class,
+                () -> OpenRouterAiModel.parseChat(new JSONObject("{\"choices\":[]}"), 1));
+        assertThrows(org.json.JSONException.class,
+                () -> OpenRouterAiModel.parseChat(new JSONObject("{}"), 1));
+        assertThrows(org.json.JSONException.class,
+                () -> OpenRouterAiModel.parseDecisions(new JSONObject("{}"), 0.5));
     }
 
     @Test
@@ -197,7 +217,7 @@ public class AiModelContractTest {
                 "{\"results\":[{\"ingredient_id\":false,\"verdict\":\"risk\"}]}",
                 "{\"results\":[{\"ingredient_id\":0,\"verdict\":\"risk\"},"
                         + "{\"ingredient_id\":0,\"verdict\":\"no_evidence\"}]}"}) {
-            assertThrows(IllegalArgumentException.class, () -> CloudAllergenPrompt.parse(reply, 2));
+            assertThrows(AiResponseFormatException.class, () -> CloudAllergenPrompt.parse(reply, 2));
         }
     }
 
@@ -207,12 +227,12 @@ public class AiModelContractTest {
                 "{\"results\":[{\"ingredient_id\":0,\"verdict\":\"risk\",\"ingredient\":\"invented\"}]}",
                 "{\"results\":[{\"ingredient_id\":0,\"verdict\":\"safe\"}]}",
                 "{\"results\":[{\"ingredient_id\":0,\"verdict\":false}]}",
-                "{\"results\":[],\"explanation\":\"invented\"}", "{\"results\":[]} trailing"}) {
-            try {
-                CloudAllergenPrompt.parse(reply, 1);
-                fail("Accepted malformed cloud result: " + reply);
-            } catch (IllegalArgumentException | org.json.JSONException expected) { }
+                "{\"results\":[],\"explanation\":\"invented\"}", "{\"results\":[]} trailing",
+                "{\"results\":[", "not json"}) {
+            assertThrows("Accepted malformed cloud result: " + reply, AiResponseFormatException.class,
+                    () -> CloudAllergenPrompt.parse(reply, 1));
         }
+        assertThrows(AiResponseFormatException.class, () -> CloudAllergenPrompt.parse(null, 1));
     }
 
     @Test
@@ -239,6 +259,73 @@ public class AiModelContractTest {
             assertFalse(error.getMessage().contains("secret"));
         }
         assertTrue(connection.disconnected);
+    }
+
+    @Test
+    public void onlyAccountWideStatusesArePermanent() {
+        for (int status : new int[]{401, 402, 404}) {
+            assertTrue(String.valueOf(status), new OpenRouterAiModel.ApiException(status).permanent());
+        }
+        // 400 (e.g. context too long) and 403 (moderation) can concern one input only.
+        for (int status : new int[]{400, 403, 408, 429, 500, 502}) {
+            assertFalse(String.valueOf(status), new OpenRouterAiModel.ApiException(status).permanent());
+        }
+    }
+
+    @Test
+    public void oneModeratedRequestDoesNotStopOtherAllergens() throws Exception {
+        AllergenDictionary dictionary = AllergenDictionary.load(new StringReader(
+                "{\"schemaVersion\":1,\"allergens\":["
+                        + "{\"id\":\"MILK\",\"label\":\"Milk\",\"terms\":[\"milk\"]},"
+                        + "{\"id\":\"SOY\",\"label\":\"Soy\",\"terms\":[\"soy\"]}]}"));
+        AnalysisReport matching = Analyzer.analyse("Ingredients: alpha, beta.", dictionary,
+                Arrays.asList(dictionary.byId("MILK"), dictionary.byId("SOY")));
+        String answer = "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{"
+                + "\"content\":\"{\\\"results\\\":["
+                + "{\\\"ingredient_id\\\":0,\\\"verdict\\\":\\\"risk\\\"},"
+                + "{\\\"ingredient_id\\\":1,\\\"verdict\\\":\\\"no_evidence\\\"}]}\"}}]}";
+        AtomicInteger requests = new AtomicInteger();
+        AnalysisReport report = AiAnalyzer.analyseConcurrent(matching, true, 1, () -> {
+            FakeConnection connection = requests.getAndIncrement() == 0
+                    ? new FakeConnection(403, "flagged") : new FakeConnection(200, answer);
+            return new OpenRouterAiModel("secret", "provider/model", null, url -> connection);
+        }, () -> false, (completed, total, partial) -> { });
+        assertEquals(2, requests.get());
+        assertTrue(report.aiIncomplete());
+        assertEquals(AnalysisReport.Status.POSSIBLE, report.overall());
+    }
+
+    @Test
+    public void malformedCloudRepliesNeverStopTheRun() throws Exception {
+        AtomicInteger requests = new AtomicInteger();
+        AnalysisReport report = AiAnalyzer.analyseConcurrent(fiveIngredients(), false, 1, () -> {
+            requests.incrementAndGet();
+            FakeConnection connection = new FakeConnection(200,
+                    "{\"answers\":{\"allergen_risk\":{\"type\":\"refusal\"}}}");
+            return new OpenRouterAiModel("secret", "typesafe/example", 0.5, url -> connection);
+        }, () -> false, (completed, total, partial) -> { });
+        // Five unusable replies in a row are not an outage: every ingredient is still attempted.
+        assertEquals(5, requests.get());
+        assertTrue(report.aiIncomplete());
+        assertEquals(5, report.results().get(0).findings().size());
+    }
+
+    @Test
+    public void repeatedNonPermanentHttpFailuresStillStopTheRun() throws Exception {
+        AtomicInteger requests = new AtomicInteger();
+        AiAnalyzer.analyseConcurrent(fiveIngredients(), false, 1, () -> {
+            requests.incrementAndGet();
+            FakeConnection connection = new FakeConnection(400, "bad request");
+            return new OpenRouterAiModel("secret", "typesafe/example", 0.5, url -> connection);
+        }, () -> false, (completed, total, partial) -> { });
+        assertEquals(3, requests.get());
+    }
+
+    private static AnalysisReport fiveIngredients() throws Exception {
+        AllergenDictionary dictionary = AllergenDictionary.load(new StringReader(
+                "{\"schemaVersion\":1,\"allergens\":[{\"id\":\"MILK\",\"label\":\"Milk\",\"terms\":[\"milk\"]}]}"));
+        return Analyzer.analyse("Ingredients: alpha, beta, gamma, delta, epsilon.",
+                dictionary, Collections.singletonList(dictionary.byId("MILK")));
     }
 
     @Test

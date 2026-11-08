@@ -43,8 +43,13 @@ public final class OpenRouterAiModel implements AiModel {
 
         public int status() { return status; }
 
+        /**
+         * Only account-wide problems: a bad key, no credits, or an unknown model. OpenRouter also
+         * sends 400 (e.g. context too long) and 403 (moderation) for a single input, which must not
+         * stop the other allergens; a truly broken setup still hits the consecutive-failure limit.
+         */
         public boolean permanent() {
-            return status == 400 || status == 401 || status == 402 || status == 403 || status == 404;
+            return status == 401 || status == 402 || status == 404;
         }
     }
 
@@ -81,7 +86,9 @@ public final class OpenRouterAiModel implements AiModel {
     public AiDecision evaluate(String ingredient, Allergen allergen) throws Exception {
         if (threshold == null) {
             AiDecision decision = evaluateBatch(Collections.singletonList(ingredient), allergen).get(0);
-            if (decision == null) throw new IOException("The model omitted the ingredient result");
+            if (decision == null) {
+                throw new AiResponseFormatException("The model omitted the ingredient result");
+            }
             return decision;
         }
         if (closed || Thread.currentThread().isInterrupted()) throw new InterruptedException();
@@ -130,28 +137,44 @@ public final class OpenRouterAiModel implements AiModel {
                 .put("questions", new JSONObject().put(QUESTION_ID, question));
     }
 
-    static List<AiDecision> parseChat(JSONObject response, int ingredientCount) throws JSONException, IOException {
+    /**
+     * A broken envelope or a provider error is an availability failure (IOException/JSONException).
+     * A truncated, refused or malformed answer is this input's problem only, so it raises
+     * {@link AiResponseFormatException} and does not count toward stopping the run.
+     */
+    static List<AiDecision> parseChat(JSONObject response, int ingredientCount)
+            throws JSONException, IOException, AiResponseFormatException {
         JSONArray choices = response.getJSONArray("choices");
         if (choices.length() != 1) throw new IOException("OpenRouter did not return one answer");
         JSONObject choice = choices.getJSONObject(0);
-        if (!"stop".equals(choice.optString("finish_reason"))) {
-            throw new IOException("The model response was incomplete or refused");
+        String finish = choice.optString("finish_reason");
+        if ("error".equals(finish)) throw new IOException("The model provider failed mid-response");
+        if (!"stop".equals(finish)) {
+            throw new AiResponseFormatException("The model response was incomplete or refused");
         }
         JSONObject message = choice.getJSONObject("message");
         if (!(message.opt("content") instanceof String) || !message.isNull("refusal")) {
-            throw new IOException("The model did not return an answer");
+            throw new AiResponseFormatException("The model did not return an answer");
         }
         return CloudAllergenPrompt.parse(message.getString("content"), ingredientCount);
     }
 
-    static AiDecision parseDecisions(JSONObject response, double threshold) throws JSONException, IOException {
+    static AiDecision parseDecisions(JSONObject response, double threshold)
+            throws JSONException, AiResponseFormatException {
         JSONObject answers = response.getJSONObject("answers");
-        if (answers.length() != 1) throw new IOException("Decisions did not return one answer");
-        JSONObject answer = answers.getJSONObject(QUESTION_ID);
-        if (!"score".equals(answer.optString("type")) || !(answer.opt("score") instanceof Number)) {
-            throw new IOException("Decisions did not return a score");
+        JSONObject answer = answers.optJSONObject(QUESTION_ID);
+        if (answers.length() != 1 || answer == null) {
+            throw new AiResponseFormatException("Decisions did not return one answer");
         }
-        return AiDecision.scored(((Number) answer.get("score")).doubleValue(), threshold);
+        Object score = answer.opt("score");
+        if (!"score".equals(answer.optString("type")) || !(score instanceof Number)) {
+            throw new AiResponseFormatException("Decisions did not return a score");
+        }
+        try {
+            return AiDecision.scored(((Number) score).doubleValue(), threshold);
+        } catch (IllegalArgumentException outOfRange) {
+            throw new AiResponseFormatException("Decisions returned an invalid score", outOfRange);
+        }
     }
 
     private String post(String endpoint, String body) throws Exception {
