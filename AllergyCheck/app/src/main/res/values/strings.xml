@@ -1,5 +1,16 @@
 <resources>
     <string name="app_name">Allergy Check</string>
+
+    <!-- OCR test harness. Remove alongside OcrTestActivity. -->
+    <string name="ocr_test_title">OCR Test</string>
+    <string name="pick_image">Select label photo</string>
+    <string name="enhance_image">Enhance image before OCR</string>
+    <string name="image_preview_description">The selected label photo</string>
+    <string name="ocr_placeholder">Pick a photo of a food label to extract its text.</string>
+    <string name="ocr_empty_result">No text found in this image. Try a closer, better-lit photo of the label.</string>
+    <string name="ocr_error">Couldn\'t read this image: %1$s</string>
+    <!-- Lines, characters and elapsed milliseconds: the numbers to compare when the switch is flipped. -->
+    <string name="ocr_stats">lines: %1$d · chars: %2$d · %3$d ms</string>
     <string name="brand_name">AllergyCheck</string>
     <string name="new_scan">NEW SCAN</string>
     <string name="home_title">Know what’s in your food</string>
@@ -41,16 +52,6 @@
         <item quantity="one">%d allergen selected</item>
         <item quantity="other">%d allergens selected</item>
     </plurals>
-    <string-array name="allergen_options">
-        <item>Milk</item>
-        <item>Eggs</item>
-        <item>Peanuts</item>
-        <item>Tree nuts</item>
-        <item>Soy</item>
-        <item>Wheat</item>
-        <item>Sesame</item>
-        <item>Fish</item>
-        <item>Shellfish</item>
-        <item>Mustard</item>
-    </string-array>
+    <!-- The allergen names shown in the pickers come from res/raw/allergen_dictionary.json, so
+         the engine's vocabulary and the UI cannot drift apart. -->
 </resources>

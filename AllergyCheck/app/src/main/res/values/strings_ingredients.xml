@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for showing extracted ingredients. Kept in their own file so they merge cleanly
+     with the home-screen strings.xml. -->
+<resources>
+    <string name="ingredient_result_title">Ingredient extraction</string>
+    <string name="reading_ingredients">Reading ingredients…</string>
+    <string name="reading_ingredients_message">Recognizing the label text, pulling out the ingredient list and checking it against your allergens.</string>
+    <string name="ingredient_read_error">Couldn\'t read this label. Try again or choose a clearer photo.</string>
+    <string name="ingredients_found">Ingredients (%1$d):</string>
+    <string name="no_ingredients_found">No ingredients found. The label text doesn\'t seem to contain an ingredient list.\n\nText read from the image:\n%1$s</string>
+    <string name="ingredients_error">Couldn\'t read the ingredients: %1$s\n\nTry again, or take a clearer photo of the ingredient list.</string>
+    <string name="model_missing">The ingredient reader model isn\'t installed on this device yet.\n\nCopy a Gemma .task model file into:\n%1$s</string>
+</resources>

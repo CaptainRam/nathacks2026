@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -28,6 +30,21 @@
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          Temporary OCR harness. Has its own LAUNCHER entry so it appears as a second "OCR Test"
+          icon, keeping MainActivity untouched. Delete this block with OcrTestActivity.
+        -->
+        <activity
+            android:name=".OcrTestActivity"
+            android:exported="true"
+            android:label="@string/ocr_test_title">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

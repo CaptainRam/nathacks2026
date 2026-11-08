@@ -37,7 +37,13 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.material)
+    implementation(libs.mlkit.text.recognition)
+    // On-device LLM (Gemma) that reads the OCR text and lists the ingredients.
+    implementation(libs.mediapipe.tasks.genai)
     testImplementation(libs.junit)
+    // org.json ships in the Android framework, so the app needs no dependency for it. On the JVM
+    // unit-test classpath it is only a stub, so the real implementation is added for tests only.
+    testImplementation(libs.json)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
 }
