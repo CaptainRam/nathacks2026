@@ -54,15 +54,23 @@ final class AnalysisResultView {
         message = new AnalysisMessage(root.getResources());
     }
 
-    /** Shows a full analysis. */
-    void showReport(@NonNull AnalysisReport report) {
+    /**
+     * Shows a full analysis. Allergens that were not detected are listed only when
+     * {@code showNotDetected} is set; the verdict still covers every selected allergen.
+     */
+    void showReport(@NonNull AnalysisReport report, boolean showNotDetected) {
         bindVerdict(report.overall(), message.title(report), message.verdict(report));
         lowConfidenceNote.setVisibility(
                 AnalysisMessage.showLowConfidence(report) ? View.VISIBLE : View.GONE);
 
         allergenRows.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(root.getContext());
+        int shown = 0;
         for (AllergenResult result : report.results()) {
+            if (!showNotDetected && result.status() == AnalysisReport.Status.NOT_DETECTED) {
+                continue;
+            }
+            shown++;
             View row = inflater.inflate(R.layout.item_allergen_result, allergenRows, false);
             ((TextView) row.findViewById(R.id.allergen_name)).setText(result.allergen().label());
             TextView status = row.findViewById(R.id.allergen_status);
@@ -76,7 +84,7 @@ final class AnalysisResultView {
             evidence.setVisibility(lines.isEmpty() ? View.GONE : View.VISIBLE);
             allergenRows.addView(row);
         }
-        boolean hasAllergens = !report.results().isEmpty();
+        boolean hasAllergens = shown > 0;
         allergenTitle.setVisibility(hasAllergens ? View.VISIBLE : View.GONE);
         allergenRows.setVisibility(hasAllergens ? View.VISIBLE : View.GONE);
 

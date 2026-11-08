@@ -398,7 +398,8 @@ public class MainActivity extends AppCompatActivity {
                             getString(R.string.no_ingredients_found, text));
                     return;
                 }
-                resultView.showReport(report);
+                resultView.showReport(report,
+                        AllergenPreferences.showNotDetected(MainActivity.this));
                 showResult(report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED
                         ? ResultAction.CHOOSE_ALLERGENS
                         : report.overall() == AnalysisReport.Status.UNREADABLE

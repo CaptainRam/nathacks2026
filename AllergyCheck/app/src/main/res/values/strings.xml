@@ -42,7 +42,10 @@
     <string name="settings_section_model">AI model</string>
     <string name="save">Save</string>
     <string name="discard_changes_title">Discard unsaved changes?</string>
-    <string name="discard_changes_message">Your allergen selection hasn’t been saved yet.</string>
+    <string name="discard_changes_message">Your changes haven’t been saved yet.</string>
+    <string name="results_settings_title">Results</string>
+    <string name="show_not_detected">Show allergens not detected</string>
+    <string name="show_not_detected_hint">Also list your allergens that weren’t found on the label.</string>
     <string name="discard">Discard</string>
     <string name="keep_editing">Keep editing</string>
     <string name="tip_frame">Fit the whole ingredient list in the frame</string>
@@ -51,7 +54,7 @@
     <string name="set_allergens">Set your allergens</string>
     <string name="save_preferences">Save preferences</string>
     <string name="cancel">Cancel</string>
-    <string name="preferences_saved">Allergen preferences saved</string>
+    <string name="preferences_saved">Settings saved</string>
     <plurals name="allergens_selected">
         <item quantity="one">%d allergen selected</item>
         <item quantity="other">%d allergens selected</item>

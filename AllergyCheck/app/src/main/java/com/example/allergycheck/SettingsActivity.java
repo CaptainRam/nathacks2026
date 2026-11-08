@@ -32,6 +32,7 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String DRAFT_ALLERGENS = "draft_allergens";
     private static final String MODEL_DETAILS_EXPANDED = "model_details_expanded";
     private static final String MODEL_SECTION_SHOWN = "model_section_shown";
+    private static final String DRAFT_SHOW_NOT_DETECTED = "draft_show_not_detected";
 
     /**
      * Allergen ids. Only ids the dictionary defines ever enter this set, so its size is the
@@ -52,6 +54,9 @@ public class SettingsActivity extends AppCompatActivity {
     private final Set<String> selectedAllergens = new HashSet<>();
     /** What is stored now; the draft differs from it until Save is pressed. */
     private final Set<String> savedAllergens = new HashSet<>();
+    /** Draft and stored value of the "show allergens not detected" switch. */
+    private boolean showNotDetected;
+    private boolean savedShowNotDetected;
     private TextView selectionSummary;
     private NestedScrollView scroll;
     private View headerDivider;
@@ -201,6 +206,21 @@ public class SettingsActivity extends AppCompatActivity {
         }
         updateSelectionSummary();
 
+        savedShowNotDetected = AllergenPreferences.showNotDetected(this);
+        showNotDetected = savedInstanceState == null ? savedShowNotDetected
+                : savedInstanceState.getBoolean(DRAFT_SHOW_NOT_DETECTED, savedShowNotDetected);
+        MaterialSwitch notDetectedSwitch = findViewById(R.id.show_not_detected_switch);
+        notDetectedSwitch.setSaveEnabled(false);
+        notDetectedSwitch.setChecked(showNotDetected);
+        // updateSelectionSummary ran before this draft was restored, so re-check it now.
+        updateUnsavedChanges();
+        notDetectedSwitch.setOnCheckedChangeListener((button, checked) -> {
+            showNotDetected = checked;
+            updateUnsavedChanges();
+        });
+        // The whole row toggles, not only the small switch.
+        ((View) notDetectedSwitch.getParent()).setOnClickListener(view -> notDetectedSwitch.toggle());
+
         findViewById(R.id.save_preferences_button).setOnClickListener(view -> savePreferences());
 
         MaterialButtonToggleGroup sections = findViewById(R.id.settings_section_toggle);
@@ -243,6 +263,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void savePreferences() {
         AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
+        AllergenPreferences.saveShowNotDetected(this, showNotDetected);
         setResult(RESULT_OK);
         finish();
     }
@@ -343,12 +364,18 @@ public class SettingsActivity extends AppCompatActivity {
         int count = selectedAllergens.size();
         selectionSummary.setText(count == 0 ? getString(R.string.no_allergens_selected)
                 : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
-        unsavedChangesCallback.setEnabled(!selectedAllergens.equals(savedAllergens));
+        updateUnsavedChanges();
+    }
+
+    private void updateUnsavedChanges() {
+        unsavedChangesCallback.setEnabled(!selectedAllergens.equals(savedAllergens)
+                || showNotDetected != savedShowNotDetected);
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putStringArrayList(DRAFT_ALLERGENS, new ArrayList<>(selectedAllergens));
+        outState.putBoolean(DRAFT_SHOW_NOT_DETECTED, showNotDetected);
         outState.putBoolean(MODEL_DETAILS_EXPANDED, modelDetails.getVisibility() == View.VISIBLE);
         outState.putBoolean(MODEL_SECTION_SHOWN, modelSection.getVisibility() == View.VISIBLE);
         super.onSaveInstanceState(outState);

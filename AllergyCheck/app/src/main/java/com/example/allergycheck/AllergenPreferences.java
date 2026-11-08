@@ -26,6 +26,7 @@ import java.util.Set;
 final class AllergenPreferences {
     private static final String PREFERENCES = "allergy_preferences";
     private static final String ALLERGENS = "selected_allergens";
+    private static final String SHOW_NOT_DETECTED = "show_not_detected";
 
     private AllergenPreferences() {
     }
@@ -78,6 +79,18 @@ final class AllergenPreferences {
     /** Replaces the selection. {@code ids} must be {@link Allergen#id()} values. */
     static void saveSelectedAllergenIds(Context context, Set<String> ids) {
         preferences(context).edit().putStringSet(ALLERGENS, new HashSet<>(ids)).apply();
+    }
+
+    /**
+     * Whether the result lists selected allergens that were not found on the label. Off by
+     * default, so the result shows only what the food (may) contain.
+     */
+    static boolean showNotDetected(Context context) {
+        return preferences(context).getBoolean(SHOW_NOT_DETECTED, false);
+    }
+
+    static void saveShowNotDetected(Context context, boolean show) {
+        preferences(context).edit().putBoolean(SHOW_NOT_DETECTED, show).apply();
     }
 
     private static Set<String> idsOf(Set<Allergen> allergens) {

@@ -13,6 +13,8 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.google.android.material.materialswitch.MaterialSwitch;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,22 +30,26 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-/** The settings section switch, its entry points, and the unsaved-draft guard. Saves nothing. */
+/** The settings section switch, its entry points, the unsaved-draft guard and the results switch. */
 @RunWith(AndroidJUnit4.class)
 public class SettingsLayoutUiTest {
     private final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
     private Set<String> originalAllergens;
+    private boolean originalShowNotDetected;
 
     @Before
     public void clearAllergens() {
         originalAllergens = new HashSet<>(AllergenPreferences.selectedAllergenIds(
                 context, AllergenDictionaryProvider.get(context)));
         AllergenPreferences.saveSelectedAllergenIds(context, Collections.emptySet());
+        originalShowNotDetected = AllergenPreferences.showNotDetected(context);
+        AllergenPreferences.saveShowNotDetected(context, false);
     }
 
     @After
     public void restoreAllergens() {
         AllergenPreferences.saveSelectedAllergenIds(context, originalAllergens);
+        AllergenPreferences.saveShowNotDetected(context, originalShowNotDetected);
     }
 
     @Test
@@ -135,6 +141,74 @@ public class SettingsLayoutUiTest {
         String firstId = AllergenDictionaryProvider.get(context).allergens().iterator().next().id();
         assertEquals(Collections.singleton(firstId), AllergenPreferences.selectedAllergenIds(
                 context, AllergenDictionaryProvider.get(context)));
+    }
+
+    @Test
+    public void showNotDetectedIsOffByDefault() {
+        context.getSharedPreferences("allergy_preferences", Context.MODE_PRIVATE).edit()
+                .remove("show_not_detected").commit();
+        assertFalse(AllergenPreferences.showNotDetected(context));
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> assertFalse(notDetectedSwitch(activity).isChecked()));
+        }
+    }
+
+    @Test
+    public void showNotDetectedSwitchIsPartOfTheDraft() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                MaterialSwitch toggle = notDetectedSwitch(activity);
+                assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+                // Tapping the row, not only the switch, flips it.
+                ((View) toggle.getParent()).performClick();
+                assertTrue(toggle.isChecked());
+                assertTrue(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+                toggle.performClick();
+                assertFalse(toggle.isChecked());
+                assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+                toggle.performClick();
+            });
+            // The unsaved draft survives rotation and is still not stored.
+            scenario.recreate();
+            scenario.onActivity(activity -> {
+                assertTrue(notDetectedSwitch(activity).isChecked());
+                assertTrue(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
+            });
+        }
+        assertFalse(AllergenPreferences.showNotDetected(context));
+    }
+
+    @Test
+    public void saveStoresShowNotDetected() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                notDetectedSwitch(activity).performClick();
+                activity.findViewById(R.id.save_preferences_button).performClick();
+            });
+            assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+        }
+        assertTrue(AllergenPreferences.showNotDetected(context));
+    }
+
+    @Test
+    public void discardKeepsShowNotDetectedOff() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                notDetectedSwitch(activity).performClick();
+                activity.getOnBackPressedDispatcher().onBackPressed();
+                click(activity, DialogInterface.BUTTON_NEGATIVE);
+            });
+            assertEquals(Activity.RESULT_CANCELED, scenario.getResult().getResultCode());
+        }
+        assertFalse(AllergenPreferences.showNotDetected(context));
+    }
+
+    private static MaterialSwitch notDetectedSwitch(SettingsActivity activity) {
+        return activity.findViewById(R.id.show_not_detected_switch);
     }
 
     /** Checks the first allergen chip, then asks to leave, which must raise the question. */
