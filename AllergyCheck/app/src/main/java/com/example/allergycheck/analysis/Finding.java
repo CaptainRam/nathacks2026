@@ -30,7 +30,13 @@ public final class Finding implements Serializable {
         /** The ingredient can be made from the allergen but need not be (e.g. "lecithin"). */
         AMBIGUOUS_INGREDIENT,
         /** The text only nearly matches — probably an OCR misread, so it needs a human check. */
-        UNCERTAIN_READ
+        UNCERTAIN_READ,
+        /** An AI model flagged this original ingredient; this is an inference, not label proof. */
+        AI_RISK,
+        /** The model could not rule out this ingredient as a source of the selected allergen. */
+        AI_UNCERTAIN,
+        /** This ingredient could not be checked, and needs manual review. */
+        AI_UNAVAILABLE
     }
 
     private final Allergen allergen;
@@ -39,14 +45,21 @@ public final class Finding implements Serializable {
     private final Reason reason;
     private final String matchedTerm;
     private final String evidence;
+    private final Double score;
 
     Finding(Allergen allergen, Level level, Source source, Reason reason, String matchedTerm, String evidence) {
+        this(allergen, level, source, reason, matchedTerm, evidence, null);
+    }
+
+    Finding(Allergen allergen, Level level, Source source, Reason reason,
+            String matchedTerm, String evidence, Double score) {
         this.allergen = allergen;
         this.level = level;
         this.source = source;
         this.reason = reason;
         this.matchedTerm = matchedTerm;
         this.evidence = evidence;
+        this.score = score;
     }
 
     public Allergen allergen() {
@@ -73,6 +86,11 @@ public final class Finding implements Serializable {
     /** The label text it was found in, exactly as read, for quoting back to the user. */
     public String evidence() {
         return evidence;
+    }
+
+    /** Optional Decisions-model score, not a calibrated probability of ingredient presence. */
+    public Double score() {
+        return score;
     }
 
     @Override

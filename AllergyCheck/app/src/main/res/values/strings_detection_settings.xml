@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detection_settings_title">Detection method</string>
+    <string name="detection_location_hint">Choose how ingredients are checked. Your choice applies right away.</string>
+    <string name="detection_location_label">Where ingredients are checked</string>
+    <string name="detection_local">On device</string>
+    <string name="detection_cloud">Cloud</string>
+    <string name="detection_matching">Dictionary matching</string>
+    <string name="detection_local_ai">Local AI</string>
+    <string name="detection_openrouter">OpenRouter LLM</string>
+    <string name="detection_decisions">Decisions model</string>
+    <string name="detection_matching_hint">Fast and offline. Matches ingredients against the built-in allergen list.</string>
+    <string name="detection_local_ai_hint">Offline. Uses the downloaded model to check each ingredient.</string>
+    <string name="detection_openrouter_hint">Checks the whole ingredient list with a chat model you choose.</string>
+    <string name="detection_decisions_hint">Scores each ingredient and flags those at or above your threshold.</string>
+    <string name="detection_cloud_title">Cloud connection</string>
+    <string name="detection_cloud_hint">Only the extracted ingredient list is sent, one allergen per request. Photos and label text stay on this device. Save before scanning.</string>
+    <string name="detection_api_key">OpenRouter API key</string>
+    <string name="detection_api_key_hint">Stored on this device only and never backed up.</string>
+    <string name="detection_model_id">OpenRouter model ID</string>
+    <string name="detection_decisions_model_id">Decisions model ID</string>
+    <string name="detection_model_id_hint">Format: provider/model, as shown on OpenRouter.</string>
+    <string name="detection_threshold">Flag threshold (0–1)</string>
+    <string name="detection_threshold_hint">Lower values flag more ingredients for review. Default: 0.5.</string>
+    <string name="detection_concurrency">Parallel requests</string>
+    <string name="detection_concurrency_hint">Higher is faster but may hit rate limits. Default: 1.</string>
+    <string name="detection_concurrency_invalid">Enter a positive whole number.</string>
+    <string name="detection_save_cloud">Save cloud settings</string>
+    <string name="detection_cloud_saved">Cloud settings saved.</string>
+    <string name="detection_cloud_needs_key">Add your API key and save to start using cloud detection.</string>
+    <string name="detection_key_required">Enter your OpenRouter API key.</string>
+    <string name="detection_model_required">Enter a model ID in provider/model format.</string>
+    <string name="detection_threshold_invalid">Enter a number between 0 and 1.</string>
+</resources>

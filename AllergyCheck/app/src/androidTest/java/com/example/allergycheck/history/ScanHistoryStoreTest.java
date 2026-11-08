@@ -8,11 +8,13 @@ import static org.junit.Assert.assertTrue;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.allergycheck.analysis.AllergenDictionary;
+import com.example.allergycheck.analysis.AiAnalyzer;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.analysis.Allergen;
@@ -23,10 +25,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,6 +99,7 @@ public class ScanHistoryStoreTest {
         assertFalse("the summary must name the allergens", item.allergenLabels().isEmpty());
         assertNull("a report row carries no message", item.messageTitle());
         assertFalse(item.isFailure());
+        assertFalse(item.aiIncomplete());
     }
 
     /**
@@ -157,6 +162,117 @@ public class ScanHistoryStoreTest {
         ScanHistoryDetail detail = store.detail(store.insert(NOW, analyse(text)));
         assertNotNull(detail);
         assertEquals(text, detail.rawText());
+    }
+
+    @Test
+    public void incompleteAiReportKeepsKnownHitsAndItsCaveatInListAndDetail() {
+        AnalysisReport original = AiAnalyzer.incompleteReport(
+                analyse("Ingredients: milk powder, sugar, water."));
+        assertEquals(AnalysisReport.Status.CONTAINS, original.overall());
+        assertTrue(original.aiIncomplete());
+        long id = store.insert(NOW, original);
+
+        ScanHistoryItem item = store.recent(1).get(0);
+        assertTrue(item.aiIncomplete());
+        assertEquals(AnalysisReport.Status.CONTAINS, item.status());
+        assertTrue(item.allergenLabels().contains("Milk"));
+        ScanHistoryDetail detail = store.detail(id);
+        assertNotNull(detail);
+        assertTrue(detail.item().aiIncomplete());
+        assertNotNull(detail.report());
+        assertTrue(detail.report().aiAnalysis());
+        assertTrue(detail.report().aiIncomplete());
+        assertEquals(original.results().get(0).findings().size(),
+                detail.report().results().get(0).findings().size());
+    }
+
+    @Test
+    public void incompleteAiCaveatDoesNotDependOnTheReportBlob() {
+        AnalysisReport original = AiAnalyzer.incompleteReport(
+                analyse("Ingredients: water, sugar, salt."));
+        assertEquals(AnalysisReport.Status.UNREADABLE, original.overall());
+        long id = store.insert(NOW, original);
+        ContentValues values = new ContentValues();
+        values.putNull("report_blob");
+        database.getWritableDatabase().update("scans", values, "_id = ?",
+                new String[]{Long.toString(id)});
+
+        assertTrue(store.recent(1).get(0).aiIncomplete());
+        ScanHistoryDetail detail = store.detail(id);
+        assertNotNull(detail);
+        assertNull(detail.report());
+        assertTrue(detail.item().aiIncomplete());
+        assertEquals(original.label().rawText(), detail.rawText());
+    }
+
+    @Test
+    public void versionOneUpgradePreservesReportsMessagesAndPhotoNames() throws IOException {
+        database.close();
+        AnalysisReport original = analyse("Ingredients: milk powder, sugar, water.");
+        byte[] blob;
+        try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+             ObjectOutputStream out = new ObjectOutputStream(bytes)) {
+            out.writeObject(original);
+            out.flush();
+            blob = bytes.toByteArray();
+        }
+        long reportId;
+        long failureId;
+        try (SQLiteDatabase legacy = context.openOrCreateDatabase(
+                fileName, Context.MODE_PRIVATE, null)) {
+            // The exact version 1 schema, without the new summary flag.
+            legacy.execSQL("CREATE TABLE scans (_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "created_at INTEGER NOT NULL, overall_status TEXT NOT NULL, "
+                    + "summary_allergens TEXT NOT NULL DEFAULT '', "
+                    + "low_confidence INTEGER NOT NULL DEFAULT 0, "
+                    + "raw_text TEXT NOT NULL DEFAULT '', image_name TEXT, report_blob BLOB, "
+                    + "report_version INTEGER NOT NULL DEFAULT 0, message_title TEXT, "
+                    + "message_body TEXT)");
+            legacy.execSQL("CREATE INDEX idx_scans_created_at ON scans (created_at DESC, _id DESC)");
+            ContentValues reportValues = new ContentValues();
+            reportValues.put("created_at", NOW);
+            reportValues.put("overall_status", original.overall().name());
+            reportValues.put("summary_allergens", "Milk");
+            reportValues.put("raw_text", original.label().rawText());
+            reportValues.put("image_name", "scan_saved.jpg");
+            reportValues.put("report_blob", blob);
+            reportValues.put("report_version", 2);
+            reportId = legacy.insertOrThrow("scans", null, reportValues);
+            ContentValues failureValues = new ContentValues();
+            failureValues.put("created_at", NOW + 1);
+            failureValues.put("overall_status", "UNREADABLE");
+            failureValues.put("raw_text", "blurred label");
+            failureValues.put("message_title", "Ingredient extraction");
+            failureValues.put("message_body", "No ingredients found.");
+            failureId = legacy.insertOrThrow("scans", null, failureValues);
+            legacy.setVersion(1);
+        }
+
+        // Opening through the current helper must perform the additive migration.
+        assertEquals(2, database.getReadableDatabase().getVersion());
+        assertEquals(2, store.count());
+        List<ScanHistoryItem> items = store.recent(10);
+        assertEquals(failureId, items.get(0).id());
+        assertEquals(reportId, items.get(1).id());
+        assertFalse(items.get(0).aiIncomplete());
+        assertFalse(items.get(1).aiIncomplete());
+        ScanHistoryDetail restored = store.detail(reportId);
+        assertNotNull(restored);
+        assertNotNull(restored.report());
+        assertEquals(original.overall(), restored.report().overall());
+        assertEquals(original.label().rawText(), restored.rawText());
+        assertEquals("scan_saved.jpg", restored.item().imageName());
+        assertEquals(Collections.singletonList("Milk"), restored.item().allergenLabels());
+        ScanHistoryDetail failure = store.detail(failureId);
+        assertNotNull(failure);
+        assertTrue(failure.item().isFailure());
+        assertEquals("blurred label", failure.rawText());
+        assertEquals("Ingredient extraction", failure.item().messageTitle());
+        assertEquals("No ingredients found.", failure.messageBody());
+
+        long newId = store.insert(NOW + 2, AiAnalyzer.incompleteReport(original));
+        assertTrue(newId > failureId);
+        assertTrue(store.recent(1).get(0).aiIncomplete());
     }
 
     @Test

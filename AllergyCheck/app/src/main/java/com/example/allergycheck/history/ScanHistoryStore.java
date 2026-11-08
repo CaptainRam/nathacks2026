@@ -59,6 +59,7 @@ public final class ScanHistoryStore {
             ScanHistoryDatabase.LOW_CONFIDENCE,
             ScanHistoryDatabase.IMAGE_NAME,
             ScanHistoryDatabase.MESSAGE_TITLE,
+            ScanHistoryDatabase.AI_INCOMPLETE,
     };
 
     private static final String[] DETAIL_COLUMNS = {
@@ -69,6 +70,7 @@ public final class ScanHistoryStore {
             ScanHistoryDatabase.LOW_CONFIDENCE,
             ScanHistoryDatabase.IMAGE_NAME,
             ScanHistoryDatabase.MESSAGE_TITLE,
+            ScanHistoryDatabase.AI_INCOMPLETE,
             ScanHistoryDatabase.RAW_TEXT,
             ScanHistoryDatabase.MESSAGE_BODY,
             ScanHistoryDatabase.REPORT_BLOB,
@@ -101,6 +103,7 @@ public final class ScanHistoryStore {
         values.put(ScanHistoryDatabase.OVERALL_STATUS, report.overall().name());
         values.put(ScanHistoryDatabase.SUMMARY_ALLERGENS, joinLabels(report));
         values.put(ScanHistoryDatabase.LOW_CONFIDENCE, report.lowConfidence() ? 1 : 0);
+        values.put(ScanHistoryDatabase.AI_INCOMPLETE, report.aiIncomplete() ? 1 : 0);
         values.put(ScanHistoryDatabase.RAW_TEXT, report.label().rawText());
         byte[] blob = serialise(report);
         if (blob != null) {
@@ -172,11 +175,11 @@ public final class ScanHistoryStore {
                 return null;
             }
             ScanHistoryItem item = readItem(cursor);
-            String rawText = cursor.isNull(7) ? "" : cursor.getString(7);
-            String messageBody = cursor.isNull(8) ? null : cursor.getString(8);
+            String rawText = cursor.isNull(8) ? "" : cursor.getString(8);
+            String messageBody = cursor.isNull(9) ? null : cursor.getString(9);
             AnalysisReport report = null;
-            if (!cursor.isNull(9) && cursor.getInt(10) == CURRENT_REPORT_VERSION) {
-                report = deserialise(cursor.getBlob(9));
+            if (!cursor.isNull(10) && cursor.getInt(11) == CURRENT_REPORT_VERSION) {
+                report = deserialise(cursor.getBlob(10));
             }
             return new ScanHistoryDetail(item, report, rawText, messageBody);
         }
@@ -195,7 +198,7 @@ public final class ScanHistoryStore {
         return ids;
     }
 
-    /** The first seven columns of both projections are the same, on purpose. */
+    /** The first eight columns of both projections are the same, on purpose. */
     @NonNull
     private static ScanHistoryItem readItem(@NonNull Cursor cursor) {
         return new ScanHistoryItem(
@@ -204,6 +207,7 @@ public final class ScanHistoryStore {
                 readStatus(cursor.getString(2)),
                 splitLabels(cursor.getString(3)),
                 cursor.getInt(4) != 0,
+                cursor.getInt(7) != 0,
                 cursor.isNull(5) ? null : cursor.getString(5),
                 cursor.isNull(6) ? null : cursor.getString(6));
     }

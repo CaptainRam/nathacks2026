@@ -6,6 +6,7 @@ import android.text.format.DateFormat;
 
 import androidx.annotation.NonNull;
 
+import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.history.AllergenNameList;
 import com.example.allergycheck.history.ScanHistoryItem;
 import com.example.allergycheck.history.ScanSummaryShape;
@@ -41,6 +42,16 @@ final class HistorySummary {
         if (item.isFailure()) {
             return resources.getString(R.string.status_unreadable_title);
         }
+        if (item.aiIncomplete() && item.status() == AnalysisReport.Status.UNREADABLE) {
+            return resources.getString(R.string.status_ai_incomplete_title);
+        }
+        String verdict = verdictLine(item);
+        return item.aiIncomplete()
+                ? resources.getString(R.string.history_summary_ai_incomplete, verdict) : verdict;
+    }
+
+    @NonNull
+    private String verdictLine(@NonNull ScanHistoryItem item) {
         ScanSummaryShape shape = ScanSummaryShape.of(item.status());
         switch (shape) {
             case NONE_DETECTED:

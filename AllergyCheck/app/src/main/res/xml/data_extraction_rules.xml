@@ -8,6 +8,7 @@
         <exclude domain="external" path="llm/" />
         <exclude domain="file" path="llm/" />
         <exclude domain="sharedpref" path="local_model.xml" />
+        <exclude domain="sharedpref" path="analysis_credentials.xml" />
         <!-- Scan history is health-adjacent and stays on the device. -->
         <exclude domain="file" path="history/" />
         <exclude domain="database" path="scan_history.db" />
@@ -22,6 +23,7 @@
         <exclude domain="external" path="llm/" />
         <exclude domain="file" path="llm/" />
         <exclude domain="sharedpref" path="local_model.xml" />
+        <exclude domain="sharedpref" path="analysis_credentials.xml" />
         <!-- Scan history is health-adjacent and stays on the device. -->
         <exclude domain="file" path="history/" />
         <exclude domain="database" path="scan_history.db" />

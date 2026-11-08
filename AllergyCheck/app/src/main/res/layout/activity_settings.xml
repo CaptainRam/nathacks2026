@@ -180,7 +180,7 @@
                     </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
 
-                <!-- Local AI model: every action here takes effect immediately. -->
+                <!-- Detection location and models. -->
                 <LinearLayout
                     android:id="@+id/model_section"
                     android:layout_width="match_parent"
@@ -188,15 +188,21 @@
                     android:orientation="vertical"
                     android:visibility="gone">
 
+                    <include layout="@layout/view_detection_settings" />
+
                     <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/local_model_title"
                         style="@style/Widget.AllergyCheck.SettingsSectionTitle"
+                        android:layout_marginTop="24dp"
                         android:text="@string/model_settings_title" />
 
                     <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/local_model_hint"
                         style="@style/Widget.AllergyCheck.SettingsSectionHint"
                         android:text="@string/model_settings_section_hint" />
 
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/local_model_section"
                         style="@style/Widget.AllergyCheck.SettingsCard"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">

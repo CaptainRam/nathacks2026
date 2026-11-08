@@ -61,6 +61,23 @@ public final class OcrPipeline {
         /** The image could not be read or recognition failed. Never report this as "no allergens". */
         @MainThread
         void onFailure(@NonNull Exception error);
+
+        /**
+         * The run moved on to {@code stage}, so a screen can show how far along it is. Decoding
+         * starts as soon as {@code recognize} is called and is not reported separately. Never
+         * invoked after {@link #close()} or once the run has finished.
+         */
+        @MainThread
+        default void onStage(@NonNull Stage stage) {
+        }
+    }
+
+    /** The steps a run reports through {@link Callback#onStage(Stage)}, in order. */
+    public enum Stage {
+        /** The image is decoded; it is now being conditioned for the recogniser. */
+        PREPARING,
+        /** The conditioned image is with the recogniser. */
+        RECOGNIZING
     }
 
     private final TextRecognizer recognizer;
@@ -112,6 +129,7 @@ public final class OcrPipeline {
             Bitmap prepared;
             try {
                 decoded = LabelImageDecoder.decode(appContext, imageUri);
+                reportStage(Stage.PREPARING, callback);
                 prepared = preparer.prepare(decoded);
             } catch (IOException | RuntimeException e) {
                 // Surfaced through the same path as recognition errors so callers have one failure branch.
@@ -152,6 +170,7 @@ public final class OcrPipeline {
             }
             Bitmap prepared;
             try {
+                reportStage(Stage.PREPARING, callback);
                 prepared = preparer.prepare(bitmap);
             } catch (RuntimeException e) {
                 mainHandler.post(() -> callback.onFailure(e));
@@ -186,6 +205,7 @@ public final class OcrPipeline {
             recycle(decoded, prepared, ownsDecoded);
             return;
         }
+        callback.onStage(Stage.RECOGNIZING);
         recognizer.process(InputImage.fromBitmap(prepared, /* rotationDegrees= */ 0))
                 .addOnSuccessListener(text -> {
                     if (closed) {
@@ -237,6 +257,15 @@ public final class OcrPipeline {
                     }
                     callback.onFailure(error);
                 });
+    }
+
+    /** Posts {@code stage} to the main thread, unless the pipeline is closed by the time it runs. */
+    private void reportStage(@NonNull Stage stage, @NonNull Callback callback) {
+        mainHandler.post(() -> {
+            if (!closed) {
+                callback.onStage(stage);
+            }
+        });
     }
 
     /**

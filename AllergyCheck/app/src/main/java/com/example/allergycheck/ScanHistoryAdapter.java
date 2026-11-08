@@ -213,13 +213,13 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
             switch (status) {
                 case CONTAINS:
                     return MaterialColors.getColor(itemView,
-                            com.google.android.material.R.attr.colorError);
+                            androidx.appcompat.R.attr.colorError);
                 case MAY_CONTAIN:
                 case POSSIBLE:
                     return itemView.getContext().getColor(R.color.status_warning_container);
                 case NOT_DETECTED:
                     return MaterialColors.getColor(itemView,
-                            com.google.android.material.R.attr.colorPrimary);
+                            androidx.appcompat.R.attr.colorPrimary);
                 default:
                     return MaterialColors.getColor(itemView,
                             com.google.android.material.R.attr.colorOutline);

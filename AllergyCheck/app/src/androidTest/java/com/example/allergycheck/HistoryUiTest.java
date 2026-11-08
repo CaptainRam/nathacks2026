@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.example.allergycheck.analysis.AllergenDictionary;
+import com.example.allergycheck.analysis.AiAnalyzer;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.history.ScanHistoryDatabase;
@@ -101,6 +102,55 @@ public class HistoryUiTest {
             openHistory(scan);
             assertEquals(context.getString(R.string.history_summary_none_detected),
                     awaitSummaryFor(scan, id));
+        }
+    }
+
+    @Test
+    public void unavailableAiReadsAsIncompleteRatherThanAnUnreadablePhoto() {
+        AnalysisReport report = AiAnalyzer.incompleteReport(Analyzer.analyse(
+                "Ingredients: water, sugar, salt.", dictionary, dictionary.allergens()));
+        assertEquals(AnalysisReport.Status.UNREADABLE, report.overall());
+        long id = store.insert(System.currentTimeMillis(), report);
+
+        try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
+            openHistory(scan);
+            assertEquals(context.getString(R.string.status_ai_incomplete_title),
+                    awaitSummaryFor(scan, id));
+            clickRowFor(scan, id);
+            awaitTrue(scan, activity -> {
+                View page = activity.findViewById(R.id.scan_detail_page);
+                if (page == null || !page.isShown()) {
+                    return false;
+                }
+                TextView title = page.findViewById(R.id.verdict_title);
+                return title != null && context.getString(R.string.status_ai_incomplete_title)
+                        .contentEquals(title.getText());
+            }, "the saved detail should retain the AI-incomplete verdict");
+        }
+    }
+
+    @Test
+    public void knownAllergenHitsKeepTheAiIncompleteCaveatInTheSummary() {
+        AnalysisReport report = AiAnalyzer.incompleteReport(Analyzer.analyse(
+                "Ingredients: milk powder, sugar, water.", dictionary, dictionary.allergens()));
+        assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
+        assertTrue(report.aiIncomplete());
+        long id = store.insert(System.currentTimeMillis(), report);
+
+        try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
+            openHistory(scan);
+            String detected = context.getString(R.string.history_summary_detected, "Milk");
+            String expected = context.getString(R.string.history_summary_ai_incomplete, detected);
+            assertEquals(expected, awaitSummaryFor(scan, id));
+            scan.onActivity(activity -> {
+                androidx.recyclerview.widget.RecyclerView list =
+                        activity.findViewById(R.id.history_list);
+                androidx.recyclerview.widget.RecyclerView.ViewHolder row =
+                        list.findViewHolderForItemId(id);
+                assertNotNull(row);
+                assertTrue("TalkBack must retain the same caveat", row.itemView
+                        .getContentDescription().toString().contains(expected));
+            });
         }
     }
 

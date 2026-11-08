@@ -38,11 +38,13 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentManager;
 
 import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.analysis.AiAnalyzer;
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.history.ScanHistory;
 import com.example.allergycheck.ingredients.IngredientExtractor;
+import com.example.allergycheck.ingredients.LocalModelManager;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -50,6 +52,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
@@ -66,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private static final String PENDING_PHOTO_STATE = "pending_photo";
     private static final String CAMERA_STATE = "pending_camera_photo";
     private static final String ANALYSIS_STATE = "analysis_mode";
+    private static final String SETTINGS_OPEN_STATE = "settings_open";
+    private static final String SETTINGS_INTERRUPTED_STATE = "settings_interrupted_scan";
     private static final String HISTORY_STATE = "history_visible";
     private static final String HISTORY_FRAGMENT = "history";
     private static final int MAX_PREVIEW_SIZE = 1600;
@@ -95,10 +100,14 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private LinearLayout photoStrip;
     private ViewGroup analysisGroup;
     private View analysisLoading;
+    private ScanProgress scanProgress;
     private ViewGroup analysisResult;
     private View restartButton;
     private AnalysisResultView resultView;
     private OcrPipeline ocrPipeline;
+    private AiAnalysisRunner aiRunner;
+    private boolean settingsOpen;
+    private boolean settingsInterruptedScan;
     /** True while the page shows a check (in progress or finished) instead of the home. */
     private boolean analysisMode;
     private boolean historyVisible;
@@ -111,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private ModelDownloadController modelDownloadController;
 
     /** The extra button under a result, when the result needs one. */
-    private enum ResultAction { NONE, RETRY, CHOOSE_ALLERGENS }
+    private enum ResultAction { NONE, RETRY, CHOOSE_ALLERGENS, CONFIGURE_AI }
 
     /** Back during a check returns to the photo instead of leaving the app. */
     private final OnBackPressedCallback analysisBackCallback = new OnBackPressedCallback(false) {
@@ -140,8 +149,13 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     private final ActivityResultLauncher<Intent> settingsLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                boolean resume = settingsInterruptedScan;
+                settingsOpen = false;
+                settingsInterruptedScan = false;
                 if (result.getResultCode() == RESULT_OK) {
                     onAllergenPreferencesSaved();
+                } else if (resume && analysisMode) {
+                    rescanCurrentPhoto();
                 }
             });
 
@@ -170,6 +184,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        settingsOpen = savedInstanceState != null && savedInstanceState.getBoolean(SETTINGS_OPEN_STATE);
+        settingsInterruptedScan = savedInstanceState != null
+                && savedInstanceState.getBoolean(SETTINGS_INTERRUPTED_STATE);
         WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_main);
         boolean darkTheme = (getResources().getConfiguration().uiMode
@@ -206,14 +223,17 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         photoStrip = findViewById(R.id.photo_strip);
         analysisGroup = findViewById(R.id.analysis_group);
         analysisLoading = findViewById(R.id.analysis_loading);
+        scanProgress = new ScanProgress(findViewById(R.id.analysis_progress));
         analysisResult = findViewById(R.id.analysis_result);
         restartButton = findViewById(R.id.restart_button);
         resultView = new AnalysisResultView(analysisResult);
         ocrPipeline = new OcrPipeline();
+        aiRunner = new AiAnalysisRunner(this);
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
         // After the analysis callback, so it wins while history is showing.
         getOnBackPressedDispatcher().addCallback(this, historyBackCallback);
-        modelDownloadController = new ModelDownloadController(this, () -> openSettings(true));
+        modelDownloadController = new ModelDownloadController(this, () -> openSettings(true),
+                () -> AnalysisPreferences.mode(this) == AnalysisPreferences.Mode.LOCAL_AI);
         // Prune anything past the retention window and sweep images with no row. Cheap from here:
         // it only hands the work to the history worker.
         ScanHistory.get(this).maintain(null);
@@ -319,12 +339,14 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     private void loadPhoto(Uri uri) {
+        aiRunner.cancel();
         final int request = ++imageRequest;
         pendingPhoto = uri;
         setLoading(true);
         if (analysisMode) {
             // Replacing the photo during a check: show that the new one is being read.
             showAnalysisLoading();
+            restartScanProgress();
         }
         // A camera image can be very large. Decode a bounded preview off the UI thread.
         imageExecutor.execute(() -> {
@@ -413,13 +435,33 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
      * give it instead of whatever happened to be big enough to draw.
      */
     private void recognizeIngredients(Uri photo, int request) {
+        if (settingsOpen) {
+            settingsInterruptedScan = true;
+            return;
+        }
+        aiRunner.cancel();
         showAnalysisLoading();
+        // Continues from the decode the ring may already be showing; never moves it backwards.
+        // A mode switched in settings since the ring started shares it out differently, so restart.
+        if (scanProgress.isAi() != usesAi()) {
+            restartScanProgress();
+        }
+        scanProgress.step(ScanProgress.Step.DECODING);
         ocrPipeline.recognize(this, photo, new OcrPipeline.Callback() {
+            @Override
+            public void onStage(@NonNull OcrPipeline.Stage stage) {
+                if (isCurrentImageRequest(request)) {
+                    scanProgress.step(stage == OcrPipeline.Stage.PREPARING
+                            ? ScanProgress.Step.PREPARING : ScanProgress.Step.RECOGNIZING);
+                }
+            }
+
             @Override
             public void onSuccess(@NonNull OcrResult result) {
                 if (!isCurrentImageRequest(request)) {
                     return;
                 }
+                scanProgress.step(ScanProgress.Step.MATCHING);
                 String text = result.fullText();
                 if (text.trim().isEmpty()) {
                     showAndSaveMessage(photo, text, getString(R.string.ocr_empty_result));
@@ -431,21 +473,40 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                 AllergenDictionary dictionary = AllergenDictionaryProvider.get(MainActivity.this);
                 AnalysisReport report = Analyzer.analyse(ingredients, text, dictionary,
                         AllergenPreferences.selectedAllergenSet(MainActivity.this, dictionary));
-                if (ingredients.isEmpty() && report.label().statements().isEmpty()) {
+                if (report.label().isEmpty()) {
                     // Nothing to analyse at all: show the raw text so the user can see what was read.
                     showAndSaveMessage(photo, text,
                             getString(R.string.no_ingredients_found, text));
                     return;
                 }
-                resultView.showReport(report,
-                        AllergenPreferences.showNotDetected(MainActivity.this));
-                showResult(report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED
-                        ? ResultAction.CHOOSE_ALLERGENS
-                        : report.overall() == AnalysisReport.Status.UNREADABLE
-                        ? ResultAction.RETRY : ResultAction.NONE);
-                // Recorded after the verdict is on screen, so nothing here can delay it. The
-                // staleness guard above is what keeps a cancelled or superseded scan out.
-                ScanHistory.get(MainActivity.this).save(report, photo);
+                AnalysisPreferences.Mode mode = AnalysisPreferences.mode(MainActivity.this);
+                if (mode == AnalysisPreferences.Mode.MATCHING || report.results().isEmpty()) {
+                    showAnalysisReport(photo, report, null);
+                } else if (report.label().ingredients().isEmpty()) {
+                    showAnalysisReport(photo, AiAnalyzer.incompleteReport(report), null);
+                } else if (!hasAiConfiguration(mode)) {
+                    showAnalysisReport(photo, AiAnalyzer.incompleteReport(report),
+                            ResultAction.CONFIGURE_AI);
+                } else {
+                    scanProgress.step(ScanProgress.Step.AI_CHECKS);
+                    aiRunner.check(report, new AiAnalysisRunner.Callback() {
+                        @Override
+                        public void onProgress(int completed, int total) {
+                            if (isCurrentImageRequest(request)) {
+                                scanProgress.aiChecks(completed, total);
+                                ((TextView) findViewById(R.id.analysis_loading_title)).setText(
+                                        R.string.ai_check_progress);
+                            }
+                        }
+
+                        @Override
+                        public void onResult(AnalysisReport checked) {
+                            if (isCurrentImageRequest(request)) {
+                                showAnalysisReport(photo, checked, null);
+                            }
+                        }
+                    });
+                }
             }
 
             @Override
@@ -457,6 +518,25 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         });
     }
 
+    private boolean hasAiConfiguration(AnalysisPreferences.Mode mode) {
+        if (mode == AnalysisPreferences.Mode.LOCAL_AI) {
+            return LocalModelManager.installedModel(this) != null;
+        }
+        String model = mode == AnalysisPreferences.Mode.DECISIONS
+                ? AnalysisPreferences.decisionsModel(this) : AnalysisPreferences.openRouterModel(this);
+        return !AnalysisPreferences.openRouterApiKey(this).trim().isEmpty() && !model.trim().isEmpty();
+    }
+
+    private void showAnalysisReport(Uri photo, AnalysisReport report, ResultAction action) {
+        resultView.showReport(report, AllergenPreferences.showNotDetected(this));
+        showResult(action != null ? action
+                : report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED
+                ? ResultAction.CHOOSE_ALLERGENS
+                : report.aiIncomplete() || report.overall() == AnalysisReport.Status.UNREADABLE
+                ? ResultAction.RETRY : ResultAction.NONE,
+                () -> ScanHistory.get(this).save(report, photo));
+    }
+
     /**
      * Shows a scan that produced no report, and records it anyway. A failed read is still a scan
      * the user took, and storing the title and body lets the history page reproduce this very
@@ -464,8 +544,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
      */
     private void showAndSaveMessage(Uri photo, String rawText, String message) {
         String title = getString(R.string.ingredient_result_title);
-        showMessageResult(title, message);
-        ScanHistory.get(this).saveFailure(rawText, title, message, photo);
+        resultView.showMessage(title, message);
+        showResult(ResultAction.RETRY,
+                () -> ScanHistory.get(this).saveFailure(rawText, title, message, photo));
     }
 
     /** Re-reads the photo already on screen, if any; a no-op when nothing is loaded. */
@@ -475,12 +556,13 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         if (selectedPhoto == null || bitmap == null || pendingPhoto != null) {
             return;
         }
+        restartScanProgress();
         recognizeIngredients(selectedPhoto, ++imageRequest);
     }
 
     private boolean isCurrentImageRequest(int request) {
         return request == imageRequest && selectedPhoto != null && analysisMode
-                && !isFinishing() && !isDestroyed();
+                && !settingsOpen && !isFinishing() && !isDestroyed();
     }
 
     private Bitmap currentBitmap() {
@@ -606,8 +688,12 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     private void leaveAnalysisMode(boolean animate) {
         ++imageRequest;
+        aiRunner.cancel();
         endPhotoFlight();
         stopScanning();
+        // Hidden so the next check comes into view, and starts its ring, from empty.
+        scanProgress.cancel();
+        analysisLoading.setVisibility(View.GONE);
         // A replacement photo may still be decoding; its result is now dropped, so undo its
         // loading state and remove its file if it was a fresh camera capture.
         if (pendingPhoto != null) {
@@ -732,9 +818,12 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     private void showAnalysisLoading() {
         resultAction = ResultAction.NONE;
+        ((TextView) findViewById(R.id.analysis_loading_title)).setText(R.string.reading_ingredients);
         if (analysisLoading.getVisibility() != View.VISIBLE) {
             TransitionManager.beginDelayedTransition(contentColumn,
                     HomeMotion.pageTransition(photoCard, photoStripScroll));
+            // A scan coming into view starts from an empty ring; one already showing carries on.
+            restartScanProgress();
         }
         analysisResult.setVisibility(View.GONE);
         restartButton.setVisibility(View.GONE);
@@ -742,13 +831,37 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         startScanning();
     }
 
-    private void showMessageResult(String title, String message) {
-        resultView.showMessage(title, message);
-        showResult(ResultAction.RETRY);
+    /**
+     * Empties the ring for a new scan, shared out for the detection mode it will run in: the AI
+     * modes save most of the ring for their checks, matching spends it all on reading the label.
+     */
+    private void restartScanProgress() {
+        scanProgress.reset(usesAi());
+        scanProgress.step(ScanProgress.Step.DECODING);
     }
 
-    /** Replaces the progress with the result that {@link #resultView} was just filled with. */
-    private void showResult(ResultAction action) {
+    /** Whether this scan will run AI checks; a mode that is not set up only reads and matches. */
+    private boolean usesAi() {
+        AnalysisPreferences.Mode mode = AnalysisPreferences.mode(this);
+        return mode != AnalysisPreferences.Mode.MATCHING && hasAiConfiguration(mode);
+    }
+
+    /** Replaces progress with the final result, then records it if completion was not cancelled. */
+    private void showResult(ResultAction action, Runnable onShown) {
+        Runnable reveal = () -> {
+            revealResult(action);
+            onShown.run();
+        };
+        if (analysisLoading.getVisibility() == View.VISIBLE) {
+            // Let the ring close first: a result over a part-filled ring reads as cut short.
+            // Cancelling or restarting the scan also drops the pending history save.
+            scanProgress.finish(reveal);
+        } else {
+            reveal.run();
+        }
+    }
+
+    private void revealResult(ResultAction action) {
         // A fade still running from the last page change would otherwise hide the result again.
         TransitionManager.endTransitions(contentColumn);
         stopScanning();
@@ -758,11 +871,15 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         } else {
             resultSecondaryButton.setVisibility(View.VISIBLE);
             resultSecondaryButton.setText(action == ResultAction.CHOOSE_ALLERGENS
-                    ? R.string.choose_allergens_action : R.string.try_again);
+                    ? R.string.choose_allergens_action : action == ResultAction.CONFIGURE_AI
+                    ? R.string.configure_ai_action : R.string.try_again);
         }
         analysisLoading.setVisibility(View.GONE);
         analysisResult.setVisibility(View.VISIBLE);
-        restartButton.setVisibility(View.VISIBLE);
+        restartButton.setVisibility(historyVisible ? View.GONE : View.VISIBLE);
+        if (historyVisible) {
+            return;
+        }
         if (ValueAnimator.areAnimatorsEnabled()) {
             HomeMotion.revealChildren(analysisResult, 0);
             HomeMotion.popIn(resultView.verdictIcon(), 120);
@@ -775,6 +892,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void onResultAction() {
         if (resultAction == ResultAction.CHOOSE_ALLERGENS) {
             openAllergenPreferences();
+        } else if (resultAction == ResultAction.CONFIGURE_AI) {
+            openSettings(true);
         } else if (resultAction == ResultAction.RETRY) {
             rescanCurrentPhoto();
         }
@@ -826,6 +945,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     private void removePhoto() {
         ++imageRequest;
+        aiRunner.cancel();
         if (selectedPhoto != null) {
             releasePhotoAccess(selectedPhoto);
         }
@@ -909,6 +1029,13 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     /** Always through the launcher, so a save from either section refreshes this screen. */
     private void openSettings(boolean showModel) {
+        settingsOpen = true;
+        if (analysisMode && analysisLoading.getVisibility() == View.VISIBLE) {
+            settingsInterruptedScan = true;
+            aiRunner.cancel();
+            // A ring closing on a finished scan must not reveal its result behind settings.
+            scanProgress.cancel();
+        }
         settingsLauncher.launch(new Intent(this, SettingsActivity.class)
                 .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, showModel));
     }
@@ -1007,6 +1134,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             outState.putString(CAMERA_STATE, pendingCameraPhoto.toString());
         }
         outState.putBoolean(ANALYSIS_STATE, analysisMode);
+        outState.putBoolean(SETTINGS_OPEN_STATE, settingsOpen);
+        outState.putBoolean(SETTINGS_INTERRUPTED_STATE, settingsInterruptedScan);
         outState.putBoolean(HISTORY_STATE, historyVisible);
         super.onSaveInstanceState(outState);
     }
@@ -1020,7 +1149,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             animator.cancel();
         }
         scanAnimators.clear();
+        scanProgress.cancel();
         ocrPipeline.close();
+        aiRunner.close();
         imageExecutor.shutdownNow();
         super.onDestroy();
     }

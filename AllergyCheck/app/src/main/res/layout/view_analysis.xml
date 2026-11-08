@@ -32,14 +32,26 @@
         android:gravity="center_horizontal"
         android:orientation="vertical">
 
+        <!-- Determinate: ScanProgress fills it through reading the label and, in the AI modes,
+             the AI checks, so every detection mode shows how far the scan has got. Wavy as in M3
+             Expressive: the spec's 1.6dp amplitude and 15dp wavelength at 48dp, scaled to 56dp,
+             with the wave drifting so a ring waiting on the AI still reads as alive. Hidden from
+             accessibility: it moves every frame inside the live region, and the title already
+             says where the scan is. -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/analysis_progress"
+            style="@style/Widget.Material3.CircularProgressIndicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:indeterminate="true"
+            android:importantForAccessibility="no"
+            android:max="100"
             app:indicatorSize="56dp"
-            app:trackCornerRadius="4dp"
-            app:trackThickness="5dp" />
+            app:indicatorTrackGapSize="4dp"
+            app:trackCornerRadius="50%"
+            app:trackThickness="5dp"
+            app:waveAmplitude="2dp"
+            app:waveSpeed="12dp"
+            app:wavelength="18dp" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/analysis_loading_title"

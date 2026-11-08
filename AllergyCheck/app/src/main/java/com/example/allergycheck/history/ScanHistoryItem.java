@@ -19,17 +19,19 @@ public final class ScanHistoryItem {
     private final AnalysisReport.Status status;
     private final List<String> allergenLabels;
     private final boolean lowConfidence;
+    private final boolean aiIncomplete;
     private final String imageName;
     private final String messageTitle;
 
     ScanHistoryItem(long id, long createdAt, @NonNull AnalysisReport.Status status,
-                    @NonNull List<String> allergenLabels, boolean lowConfidence,
+                    @NonNull List<String> allergenLabels, boolean lowConfidence, boolean aiIncomplete,
                     @Nullable String imageName, @Nullable String messageTitle) {
         this.id = id;
         this.createdAt = createdAt;
         this.status = status;
         this.allergenLabels = Collections.unmodifiableList(allergenLabels);
         this.lowConfidence = lowConfidence;
+        this.aiIncomplete = aiIncomplete;
         this.imageName = imageName;
         this.messageTitle = messageTitle;
     }
@@ -53,6 +55,11 @@ public final class ScanHistoryItem {
 
     public boolean lowConfidence() {
         return lowConfidence;
+    }
+
+    /** At least one AI check failed; keep this caveat even when label matches were found. */
+    public boolean aiIncomplete() {
+        return aiIncomplete;
     }
 
     /** The saved photo's file name, or {@code null} when the image could not be written. */

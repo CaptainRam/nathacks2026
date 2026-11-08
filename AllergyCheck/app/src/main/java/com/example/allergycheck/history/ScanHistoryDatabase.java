@@ -13,7 +13,7 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
 
     public static final String FILE_NAME = "scan_history.db";
 
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     static final String TABLE = "scans";
     static final String ID = "_id";
@@ -21,6 +21,7 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
     static final String OVERALL_STATUS = "overall_status";
     static final String SUMMARY_ALLERGENS = "summary_allergens";
     static final String LOW_CONFIDENCE = "low_confidence";
+    static final String AI_INCOMPLETE = "ai_incomplete";
     static final String RAW_TEXT = "raw_text";
     static final String IMAGE_NAME = "image_name";
     static final String REPORT_BLOB = "report_blob";
@@ -48,6 +49,7 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
                 + OVERALL_STATUS + " TEXT NOT NULL, "
                 + SUMMARY_ALLERGENS + " TEXT NOT NULL DEFAULT '', "
                 + LOW_CONFIDENCE + " INTEGER NOT NULL DEFAULT 0, "
+                + AI_INCOMPLETE + " INTEGER NOT NULL DEFAULT 0, "
                 + RAW_TEXT + " TEXT NOT NULL DEFAULT '', "
                 + IMAGE_NAME + " TEXT, "
                 + REPORT_BLOB + " BLOB, "
@@ -60,7 +62,11 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(@NonNull SQLiteDatabase db, int from, int to) {
-        // Nothing to migrate yet. History is a cache of the user's own scans, not a system of
-        // record, so a future incompatible change may simply drop the table and start again.
+        if (from < 2) {
+            // Version 1 only stored matching reports, so their AI checks were never incomplete.
+            // Keep the saved reports, photos and failure messages intact.
+            db.execSQL("ALTER TABLE " + TABLE + " ADD COLUMN " + AI_INCOMPLETE
+                    + " INTEGER NOT NULL DEFAULT 0");
+        }
     }
 }
