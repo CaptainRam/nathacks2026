@@ -85,6 +85,17 @@
         <item name="shapeAppearance">@style/ShapeAppearance.AllergyCheck.Medium</item>
         <item name="strokeWidth">0dp</item>
     </style>
+    <!-- A detection mode: a title line and a one-line explanation, set in code. -->
+    <style name="Widget.AllergyCheck.DetectionModeOption" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:paddingVertical">8dp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:saveEnabled">false</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
     <style name="ShapeAppearance.AllergyCheck.Large" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">28dp</item>

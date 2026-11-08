@@ -22,109 +22,114 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp">
 
-            <RadioGroup
+            <!-- Where the check runs; the options below change with it. -->
+            <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/detection_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:saveEnabled="false">
+                android:contentDescription="@string/detection_location_label"
+                android:saveEnabled="false"
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
-                <com.google.android.material.radiobutton.MaterialRadioButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/detection_location_local"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:minHeight="48dp"
                     android:saveEnabled="false"
-                    android:text="@string/detection_local" />
+                    android:text="@string/detection_local"
+                    android:textAllCaps="false" />
 
-                <com.google.android.material.radiobutton.MaterialRadioButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/detection_location_cloud"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:minHeight="48dp"
                     android:saveEnabled="false"
-                    android:text="@string/detection_cloud" />
-            </RadioGroup>
+                    android:text="@string/detection_cloud"
+                    android:textAllCaps="false" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
+            <!-- Each option carries its own two-line label, set in code. -->
             <RadioGroup
                 android:id="@+id/detection_local_modes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:saveEnabled="false">
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/detection_mode_matching"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:saveEnabled="false"
-                    android:text="@string/detection_matching" />
+                    style="@style/Widget.AllergyCheck.DetectionModeOption" />
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/detection_mode_local_ai"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:saveEnabled="false"
-                    android:text="@string/detection_local_ai" />
+                    style="@style/Widget.AllergyCheck.DetectionModeOption" />
             </RadioGroup>
 
             <RadioGroup
                 android:id="@+id/detection_cloud_modes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:saveEnabled="false"
                 android:visibility="gone">
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/detection_mode_openrouter"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:saveEnabled="false"
-                    android:text="@string/detection_openrouter" />
+                    style="@style/Widget.AllergyCheck.DetectionModeOption" />
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
                     android:id="@+id/detection_mode_decisions"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:saveEnabled="false"
-                    android:text="@string/detection_decisions" />
+                    style="@style/Widget.AllergyCheck.DetectionModeOption" />
             </RadioGroup>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/detection_mode_description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:accessibilityLiveRegion="polite"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+    <!-- Cloud connection: its own section, like the local model below for Local. -->
+    <LinearLayout
+        android:id="@+id/detection_cloud_configuration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/Widget.AllergyCheck.SettingsSectionTitle"
+            android:layout_marginTop="24dp"
+            android:text="@string/detection_cloud_title" />
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/Widget.AllergyCheck.SettingsSectionHint"
+            android:text="@string/detection_cloud_hint" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.AllergyCheck.SettingsCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:id="@+id/detection_cloud_configuration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone">
-
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/Widget.AllergyCheck.SettingsSectionHint"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/detection_cloud_hint" />
+                android:padding="16dp">
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/detection_api_key_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
                     android:hint="@string/detection_api_key"
-                    app:endIconMode="password_toggle">
+                    app:endIconMode="password_toggle"
+                    app:helperText="@string/detection_api_key_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/detection_api_key"
@@ -174,7 +179,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:hint="@string/detection_threshold">
+                    android:hint="@string/detection_threshold"
+                    app:helperText="@string/detection_threshold_hint">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/detection_threshold"
@@ -200,24 +206,27 @@
                         android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Saved / needs-a-key state, read before the button. -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/detection_cloud_save_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:accessibilityLiveRegion="polite"
+                    android:drawablePadding="8dp"
+                    android:gravity="center_vertical"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:visibility="gone" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/detection_save_cloud"
                     style="@style/Widget.AllergyCheck.PrimaryButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="12dp"
+                    android:minHeight="48dp"
                     android:text="@string/detection_save_cloud" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/detection_cloud_save_status"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:accessibilityLiveRegion="polite"
-                    android:text="@string/detection_cloud_saved"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:visibility="gone" />
             </LinearLayout>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 </LinearLayout>

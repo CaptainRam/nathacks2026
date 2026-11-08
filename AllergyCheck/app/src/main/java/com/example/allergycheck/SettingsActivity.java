@@ -3,9 +3,14 @@ package com.example.allergycheck;
 import android.app.Dialog;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.TextAppearanceSpan;
 import android.text.format.Formatter;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
@@ -17,6 +22,7 @@ import android.widget.RadioGroup;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -89,6 +95,8 @@ public class SettingsActivity extends AppCompatActivity {
     private EditText decisionsThresholdInput;
     private EditText cloudConcurrencyInput;
     private boolean renderingDetectionMode;
+    /** True from a successful cloud save until the next edit. */
+    private boolean cloudJustSaved;
     private boolean analysisConfigurationChanged;
 
     /** Keeps the unsaved key through rotation without putting credentials into saved state. */
@@ -319,7 +327,8 @@ public class SettingsActivity extends AppCompatActivity {
             @Override public void onTextChanged(CharSequence text, int start, int before, int count) { }
             @Override public void afterTextChanged(Editable text) {
                 draft.apiKey = apiKeyInput.getText().toString();
-                findViewById(R.id.detection_cloud_save_status).setVisibility(View.GONE);
+                cloudJustSaved = false;
+                renderCloudStatus();
                 updateUnsavedChanges();
             }
         };
@@ -328,10 +337,18 @@ public class SettingsActivity extends AppCompatActivity {
         decisionsModelInput.addTextChangedListener(watcher);
         decisionsThresholdInput.addTextChangedListener(watcher);
         cloudConcurrencyInput.addTextChangedListener(watcher);
+        setModeLabel(R.id.detection_mode_matching, R.string.detection_matching,
+                R.string.detection_matching_hint);
+        setModeLabel(R.id.detection_mode_local_ai, R.string.detection_local_ai,
+                R.string.detection_local_ai_hint);
+        setModeLabel(R.id.detection_mode_openrouter, R.string.detection_openrouter,
+                R.string.detection_openrouter_hint);
+        setModeLabel(R.id.detection_mode_decisions, R.string.detection_decisions,
+                R.string.detection_decisions_hint);
         renderDetectionMode();
-        RadioGroup location = findViewById(R.id.detection_location);
-        location.setOnCheckedChangeListener((group, checkedId) -> {
-            if (!renderingDetectionMode) {
+        MaterialButtonToggleGroup location = findViewById(R.id.detection_location);
+        location.addOnButtonCheckedListener((group, checkedId, checked) -> {
+            if (checked && !renderingDetectionMode) {
                 AnalysisPreferences.Mode previous = AnalysisPreferences.mode(this);
                 boolean wasCloud = previous == AnalysisPreferences.Mode.OPENROUTER
                         || previous == AnalysisPreferences.Mode.DECISIONS;
@@ -370,7 +387,7 @@ public class SettingsActivity extends AppCompatActivity {
                 || mode == AnalysisPreferences.Mode.DECISIONS;
         boolean decisions = mode == AnalysisPreferences.Mode.DECISIONS;
         renderingDetectionMode = true;
-        ((RadioGroup) findViewById(R.id.detection_location)).check(cloud
+        ((MaterialButtonToggleGroup) findViewById(R.id.detection_location)).check(cloud
                 ? R.id.detection_location_cloud : R.id.detection_location_local);
         ((RadioGroup) findViewById(R.id.detection_local_modes)).check(
                 mode == AnalysisPreferences.Mode.LOCAL_AI
@@ -387,10 +404,59 @@ public class SettingsActivity extends AppCompatActivity {
         findViewById(R.id.detection_model_layout).setVisibility(decisions ? View.GONE : View.VISIBLE);
         findViewById(R.id.detection_decisions_model_layout).setVisibility(decisions ? View.VISIBLE : View.GONE);
         findViewById(R.id.detection_threshold_layout).setVisibility(decisions ? View.VISIBLE : View.GONE);
-        ((TextView) findViewById(R.id.detection_mode_description)).setText(decisions
-                ? R.string.detection_decisions_hint : cloud ? R.string.detection_openrouter_hint
-                : mode == AnalysisPreferences.Mode.LOCAL_AI
-                        ? R.string.detection_local_ai_hint : R.string.detection_matching_hint);
+        renderCloudStatus();
+    }
+
+    /** Bold-weight title over a smaller explanation, so each option explains itself. */
+    private void setModeLabel(int buttonId, int titleRes, int hintRes) {
+        String title = getString(titleRes);
+        String hint = getString(hintRes);
+        SpannableStringBuilder label = new SpannableStringBuilder(title).append('\n').append(hint);
+        int start = title.length() + 1;
+        label.setSpan(new TextAppearanceSpan(this, com.google.android.material.R.style
+                        .TextAppearance_Material3_BodyMedium), start, label.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        label.setSpan(new ForegroundColorSpan(MaterialColors.getColor(this,
+                        com.google.android.material.R.attr.colorOnSurfaceVariant, 0)),
+                start, label.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ((TextView) findViewById(buttonId)).setText(label);
+    }
+
+    /**
+     * Confirms a save, or warns that the chosen cloud mode cannot run yet because nothing
+     * usable is stored — mode changes apply at once, but cloud fields only once saved.
+     */
+    private void renderCloudStatus() {
+        TextView status = findViewById(R.id.detection_cloud_save_status);
+        if (status == null || apiKeyInput == null) return;
+        AnalysisPreferences.Mode mode = AnalysisPreferences.mode(this);
+        String savedModel = mode == AnalysisPreferences.Mode.DECISIONS
+                ? AnalysisPreferences.decisionsModel(this) : AnalysisPreferences.openRouterModel(this);
+        boolean cloud = mode == AnalysisPreferences.Mode.OPENROUTER
+                || mode == AnalysisPreferences.Mode.DECISIONS;
+        boolean unusable = cloud && (AnalysisPreferences.openRouterApiKey(this).isEmpty()
+                || !validModelId(savedModel));
+        if (unusable) {
+            showStatus(status, R.string.detection_cloud_needs_key, R.drawable.ic_info_small,
+                    com.google.android.material.R.attr.colorError);
+        } else if (cloudJustSaved) {
+            showStatus(status, R.string.detection_cloud_saved, R.drawable.ic_check,
+                    com.google.android.material.R.attr.colorPrimary);
+        } else {
+            status.setVisibility(View.GONE);
+        }
+    }
+
+    private void showStatus(TextView status, int textRes, int iconRes, int colorAttr) {
+        int color = MaterialColors.getColor(status, colorAttr);
+        status.setText(textRes);
+        status.setTextColor(color);
+        Drawable icon = AppCompatResources.getDrawable(this, iconRes).mutate();
+        int size = Math.round(18 * getResources().getDisplayMetrics().density);
+        icon.setBounds(0, 0, size, size);
+        icon.setTint(color);
+        status.setCompoundDrawablesRelative(icon, null, null, null);
+        status.setVisibility(View.VISIBLE);
     }
 
     private boolean saveCloudConfiguration() {
@@ -454,7 +520,8 @@ public class SettingsActivity extends AppCompatActivity {
         cloudConcurrencyInput.setText(formatConcurrency(concurrency));
         analysisConfigurationChanged = true;
         setResult(RESULT_OK);
-        findViewById(R.id.detection_cloud_save_status).setVisibility(View.VISIBLE);
+        cloudJustSaved = true;
+        renderCloudStatus();
         updateUnsavedChanges();
         return true;
     }
