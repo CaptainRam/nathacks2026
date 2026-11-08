@@ -41,7 +41,13 @@ import java.util.concurrent.Executors;
  */
 public final class OcrPipeline {
 
-    /** Recognition outcome. Both methods are invoked on the main thread. */
+    /**
+     * Recognition outcome. Both methods are invoked on the main thread.
+     *
+     * <p>Neither method is ever invoked after {@link #close()}, including for work that was already
+     * in flight. A screen can therefore close its pipeline in {@code onDestroy} without guarding its
+     * callback against an already-destroyed view.
+     */
     public interface Callback {
 
         /**
@@ -86,30 +92,41 @@ public final class OcrPipeline {
      * <p>If the prepared image yields no text at all, recognition is retried once on the unmodified
      * decode before reporting an empty result. Conditioning helps most labels but cannot be proven to
      * help every one, and that retry bounds the cost of being wrong about a particular photo.
+     *
+     * <p>After {@link #close()} this is a silent no-op: nothing is submitted and no {@link Callback}
+     * method is invoked.
      */
     @MainThread
     public void recognize(@NonNull Context context, @NonNull Uri imageUri, @NonNull Callback callback) {
+        if (closed) {
+            // Checked before submitting: the executor is already shut down, and letting it reject the
+            // task would throw RejectedExecutionException out of this call on the main thread.
+            return;
+        }
         Context appContext = context.getApplicationContext();
         imageExecutor.execute(() -> {
             if (closed) {
                 return;
             }
-            Bitmap decoded;
+            Bitmap decoded = null;
             Bitmap prepared;
             try {
                 decoded = LabelImageDecoder.decode(appContext, imageUri);
                 prepared = preparer.prepare(decoded);
             } catch (IOException | RuntimeException e) {
                 // Surfaced through the same path as recognition errors so callers have one failure branch.
+                recycleDecoded(decoded);
                 mainHandler.post(() -> callback.onFailure(e));
                 return;
             } catch (OutOfMemoryError e) {
                 // Reported rather than swallowed: silently returning no text here would read as a
                 // clean, allergen-free label, which is the one outcome a failure must never produce.
+                recycleDecoded(decoded);
                 mainHandler.post(() -> callback.onFailure(new IOException("Image too large to process", e)));
                 return;
             }
-            mainHandler.post(() -> process(decoded, prepared, /* ownsDecoded= */ true, callback));
+            Bitmap decodedImage = decoded;
+            mainHandler.post(() -> process(decodedImage, prepared, /* ownsDecoded= */ true, callback));
         });
     }
 
@@ -117,11 +134,18 @@ public final class OcrPipeline {
      * Reads an already decoded, upright preview without decoding the photo again.
      *
      * <p>Conditioning and the retry pass work exactly as on the {@link Uri} path, but {@code bitmap}
-     * stays the caller's: it is never recycled here, so a preview still on screen remains safe to
-     * draw.
+     * stays the caller's: it is never recycled here — not even when preparation fails — so a preview
+     * still on screen remains safe to draw.
+     *
+     * <p>After {@link #close()} this is a silent no-op: nothing is submitted and no {@link Callback}
+     * method is invoked.
      */
     @MainThread
     public void recognize(@NonNull Bitmap bitmap, @NonNull Callback callback) {
+        if (closed) {
+            // As on the Uri path: submitting to a shut-down executor would throw, not no-op.
+            return;
+        }
         imageExecutor.execute(() -> {
             if (closed) {
                 return;
@@ -140,7 +164,14 @@ public final class OcrPipeline {
         });
     }
 
-    /** Releases the recogniser and the image thread. Safe to call more than once. */
+    /**
+     * Releases the recogniser and the image thread. Safe to call more than once.
+     *
+     * <p>No {@link Callback} method is invoked after this: later {@code recognize} calls return
+     * without submitting anything, and work already in flight finishes by recycling its bitmaps
+     * silently. That second half matters because closing the recogniser fails any pending ML Kit
+     * task, which would otherwise deliver {@code onFailure} to a screen that is already gone.
+     */
     public void close() {
         closed = true;
         imageExecutor.shutdown();
@@ -157,6 +188,10 @@ public final class OcrPipeline {
         }
         recognizer.process(InputImage.fromBitmap(prepared, /* rotationDegrees= */ 0))
                 .addOnSuccessListener(text -> {
+                    if (closed) {
+                        recycle(decoded, prepared, ownsDecoded);
+                        return;
+                    }
                     OcrResult result = filter.apply(toResult(text));
                     if (result.isEmpty() && prepared != decoded) {
                         retryOnDecoded(decoded, prepared, ownsDecoded, callback);
@@ -166,7 +201,12 @@ public final class OcrPipeline {
                     }
                 })
                 .addOnFailureListener(error -> {
+                    // close() fails any task still pending, so this also fires on teardown, where
+                    // reporting the error would push a failure onto a destroyed screen.
                     recycle(decoded, prepared, ownsDecoded);
+                    if (closed) {
+                        return;
+                    }
                     callback.onFailure(error);
                 });
     }
@@ -181,12 +221,20 @@ public final class OcrPipeline {
         }
         recognizer.process(InputImage.fromBitmap(decoded, /* rotationDegrees= */ 0))
                 .addOnSuccessListener(text -> {
+                    if (closed) {
+                        recycle(decoded, prepared, ownsDecoded);
+                        return;
+                    }
                     OcrResult result = filter.apply(toResult(text));
                     recycle(decoded, prepared, ownsDecoded);
                     callback.onSuccess(result);
                 })
                 .addOnFailureListener(error -> {
+                    // As in process(): a failure here can simply mean close() cancelled the task.
                     recycle(decoded, prepared, ownsDecoded);
+                    if (closed) {
+                        return;
+                    }
                     callback.onFailure(error);
                 });
     }
@@ -202,6 +250,20 @@ public final class OcrPipeline {
             prepared.recycle();
         }
         if (ownsDecoded) {
+            decoded.recycle();
+        }
+    }
+
+    /**
+     * Frees a bitmap this pipeline decoded when a later stage threw before anything took ownership
+     * of it; without this, a failed preparation leaks the whole 20-27 MB decode, so the next attempt
+     * after an out-of-memory error runs out of memory again.
+     *
+     * <p>Null-tolerant because the decode itself may be what threw, and only ever called on the
+     * {@link Uri} path: on the {@link Bitmap} entry point the image belongs to the caller.
+     */
+    private static void recycleDecoded(Bitmap decoded) {
+        if (decoded != null) {
             decoded.recycle();
         }
     }

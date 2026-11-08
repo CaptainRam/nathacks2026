@@ -52,16 +52,6 @@
         <item quantity="one">%d allergen selected</item>
         <item quantity="other">%d allergens selected</item>
     </plurals>
-    <string-array name="allergen_options">
-        <item>Milk</item>
-        <item>Eggs</item>
-        <item>Peanuts</item>
-        <item>Tree nuts</item>
-        <item>Soy</item>
-        <item>Wheat</item>
-        <item>Sesame</item>
-        <item>Fish</item>
-        <item>Shellfish</item>
-        <item>Mustard</item>
-    </string-array>
+    <!-- The allergen names shown in the pickers come from res/raw/allergen_dictionary.json, so
+         the engine's vocabulary and the UI cannot drift apart. -->
 </resources>

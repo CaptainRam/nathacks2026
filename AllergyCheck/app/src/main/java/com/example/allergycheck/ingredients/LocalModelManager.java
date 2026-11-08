@@ -253,30 +253,42 @@ public final class LocalModelManager {
         installing = true;
         update(new Status(State.INSTALLING, MODEL_BYTES, MODEL_BYTES, null));
         verifier.execute(() -> {
-            boolean installed;
+            boolean installed = false;
             try {
                 files.install(MODEL_BYTES, MODEL_SHA256);
                 installed = true;
             } catch (IOException | RuntimeException error) {
                 installed = false;
+            } finally {
+                // In a finally block so that anything the catch does not cover — an Error such as
+                // OutOfMemoryError while hashing — still clears the flag. While installing is true,
+                // refresh(), delete() and download() all return early, so the Settings screen would
+                // otherwise be stuck on "Installing" for the life of the process, with no retry.
+                final boolean success = installed;
+                handler.post(() -> finishInstall(id, success));
             }
-            final boolean success = installed;
-            handler.post(() -> {
-                installing = false;
-                if (success) {
-                    preferences.edit().remove(DOWNLOAD_ID).remove(LAST_ERROR).apply();
-                    // The published model has a different path; removing the old job only removes staging.
-                    try {
-                        if (downloads != null) downloads.remove(id);
-                    } catch (RuntimeException ignored) {
-                        // A stale completed row does not affect the verified model.
-                    }
-                    refresh();
-                } else {
-                    fail(context.getString(R.string.model_download_verification_error));
-                }
-            });
         });
+    }
+
+    /**
+     * Completes one verification attempt: posted exactly once per {@link #install(long)}, so the
+     * flag is cleared and listeners are notified once, on the main thread, either way.
+     */
+    @MainThread
+    private void finishInstall(long id, boolean success) {
+        installing = false;
+        if (!success) {
+            fail(context.getString(R.string.model_download_verification_error));
+            return;
+        }
+        preferences.edit().remove(DOWNLOAD_ID).remove(LAST_ERROR).apply();
+        // The published model has a different path; removing the old job only removes staging.
+        try {
+            if (downloads != null) downloads.remove(id);
+        } catch (RuntimeException ignored) {
+            // A stale completed row does not affect the verified model.
+        }
+        refresh();
     }
 
     private void fail(String error) {

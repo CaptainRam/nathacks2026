@@ -5,7 +5,7 @@ import java.io.Serializable;
 /** One piece of label evidence relating to one allergen. */
 public final class Finding implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /** How strongly the evidence says the allergen is present. Ordered strongest first. */
     public enum Level {

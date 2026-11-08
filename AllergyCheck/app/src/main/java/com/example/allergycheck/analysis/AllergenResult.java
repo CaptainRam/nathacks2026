@@ -7,7 +7,7 @@ import java.util.List;
 /** The outcome for a single allergen the user asked to check, with all supporting evidence. */
 public final class AllergenResult implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final Allergen allergen;
     private final AnalysisReport.Status status;

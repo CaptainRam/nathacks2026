@@ -36,6 +36,8 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.ingredients.IngredientExtractor;
@@ -318,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
                     setLoading(false);
                     if (analysisMode) {
                         bindThumbnails(Collections.singletonList(bitmap), true);
-                        recognizeIngredients(bitmap, request);
+                        recognizeIngredients(uri, request);
                     } else {
                         // Nothing is read until the user asks for it.
                         photoPreview.announceForAccessibility(getString(R.string.photo_added));
@@ -362,9 +364,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void recognizeIngredients(Bitmap bitmap, int request) {
+    /**
+     * Reads {@code photo} and analyses it. Deliberately takes the <em>URI</em> rather than the
+     * preview bitmap: the preview is capped at {@link #MAX_PREVIEW_SIZE} for display, which is the
+     * bottom of the band {@code LabelImageDecoder} normalises to, and small print on a tightly
+     * cropped panel is lost at that size. Recognising from the URI lets the decoder pick the
+     * resolution — including upscaling a small crop — so the recogniser sees the best image we can
+     * give it instead of whatever happened to be big enough to draw.
+     */
+    private void recognizeIngredients(Uri photo, int request) {
         showAnalysisLoading();
-        ocrPipeline.recognize(bitmap, new OcrPipeline.Callback() {
+        ocrPipeline.recognize(this, photo, new OcrPipeline.Callback() {
             @Override
             public void onSuccess(@NonNull OcrResult result) {
                 if (!isCurrentImageRequest(request)) {
@@ -379,8 +389,9 @@ public class MainActivity extends AppCompatActivity {
                 List<String> ingredients = IngredientExtractor.extract(text);
                 // The extracted list is what gets analysed; statements such as "may contain nuts"
                 // are printed outside the list, so the analyser also sees the full text.
-                AnalysisReport report = Analyzer.analyse(ingredients, text,
-                        AllergenPreferences.selectedAllergenSet(MainActivity.this));
+                AllergenDictionary dictionary = AllergenDictionaryProvider.get(MainActivity.this);
+                AnalysisReport report = Analyzer.analyse(ingredients, text, dictionary,
+                        AllergenPreferences.selectedAllergenSet(MainActivity.this, dictionary));
                 if (ingredients.isEmpty() && report.label().statements().isEmpty()) {
                     // Nothing to analyse at all: show the raw text so the user can see what was read.
                     showMessageResult(getString(R.string.ingredient_result_title),
@@ -411,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
         if (selectedPhoto == null || bitmap == null || pendingPhoto != null) {
             return;
         }
-        recognizeIngredients(bitmap, ++imageRequest);
+        recognizeIngredients(selectedPhoto, ++imageRequest);
     }
 
     private boolean isCurrentImageRequest(int request) {
@@ -429,7 +440,8 @@ public class MainActivity extends AppCompatActivity {
     /** Shrinks the photo to the top of the page, hides the home content and reads the label. */
     private void startAnalysis() {
         Bitmap bitmap = currentBitmap();
-        if (bitmap == null || analysisMode || loadingOverlay.getVisibility() == View.VISIBLE) {
+        if (selectedPhoto == null || bitmap == null || analysisMode
+                || loadingOverlay.getVisibility() == View.VISIBLE) {
             return;
         }
         RectF from = HomeMotion.fitCenterBoundsIn(root, photoPreview, bitmap);
@@ -450,8 +462,8 @@ public class MainActivity extends AppCompatActivity {
         // Start reading once the photo has landed so the flight gets every frame.
         int request = ++imageRequest;
         root.postDelayed(() -> {
-            if (request == imageRequest && analysisMode) {
-                recognizeIngredients(bitmap, request);
+            if (isCurrentImageRequest(request)) {
+                recognizeIngredients(selectedPhoto, request);
             }
         }, photoFlight == null ? 0 : HomeMotion.FLIGHT_MS);
     }
@@ -796,20 +808,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Refreshes the count and the chips from the same dictionary-resolved selection the analyser
+     * is given, so the number on the button can never claim more allergens than are being checked.
+     */
     private void updateAllergenSummary() {
-        Set<String> saved = AllergenPreferences.selectedAllergens(this);
+        Set<Allergen> saved = AllergenPreferences.selectedAllergenSet(
+                this, AllergenDictionaryProvider.get(this));
         int count = saved.size();
         allergensButton.setText(count == 0 ? getString(R.string.set_allergens)
                 : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
 
         allergenChips.removeAllViews();
-        // Keep chips in the same order as the picker rather than HashSet order.
-        for (String option : getResources().getStringArray(R.array.allergen_options)) {
-            if (!saved.contains(option)) {
-                continue;
-            }
+        // Already in dictionary order, which is the order the pickers list them in.
+        for (Allergen allergen : saved) {
             Chip chip = new Chip(this);
-            chip.setText(option);
+            chip.setText(allergen.label());
             chip.setClickable(false);
             chip.setFocusable(false);
             chip.setEnsureMinTouchTargetSize(false);

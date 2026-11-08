@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "language": "en",
+  "allergens": [
+    {
+      "id": "MILK",
+      "label": "Milk",
+      "terms": [
+        "milk", "skim milk", "whole milk", "milk powder", "milk solids", "milk protein", "milk fat",
+        "cream", "butter", "buttermilk", "butterfat", "cheese", "yogurt", "yoghurt", "yogourt",
+        "whey", "casein", "caseinate", "lactose", "lactalbumin", "lactoglobulin", "ghee", "curd",
+        "custard", "kefir", "ice cream", "dairy", "creme", "paneer", "ricotta", "mozzarella",
+        "cheddar"
+      ],
+      "ambiguous": [
+        "natural flavour", "natural flavor", "margarine", "nougat", "caramel", "chocolate"
+      ],
+      "exclusions": [
+        "cocoa butter", "shea butter", "peanut butter", "almond butter", "nut butter",
+        "cashew butter", "sunflower butter", "seed butter", "coconut milk", "coconut cream",
+        "almond milk", "soy milk", "soya milk", "oat milk", "rice milk", "cashew milk",
+        "hazelnut milk", "pea milk", "cream of tartar", "milk thistle"
+      ]
+    },
+    {
+      "id": "EGGS",
+      "label": "Eggs",
+      "terms": [
+        "egg", "egg white", "egg yolk", "dried egg", "albumin", "albumen", "ovalbumin", "ovomucoid",
+        "ovomucin", "ovovitellin", "livetin", "lysozyme", "mayonnaise", "meringue", "eggnog"
+      ],
+      "ambiguous": ["natural flavour", "natural flavor", "lecithin", "pasta", "marshmallow"],
+      "exclusions": ["egg free", "eggplant"]
+    },
+    {
+      "id": "PEANUTS",
+      "label": "Peanuts",
+      "terms": [
+        "peanut", "peanut butter", "peanut oil", "peanut flour", "groundnut", "ground nut",
+        "arachis", "monkey nut", "beer nut", "goober"
+      ],
+      "ambiguous": ["nuts", "mixed nuts", "satay", "vegetable oil"],
+      "exclusions": ["peanut free"]
+    },
+    {
+      "id": "TREE_NUTS",
+      "label": "Tree nuts",
+      "terms": [
+        "almond", "brazil nut", "cashew", "chestnut", "filbert", "hazelnut", "hickory", "macadamia",
+        "pecan", "pine nut", "pistachio", "walnut", "marzipan", "praline", "gianduja", "tree nut"
+      ],
+      "ambiguous": ["nuts", "mixed nuts", "nougat", "coconut", "nut butter", "nut oil"],
+      "exclusions": ["water chestnut", "nut free", "tree nut free"]
+    },
+    {
+      "id": "SOY",
+      "label": "Soy",
+      "terms": [
+        "soy", "soya", "soybean", "soy sauce", "soy protein", "soy flour", "soy lecithin",
+        "soy milk", "soy oil", "edamame", "tofu", "tempeh", "miso", "tamari", "shoyu", "natto",
+        "textured soy"
+      ],
+      "ambiguous": [
+        "lecithin", "vegetable protein", "hydrolyzed vegetable protein",
+        "hydrolysed vegetable protein", "textured vegetable protein", "natural flavour",
+        "natural flavor", "vegetable oil", "vegetable broth"
+      ],
+      "exclusions": ["sunflower lecithin", "soy free", "soya free"]
+    },
+    {
+      "id": "WHEAT",
+      "label": "Wheat",
+      "notes": "The exclusions list every qualified non-wheat flour and starch, so bare \"flour\" and \"starch\" in the ambiguous list stay the only trigger. \"sans gluten\" is kept as a false-positive guard: \"gluten\" is an English term, and French negates before the noun so the trailing-\"free\" rule cannot catch it.",
+      "terms": [
+        "wheat", "wheat flour", "wheat starch", "wheat germ", "wheat bran", "wheat protein",
+        "semolina", "spelt", "durum", "kamut", "farina", "couscous", "bulgur", "seitan",
+        "triticale", "gluten", "einkorn", "emmer", "graham", "orzo", "freekeh"
+      ],
+      "ambiguous": [
+        "flour", "starch", "modified starch", "modified food starch", "malt", "bran",
+        "breadcrumbs", "bread crumbs", "rusk", "pasta"
+      ],
+      "exclusions": [
+        "gluten free", "wheat free", "sans gluten", "buckwheat", "buckwheat flour",
+        "rice flour", "corn flour", "maize flour", "potato flour", "tapioca flour", "almond flour",
+        "coconut flour", "chickpea flour", "oat flour", "corn starch", "maize starch",
+        "potato starch", "tapioca starch", "rice starch", "modified corn starch",
+        "modified tapioca starch", "modified potato starch", "modified maize starch"
+      ]
+    },
+    {
+      "id": "SESAME",
+      "label": "Sesame",
+      "terms": [
+        "sesame", "sesame seed", "sesame oil", "tahini", "tahina", "halvah", "halva", "gomasio",
+        "benne", "gingelly"
+      ],
+      "ambiguous": ["hummus", "falafel", "spices"],
+      "exclusions": ["sesame free"]
+    },
+    {
+      "id": "FISH",
+      "label": "Fish",
+      "terms": [
+        "fish", "anchovy", "anchovies", "bass", "catfish", "cod", "flounder", "haddock", "hake",
+        "halibut", "herring", "mackerel", "perch", "pike", "pollock", "salmon", "sardine",
+        "snapper", "sole", "swordfish", "tilapia", "trout", "tuna", "fish sauce", "fish oil",
+        "fish gelatin", "surimi", "isinglass"
+      ],
+      "ambiguous": ["worcestershire", "omega 3", "caesar"],
+      "exclusions": ["fish free", "fish and chips"]
+    },
+    {
+      "id": "SHELLFISH",
+      "label": "Shellfish",
+      "terms": [
+        "shellfish", "crustacean", "mollusc", "mollusk", "shrimp", "prawn", "crab", "lobster",
+        "crayfish", "crawfish", "langoustine", "krill", "clam", "mussel", "oyster", "scallop",
+        "squid", "calamari", "octopus", "snail", "escargot", "abalone", "cuttlefish", "whelk",
+        "cockle"
+      ],
+      "ambiguous": ["seafood", "glucosamine"],
+      "exclusions": ["shellfish free"]
+    },
+    {
+      "id": "MUSTARD",
+      "label": "Mustard",
+      "terms": [
+        "mustard", "mustard seed", "mustard flour", "mustard oil", "mustard powder",
+        "prepared mustard"
+      ],
+      "ambiguous": ["spices", "spice", "seasoning", "curry", "curry powder", "vinaigrette"],
+      "exclusions": ["mustard free"]
+    }
+  ]
+}
