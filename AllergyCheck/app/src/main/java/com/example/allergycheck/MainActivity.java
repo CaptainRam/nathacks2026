@@ -40,6 +40,7 @@ import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
+import com.example.allergycheck.history.ScanHistory;
 import com.example.allergycheck.ingredients.IngredientExtractor;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
@@ -187,6 +188,9 @@ public class MainActivity extends AppCompatActivity {
         ocrPipeline = new OcrPipeline();
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
         modelDownloadController = new ModelDownloadController(this);
+        // Prune anything past the retention window and sweep images with no row. Cheap from here:
+        // it only hands the work to the history worker.
+        ScanHistory.get(this).maintain(null);
 
         getSupportFragmentManager().setFragmentResultListener(
                 AllergenPreferencesDialogFragment.RESULT_KEY, this, (key, result) ->
@@ -382,8 +386,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 String text = result.fullText();
                 if (text.trim().isEmpty()) {
-                    showMessageResult(getString(R.string.ingredient_result_title),
-                            getString(R.string.ocr_empty_result));
+                    showAndSaveMessage(photo, text, getString(R.string.ocr_empty_result));
                     return;
                 }
                 List<String> ingredients = IngredientExtractor.extract(text);
@@ -394,7 +397,7 @@ public class MainActivity extends AppCompatActivity {
                         AllergenPreferences.selectedAllergenSet(MainActivity.this, dictionary));
                 if (ingredients.isEmpty() && report.label().statements().isEmpty()) {
                     // Nothing to analyse at all: show the raw text so the user can see what was read.
-                    showMessageResult(getString(R.string.ingredient_result_title),
+                    showAndSaveMessage(photo, text,
                             getString(R.string.no_ingredients_found, text));
                     return;
                 }
@@ -403,16 +406,29 @@ public class MainActivity extends AppCompatActivity {
                         ? ResultAction.CHOOSE_ALLERGENS
                         : report.overall() == AnalysisReport.Status.UNREADABLE
                         ? ResultAction.RETRY : ResultAction.NONE);
+                // Recorded after the verdict is on screen, so nothing here can delay it. The
+                // staleness guard above is what keeps a cancelled or superseded scan out.
+                ScanHistory.get(MainActivity.this).save(report, photo);
             }
 
             @Override
             public void onFailure(@NonNull Exception error) {
                 if (isCurrentImageRequest(request)) {
-                    showMessageResult(getString(R.string.ingredient_result_title),
-                            getString(R.string.ingredient_read_error));
+                    showAndSaveMessage(photo, "", getString(R.string.ingredient_read_error));
                 }
             }
         });
+    }
+
+    /**
+     * Shows a scan that produced no report, and records it anyway. A failed read is still a scan
+     * the user took, and storing the title and body lets the history page reproduce this very
+     * screen through the same {@link AnalysisResultView#showMessage} call.
+     */
+    private void showAndSaveMessage(Uri photo, String rawText, String message) {
+        String title = getString(R.string.ingredient_result_title);
+        showMessageResult(title, message);
+        ScanHistory.get(this).saveFailure(rawText, title, message, photo);
     }
 
     /** Re-reads the photo already on screen, if any; a no-op when nothing is loaded. */
