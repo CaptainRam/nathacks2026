@@ -1,5 +1,6 @@
 package com.example.allergycheck;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -103,7 +104,10 @@ public class OcrTestActivity extends AppCompatActivity {
         rebuildPipeline();
         enhanceSwitch.setOnCheckedChangeListener((button, checked) -> rebuildPipeline());
         ingredientReader = new LlmIngredientReader(this);
-        modelDownloadController = new ModelDownloadController(this);
+        // The OCR harness ignores allergen changes, so it needs no result back from Settings.
+        modelDownloadController = new ModelDownloadController(this, () -> startActivity(
+                new Intent(this, SettingsActivity.class)
+                        .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, true)));
 
         // Must be registered before the activity reaches STARTED, hence here rather than in the
         // click listener. minSdk 34 means the photo picker needs no storage permission.
