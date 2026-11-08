@@ -79,7 +79,6 @@ public class SettingsActivity extends AppCompatActivity {
     private View headerDivider;
     private View allergenSection;
     private View modelSection;
-    private View saveBar;
     private LocalModelManager modelManager;
     private TextView modelAvailability;
     private TextView modelStatus;
@@ -95,8 +94,6 @@ public class SettingsActivity extends AppCompatActivity {
     private EditText decisionsThresholdInput;
     private EditText cloudConcurrencyInput;
     private boolean renderingDetectionMode;
-    /** True from a successful cloud save until the next edit. */
-    private boolean cloudJustSaved;
     private boolean analysisConfigurationChanged;
 
     /** Keeps the unsaved key through rotation without putting credentials into saved state. */
@@ -110,7 +107,7 @@ public class SettingsActivity extends AppCompatActivity {
     private int pillFailedText;
     private final LocalModelManager.Listener modelListener = this::renderModelStatus;
 
-    /** Leaving with an unsaved allergen draft asks first instead of dropping it silently. */
+    /** Leaving with an unsaved allergen or cloud draft asks first instead of dropping it silently. */
     private final OnBackPressedCallback unsavedChangesCallback = new OnBackPressedCallback(false) {
         @Override
         public void handleOnBackPressed() {
@@ -174,7 +171,6 @@ public class SettingsActivity extends AppCompatActivity {
                 (view, x, y, oldX, oldY) -> updateHeaderDivider());
         allergenSection = findViewById(R.id.allergen_section);
         modelSection = findViewById(R.id.model_section);
-        saveBar = findViewById(R.id.settings_save_bar);
         selectionSummary = findViewById(R.id.selection_summary);
 
         modelManager = LocalModelManager.get(this);
@@ -251,7 +247,7 @@ public class SettingsActivity extends AppCompatActivity {
         updateUnsavedChanges();
         notDetectedSwitch.setOnCheckedChangeListener((button, checked) -> {
             showNotDetected = checked;
-            updateUnsavedChanges();
+            updateSelectionSummary();
         });
         // The whole row toggles, not only the small switch.
         ((View) notDetectedSwitch.getParent()).setOnClickListener(view -> notDetectedSwitch.toggle());
@@ -284,12 +280,23 @@ public class SettingsActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    /** Shows one section; the save bar belongs to allergens because model actions apply at once. */
+    /**
+     * Shows one section. The save bar stays for both: one Save stores the allergen draft and the
+     * cloud fields together, so a draft started on one section can be saved from the other.
+     */
     private void showSection(boolean model) {
         allergenSection.setVisibility(model ? View.GONE : View.VISIBLE);
         modelSection.setVisibility(model ? View.VISIBLE : View.GONE);
-        saveBar.setVisibility(model ? View.GONE : View.VISIBLE);
+        updateSelectionSummary();
         scroll.post(this::updateHeaderDivider);
+    }
+
+    private boolean modelSectionShown() {
+        return modelSection.getVisibility() == View.VISIBLE;
+    }
+
+    private boolean allergenDraftChanged() {
+        return !selectedAllergens.equals(savedAllergens) || showNotDetected != savedShowNotDetected;
     }
 
     private void updateHeaderDivider() {
@@ -327,8 +334,6 @@ public class SettingsActivity extends AppCompatActivity {
             @Override public void onTextChanged(CharSequence text, int start, int before, int count) { }
             @Override public void afterTextChanged(Editable text) {
                 draft.apiKey = apiKeyInput.getText().toString();
-                cloudJustSaved = false;
-                renderCloudStatus();
                 updateUnsavedChanges();
             }
         };
@@ -371,7 +376,6 @@ public class SettingsActivity extends AppCompatActivity {
                             checkedId == R.id.detection_mode_decisions
                                     ? AnalysisPreferences.Mode.DECISIONS : AnalysisPreferences.Mode.OPENROUTER);
                 });
-        findViewById(R.id.detection_save_cloud).setOnClickListener(view -> saveCloudConfiguration());
     }
 
     private void selectDetectionMode(AnalysisPreferences.Mode mode) {
@@ -423,8 +427,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
-     * Confirms a save, or warns that the chosen cloud mode cannot run yet because nothing
-     * usable is stored — mode changes apply at once, but cloud fields only once saved.
+     * Warns that the chosen cloud mode cannot run yet because nothing usable is stored — mode
+     * changes apply at once, but cloud fields only once saved.
      */
     private void renderCloudStatus() {
         TextView status = findViewById(R.id.detection_cloud_save_status);
@@ -439,9 +443,6 @@ public class SettingsActivity extends AppCompatActivity {
         if (unusable) {
             showStatus(status, R.string.detection_cloud_needs_key, R.drawable.ic_info_small,
                     androidx.appcompat.R.attr.colorError);
-        } else if (cloudJustSaved) {
-            showStatus(status, R.string.detection_cloud_saved, R.drawable.ic_check,
-                    androidx.appcompat.R.attr.colorPrimary);
         } else {
             status.setVisibility(View.GONE);
         }
@@ -520,7 +521,6 @@ public class SettingsActivity extends AppCompatActivity {
         cloudConcurrencyInput.setText(formatConcurrency(concurrency));
         analysisConfigurationChanged = true;
         setResult(RESULT_OK);
-        cloudJustSaved = true;
         renderCloudStatus();
         updateUnsavedChanges();
         return true;
@@ -676,16 +676,21 @@ public class SettingsActivity extends AppCompatActivity {
                 Formatter.formatFileSize(this, status.totalBytes));
     }
 
+    /** The allergen count on its own section; on the model section, a note about a pending draft. */
     private void updateSelectionSummary() {
-        int count = selectedAllergens.size();
-        selectionSummary.setText(count == 0 ? getString(R.string.no_allergens_selected)
-                : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
+        if (modelSection != null && modelSectionShown()) {
+            selectionSummary.setText(allergenDraftChanged()
+                    ? getString(R.string.detection_saves_allergen_draft) : "");
+        } else {
+            int count = selectedAllergens.size();
+            selectionSummary.setText(count == 0 ? getString(R.string.no_allergens_selected)
+                    : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
+        }
         updateUnsavedChanges();
     }
 
     private void updateUnsavedChanges() {
-        unsavedChangesCallback.setEnabled(!selectedAllergens.equals(savedAllergens)
-                || showNotDetected != savedShowNotDetected || cloudSettingsChanged());
+        unsavedChangesCallback.setEnabled(allergenDraftChanged() || cloudSettingsChanged());
     }
 
     @Override
@@ -694,7 +699,7 @@ public class SettingsActivity extends AppCompatActivity {
         outState.putStringArrayList(DRAFT_ALLERGENS, new ArrayList<>(selectedAllergens));
         outState.putBoolean(DRAFT_SHOW_NOT_DETECTED, showNotDetected);
         outState.putBoolean(MODEL_DETAILS_EXPANDED, modelDetails.getVisibility() == View.VISIBLE);
-        outState.putBoolean(MODEL_SECTION_SHOWN, modelSection.getVisibility() == View.VISIBLE);
+        outState.putBoolean(MODEL_SECTION_SHOWN, modelSectionShown());
         super.onSaveInstanceState(outState);
     }
 }

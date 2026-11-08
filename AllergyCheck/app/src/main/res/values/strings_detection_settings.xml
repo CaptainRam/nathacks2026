@@ -25,8 +25,7 @@
     <string name="detection_concurrency">Parallel requests</string>
     <string name="detection_concurrency_hint">Higher is faster but may hit rate limits. Default: 1.</string>
     <string name="detection_concurrency_invalid">Enter a positive whole number.</string>
-    <string name="detection_save_cloud">Save cloud settings</string>
-    <string name="detection_cloud_saved">Cloud settings saved.</string>
+    <string name="detection_saves_allergen_draft">Unsaved allergen changes will be saved too</string>
     <string name="detection_cloud_needs_key">Add your API key and save to start using cloud detection.</string>
     <string name="detection_key_required">Enter your OpenRouter API key.</string>
     <string name="detection_model_required">Enter a model ID in provider/model format.</string>

@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
@@ -53,7 +54,7 @@ public class SettingsLayoutUiTest {
     }
 
     @Test
-    public void opensOnAllergensAndSwitchesToModelWithoutSaveBar() {
+    public void opensOnAllergensAndSwitchesToModelKeepingSaveBar() {
         try (ActivityScenario<SettingsActivity> scenario =
                      ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
             scenario.onActivity(activity -> {
@@ -194,6 +195,26 @@ public class SettingsLayoutUiTest {
     }
 
     @Test
+    public void allergenDraftIsSavedFromTheModelSection() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                ViewGroup chips = activity.findViewById(R.id.allergen_options_container);
+                chips.getChildAt(0).performClick();
+                activity.findViewById(R.id.section_model_button).performClick();
+                assertSection(activity, true);
+                assertEquals(activity.getString(R.string.detection_saves_allergen_draft),
+                        ((TextView) activity.findViewById(R.id.selection_summary)).getText().toString());
+                activity.findViewById(R.id.save_preferences_button).performClick();
+            });
+            assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+        }
+        String firstId = AllergenDictionaryProvider.get(context).allergens().iterator().next().id();
+        assertEquals(Collections.singleton(firstId), AllergenPreferences.selectedAllergenIds(
+                context, AllergenDictionaryProvider.get(context)));
+    }
+
+    @Test
     public void discardKeepsShowNotDetectedOff() {
         try (ActivityScenario<SettingsActivity> scenario =
                      ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
@@ -237,7 +258,7 @@ public class SettingsLayoutUiTest {
                 activity.findViewById(R.id.allergen_section).getVisibility());
         assertEquals(model ? View.VISIBLE : View.GONE,
                 activity.findViewById(R.id.model_section).getVisibility());
-        assertEquals(model ? View.GONE : View.VISIBLE,
-                activity.findViewById(R.id.settings_save_bar).getVisibility());
+        // One page-wide Save serves both sections.
+        assertEquals(View.VISIBLE, activity.findViewById(R.id.settings_save_bar).getVisibility());
     }
 }

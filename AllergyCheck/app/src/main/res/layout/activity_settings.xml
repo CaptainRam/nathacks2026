@@ -368,7 +368,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Saving applies to the allergen draft only, so the bar leaves with that section. -->
+    <!-- Page-wide: one Save stores the allergen draft and the AI model cloud fields. -->
     <LinearLayout
         android:id="@+id/settings_save_bar"
         android:layout_width="match_parent"
