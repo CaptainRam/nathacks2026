@@ -77,39 +77,67 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_max="520dp">
 
-                <!-- Hero -->
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/eyebrow"
+                <!-- Hero: hidden once a check starts so the photo and result own the page. -->
+                <LinearLayout
+                    android:id="@+id/intro_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/eyebrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:letterSpacing="0.1"
+                        android:text="@string/new_scan"
+                        android:textAppearance="?attr/textAppearanceLabelMedium"
+                        android:textColor="?attr/colorPrimary" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/home_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="8dp"
+                        android:accessibilityHeading="true"
+                        android:text="@string/home_title"
+                        android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/home_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/home_subtitle"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <include layout="@layout/view_model_download" />
+                </LinearLayout>
+
+                <!-- Photos being checked, shrunk to the top of the page. A horizontal strip so
+                     several label photos can be shown side by side later. -->
+                <HorizontalScrollView
+                    android:id="@+id/photo_strip_scroll"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:letterSpacing="0.1"
-                    android:text="@string/new_scan"
-                    android:textAppearance="?attr/textAppearanceLabelMedium"
-                    android:textColor="?attr/colorPrimary" />
+                    android:layout_gravity="center_horizontal"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none"
+                    android:visibility="gone">
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/home_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="8dp"
-                    android:accessibilityHeading="true"
-                    android:text="@string/home_title"
-                    android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/home_subtitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/home_subtitle"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <include layout="@layout/view_model_download" />
+                    <LinearLayout
+                        android:id="@+id/photo_strip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clipChildren="false"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
 
                 <!-- Photo -->
                 <com.google.android.material.card.MaterialCardView
@@ -256,66 +284,93 @@
                     </FrameLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/replace_button"
-                    style="@style/Widget.AllergyCheck.OutlinedButton"
+                <!-- Shown once a photo is added: nothing is read until the user asks for it. -->
+                <LinearLayout
+                    android:id="@+id/preview_actions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/replace_photo"
-                    android:visibility="gone"
-                    app:icon="@drawable/ic_upload"
-                    app:iconGravity="textStart" />
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
-                <!-- Photo tips -->
-                <com.google.android.material.textview.MaterialTextView
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/start_analysis_button"
+                        style="@style/Widget.AllergyCheck.PrimaryButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/start_analysis"
+                        app:icon="@drawable/ic_search"
+                        app:iconGravity="textStart" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/replace_button"
+                        style="@style/Widget.AllergyCheck.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/replace_photo"
+                        app:icon="@drawable/ic_upload"
+                        app:iconGravity="textStart" />
+                </LinearLayout>
+
+                <include layout="@layout/view_analysis" />
+
+                <!-- Photo tips and allergen summary, hidden while a check is on screen -->
+                <LinearLayout
+                    android:id="@+id/tips_group"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="28dp"
-                    android:accessibilityHeading="true"
-                    android:drawablePadding="8dp"
-                    android:gravity="center_vertical"
-                    android:text="@string/photo_tip_title"
-                    android:textAppearance="?attr/textAppearanceTitleSmall"
-                    android:textColor="?attr/colorOnSurface"
-                    app:drawableStartCompat="@drawable/ic_lightbulb"
-                    app:drawableTint="?attr/colorPrimary" />
+                    android:orientation="vertical">
 
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/Widget.AllergyCheck.TipRow"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/tip_frame" />
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="28dp"
+                        android:accessibilityHeading="true"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        android:text="@string/photo_tip_title"
+                        android:textAppearance="?attr/textAppearanceTitleSmall"
+                        android:textColor="?attr/colorOnSurface"
+                        app:drawableStartCompat="@drawable/ic_lightbulb"
+                        app:drawableTint="?attr/colorPrimary" />
 
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/Widget.AllergyCheck.TipRow"
-                    android:text="@string/tip_light" />
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/Widget.AllergyCheck.TipRow"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/tip_frame" />
 
-                <com.google.android.material.textview.MaterialTextView
-                    style="@style/Widget.AllergyCheck.TipRow"
-                    android:text="@string/tip_focus" />
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/Widget.AllergyCheck.TipRow"
+                        android:text="@string/tip_light" />
 
-                <!-- Allergen preferences, with a compact summary of what is selected -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/allergens_button"
-                    style="@style/Widget.AllergyCheck.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/set_allergens"
-                    app:icon="@drawable/ic_person"
-                    app:iconGravity="textStart" />
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/Widget.AllergyCheck.TipRow"
+                        android:text="@string/tip_focus" />
 
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/allergen_chips"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    app:chipSpacingHorizontal="6dp"
-                    app:chipSpacingVertical="6dp" />
+                    <!-- Allergen preferences, with a compact summary of what is selected -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/allergens_button"
+                        style="@style/Widget.AllergyCheck.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/set_allergens"
+                        app:icon="@drawable/ic_person"
+                        app:iconGravity="textStart" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/allergen_chips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone"
+                        app:chipSpacingHorizontal="6dp"
+                        app:chipSpacingVertical="6dp" />
+                </LinearLayout>
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>

@@ -13,9 +13,10 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -27,11 +28,11 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -79,6 +80,7 @@ public class MainActivityOcrIntegrationTest {
                     Activity.RESULT_OK, photoUri(photo));
 
             assertPhotoPickerIntent(pickerIntent);
+            startCheck(scenario);
             awaitMessage(scenario, "• Sugar", "• Cocoa Butter", "• Salt");
             assertEquals(photoUri(photo).toString(), preferences.getString(PHOTO_STATE, null));
         }
@@ -90,8 +92,12 @@ public class MainActivityOcrIntegrationTest {
         try (TestActivity scenario = TestActivity.launch(context)) {
             pickPhoto(scenario, R.id.import_button, MediaStore.ACTION_PICK_IMAGES,
                     Activity.RESULT_OK, photoUri(photo));
+            startCheck(scenario);
             awaitMessage(scenario, "• Sugar");
-            scenario.onActivity(activity -> dialog(activity).dismiss());
+            // Back from a check returns to the photo preview with its actions.
+            scenario.onActivity(activity -> activity.getOnBackPressedDispatcher().onBackPressed());
+            // Let the page fade finish; a fading view is kept visible until its fade ends.
+            SystemClock.sleep(1000);
 
             Intent pickerIntent = pickPhoto(scenario, R.id.replace_button, MediaStore.ACTION_PICK_IMAGES,
                     Activity.RESULT_CANCELED, null);
@@ -102,8 +108,7 @@ public class MainActivityOcrIntegrationTest {
             scenario.onActivity(activity -> {
                 assertEquals(View.VISIBLE, activity.findViewById(R.id.preview_state).getVisibility());
                 assertEquals(View.GONE, activity.findViewById(R.id.loading_overlay).getVisibility());
-                AlertDialog resultDialog = dialog(activity);
-                assertTrue(resultDialog == null || !resultDialog.isShowing());
+                assertEquals(View.GONE, activity.findViewById(R.id.analysis_group).getVisibility());
             });
         }
     }
@@ -125,22 +130,38 @@ public class MainActivityOcrIntegrationTest {
                     Activity.RESULT_OK, photoUri(validPhoto));
 
             assertPhotoPickerIntent(retryIntent);
+            startCheck(scenario);
             awaitMessage(scenario, "• Sugar", "• Cocoa Butter", "• Salt");
             assertEquals(photoUri(validPhoto).toString(), preferences.getString(PHOTO_STATE, null));
         }
     }
 
     @Test
-    public void selectedLabelAutomaticallyShowsExtractedIngredients() throws Exception {
+    public void selectedLabelIsOnlyReadAfterStartingCheck() throws Exception {
         File photo = createLabel("INGREDIENTS:", "Sugar, Cocoa Butter, Salt.");
         try (TestActivity scenario = TestActivity.launch(context)) {
             loadPhoto(scenario, photo);
+            awaitPhotoReady(scenario);
+            scenario.onActivity(activity -> {
+                assertEquals(View.GONE, activity.findViewById(R.id.analysis_group).getVisibility());
+                assertTrue(activity.findViewById(R.id.start_analysis_button).isShown());
+            });
 
+            startCheck(scenario);
             String message = awaitMessage(scenario, "• Sugar", "• Cocoa Butter", "• Salt");
             assertFalse(message.contains("No ingredients found"));
             assertEquals(photoUri(photo).toString(), preferences.getString(PHOTO_STATE, null));
-            scenario.onActivity(activity -> assertEquals(View.VISIBLE,
-                    activity.findViewById(R.id.preview_state).getVisibility()));
+            scenario.onActivity(activity -> {
+                // The check replaces the home content; the photo moves to the strip at the top.
+                assertEquals(View.GONE, activity.findViewById(R.id.intro_group).getVisibility());
+                assertEquals(View.GONE, activity.findViewById(R.id.photo_card).getVisibility());
+                assertEquals(View.GONE, activity.findViewById(R.id.tips_group).getVisibility());
+                assertEquals(View.VISIBLE,
+                        activity.findViewById(R.id.photo_strip_scroll).getVisibility());
+                ViewGroup strip = activity.findViewById(R.id.photo_strip);
+                assertEquals(1, strip.getChildCount());
+                assertTrue(activity.findViewById(R.id.restart_button).isShown());
+            });
         }
     }
 
@@ -149,6 +170,7 @@ public class MainActivityOcrIntegrationTest {
         File photo = createLabel("Nutrition Facts", "Calories 120");
         try (TestActivity scenario = TestActivity.launch(context)) {
             loadPhoto(scenario, photo);
+            startCheck(scenario);
 
             awaitMessage(scenario, "No ingredients found", "Calories", "120");
         }
@@ -159,31 +181,31 @@ public class MainActivityOcrIntegrationTest {
         File photo = createLabel();
         try (TestActivity scenario = TestActivity.launch(context)) {
             loadPhoto(scenario, photo);
+            startCheck(scenario);
 
             awaitMessage(scenario, context.getString(R.string.ocr_empty_result));
         }
     }
 
     @Test
-    public void replacingAndRemovingPhotoClearPreviousResultDialog() throws Exception {
+    public void replacingPhotoDuringCheckRechecksAndRestartClearsEverything() throws Exception {
         File original = createLabel("INGREDIENTS:", "Sugar, Cocoa Butter, Salt.");
         File replacement = createLabel("INGREDIENTS:", "Oats, Honey.");
         try (TestActivity scenario = TestActivity.launch(context)) {
             loadPhoto(scenario, original);
+            startCheck(scenario);
             awaitMessage(scenario, "• Sugar");
-            AtomicReference<AlertDialog> originalDialog = new AtomicReference<>();
-            scenario.onActivity(activity -> originalDialog.set(dialog(activity)));
 
+            // Changing the photo from the strip re-reads the new one without another tap.
             loadPhoto(scenario, replacement);
-            scenario.onActivity(activity -> assertFalse(originalDialog.get().isShowing()));
             String replacementMessage = awaitMessage(scenario, "• Oats", "• Honey");
             assertFalse(replacementMessage.toLowerCase(Locale.ROOT).contains("sugar"));
             scenario.onActivity(activity -> {
-                AlertDialog resultDialog = dialog(activity);
-                invoke(activity, "removePhoto", new Class<?>[0]);
-                assertFalse(resultDialog.isShowing());
+                assertTrue(activity.findViewById(R.id.restart_button).performClick());
                 assertEquals(View.VISIBLE, activity.findViewById(R.id.empty_state).getVisibility());
                 assertEquals(View.GONE, activity.findViewById(R.id.preview_state).getVisibility());
+                assertEquals(View.GONE, activity.findViewById(R.id.analysis_group).getVisibility());
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.intro_group).getVisibility());
             });
             assertFalse(preferences.contains(PHOTO_STATE));
         }
@@ -289,13 +311,53 @@ public class MainActivityOcrIntegrationTest {
         }
     }
 
-    private static AlertDialog dialog(MainActivity activity) {
-        try {
-            Field field = MainActivity.class.getDeclaredField("ingredientDialog");
-            field.setAccessible(true);
-            return (AlertDialog) field.get(activity);
-        } catch (ReflectiveOperationException exception) {
-            throw new AssertionError(exception);
+    /** Waits until the added photo is decoded and the check can start. */
+    private static void awaitPhotoReady(TestActivity scenario) {
+        AtomicBoolean ready = new AtomicBoolean();
+        long deadline = SystemClock.uptimeMillis() + 10000;
+        do {
+            scenario.onActivity(activity -> {
+                View button = activity.findViewById(R.id.start_analysis_button);
+                ready.set(button.isShown() && button.isEnabled()
+                        && ((ImageView) activity.findViewById(R.id.photo_preview)).getDrawable() != null);
+            });
+            if (ready.get()) {
+                return;
+            }
+            SystemClock.sleep(25);
+        } while (SystemClock.uptimeMillis() < deadline);
+        throw new AssertionError("Photo was not ready to check");
+    }
+
+    /** Taps "Check ingredients" once the photo is ready. */
+    private static void startCheck(TestActivity scenario) {
+        awaitPhotoReady(scenario);
+        scenario.onActivity(activity ->
+                assertTrue(activity.findViewById(R.id.start_analysis_button).performClick()));
+    }
+
+    /** All text shown in the in-page result, or "" while it is hidden. */
+    private static String resultText(MainActivity activity) {
+        View result = activity.findViewById(R.id.analysis_result);
+        if (!result.isShown()) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder();
+        appendText(result, out);
+        return out.toString();
+    }
+
+    private static void appendText(View view, StringBuilder out) {
+        if (view.getVisibility() != View.VISIBLE) {
+            return;
+        }
+        if (view instanceof TextView) {
+            out.append(((TextView) view).getText()).append('\n');
+        } else if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                appendText(group.getChildAt(i), out);
+            }
         }
     }
 
@@ -303,12 +365,7 @@ public class MainActivityOcrIntegrationTest {
         AtomicReference<String> message = new AtomicReference<>("");
         long deadline = SystemClock.uptimeMillis() + 15000;
         do {
-            scenario.onActivity(activity -> {
-                AlertDialog dialog = dialog(activity);
-                TextView text = dialog == null ? null : dialog.findViewById(android.R.id.message);
-                message.set(dialog != null && dialog.isShowing() && text != null
-                        ? text.getText().toString() : "");
-            });
+            scenario.onActivity(activity -> message.set(resultText(activity)));
             boolean matches = true;
             for (String expected : expectedParts) {
                 matches &= message.get().toLowerCase(Locale.ROOT)
@@ -319,7 +376,7 @@ public class MainActivityOcrIntegrationTest {
             }
             SystemClock.sleep(25);
         } while (SystemClock.uptimeMillis() < deadline);
-        throw new AssertionError("Expected OCR dialog did not appear. Last message: " + message.get());
+        throw new AssertionError("Expected result did not appear. Last result: " + message.get());
     }
 
     // Matches the platform-monitor lifecycle strategy used by MainActivityPhotoRestoreTest.

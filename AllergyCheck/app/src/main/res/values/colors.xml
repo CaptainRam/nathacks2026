@@ -20,4 +20,10 @@
     <color name="md_theme_outline_variant">#D3DCD0</color>
     <color name="md_theme_error">#BA1A1A</color>
     <color name="md_theme_on_error">#FFFFFF</color>
+    <color name="md_theme_error_container">#FFDAD6</color>
+    <color name="md_theme_on_error_container">#410002</color>
+    <!-- Precautionary / uncertain verdicts: amber, distinct from the red "contains" verdict. -->
+    <color name="status_warning_container">#FFDEA6</color>
+    <color name="status_on_warning_container">#271900</color>
+    <color name="scan_line_center">#80386A4A</color>
 </resources>

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Renders an {@link AnalysisReport} as the title and body of the result dialog: the verdict, the
+ * Words an {@link AnalysisReport} for the result shown on the home page: the verdict, the
  * per-allergen breakdown with the label text behind each finding, and the ingredients that were
  * read.
  *
@@ -47,30 +47,9 @@ final class AnalysisMessage {
         }
     }
 
-    /** The full body: verdict explanation, per-allergen findings, ingredients and the disclaimer. */
+    /** The verdict explanation shown under the headline. */
     @NonNull
-    String body(@NonNull AnalysisReport report) {
-        StringBuilder out = new StringBuilder(verdict(report));
-        if (report.lowConfidence() && report.overall() != AnalysisReport.Status.UNREADABLE) {
-            out.append("\n\n").append(resources.getString(R.string.low_confidence_warning));
-        }
-        if (!report.results().isEmpty()) {
-            out.append("\n\n").append(resources.getString(R.string.section_allergens));
-            for (AllergenResult result : report.results()) {
-                out.append('\n').append(result.allergen().label())
-                        .append(" — ").append(statusWord(result.status()));
-                for (Finding finding : result.findings()) {
-                    out.append("\n    • ").append(describe(finding));
-                }
-            }
-        }
-        if (report.overall() != AnalysisReport.Status.UNREADABLE) {
-            appendIngredients(out, report);
-        }
-        return out.append("\n\n").append(resources.getString(R.string.disclaimer)).toString();
-    }
-
-    private String verdict(AnalysisReport report) {
+    String verdict(@NonNull AnalysisReport report) {
         AnalysisReport.Status overall = report.overall();
         switch (overall) {
             case CONTAINS:
@@ -88,27 +67,60 @@ final class AnalysisMessage {
         }
     }
 
-    private void appendIngredients(StringBuilder out, AnalysisReport report) {
-        List<IngredientItem> items = report.label().ingredients();
-        if (items.isEmpty()) {
-            out.append("\n\n").append(resources.getString(R.string.no_ingredient_list));
-            return;
-        }
+    /** Whether to warn that the result rests on thin evidence. */
+    static boolean showLowConfidence(@NonNull AnalysisReport report) {
+        return report.lowConfidence() && report.overall() != AnalysisReport.Status.UNREADABLE;
+    }
+
+    /** The ingredient list is only meaningful when the label could be read at all. */
+    static boolean showIngredients(@NonNull AnalysisReport report) {
+        return report.overall() != AnalysisReport.Status.UNREADABLE;
+    }
+
+    /** Heading for the ingredient list, with the number of top-level ingredients. */
+    @NonNull
+    String ingredientsTitle(@NonNull AnalysisReport report) {
         int topLevel = 0;
-        for (IngredientItem item : items) {
+        for (IngredientItem item : report.label().ingredients()) {
             if (item.depth() == 0) {
                 topLevel++;
             }
         }
-        out.append("\n\n").append(resources.getString(R.string.section_ingredients, topLevel));
+        return resources.getString(R.string.section_ingredients, topLevel);
+    }
+
+    /** One bullet per ingredient, sub-ingredients indented; or a note when none were found. */
+    @NonNull
+    String ingredients(@NonNull AnalysisReport report) {
+        List<IngredientItem> items = report.label().ingredients();
+        if (items.isEmpty()) {
+            return resources.getString(R.string.no_ingredient_list);
+        }
+        StringBuilder out = new StringBuilder();
         for (IngredientItem item : items) {
+            if (out.length() > 0) {
+                out.append('\n');
+            }
             // Sub-ingredients are already quoted inside their parent, so only indent them.
-            out.append('\n');
             for (int i = 0; i < item.depth(); i++) {
                 out.append("    ");
             }
             out.append("• ").append(item.original());
         }
+        return out.toString();
+    }
+
+    /** The label text behind one allergen's status, one bullet per finding. */
+    @NonNull
+    String evidence(@NonNull AllergenResult result) {
+        StringBuilder out = new StringBuilder();
+        for (Finding finding : result.findings()) {
+            if (out.length() > 0) {
+                out.append('\n');
+            }
+            out.append("• ").append(describe(finding));
+        }
+        return out.toString();
     }
 
     /** The allergens that ended up with this exact status, in report order. */
@@ -122,7 +134,8 @@ final class AnalysisMessage {
         return String.join(", ", names);
     }
 
-    private String statusWord(AnalysisReport.Status status) {
+    @NonNull
+    String statusWord(@NonNull AnalysisReport.Status status) {
         switch (status) {
             case CONTAINS:
                 return resources.getString(R.string.result_contains);
