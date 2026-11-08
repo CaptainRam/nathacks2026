@@ -147,23 +147,29 @@ final class ScanTestSupport implements AutoCloseable {
         }
 
         /**
-         * Waits until the activity is actually resumed. A previous test's activity can still be
-         * finishing when this one launches, and acting on one that has already saved its state
-         * fails in ways that have nothing to do with what is being tested.
+         * Waits until the activity is actually resumed, asking its lifecycle directly. A previous
+         * test's activity can still be finishing when this one launches, and acting on one that is
+         * not resumed fails in ways that have nothing to do with what is being tested.
          */
         private void awaitResumed() {
             long deadline = SystemClock.uptimeMillis() + 10_000;
             do {
                 boolean[] resumed = {false};
-                onActivity(current -> resumed[0] = !current.isFinishing()
-                        && !current.isDestroyed()
-                        && !current.getSupportFragmentManager().isStateSaved());
+                onActivity(current -> resumed[0] = current.getLifecycle().getCurrentState()
+                        .isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED));
                 if (resumed[0]) {
                     return;
                 }
                 SystemClock.sleep(25);
             } while (SystemClock.uptimeMillis() < deadline);
-            throw new AssertionError("The activity never became resumed");
+            boolean[] finishing = {false};
+            boolean[] destroyed = {false};
+            onActivity(current -> {
+                finishing[0] = current.isFinishing();
+                destroyed[0] = current.isDestroyed();
+            });
+            throw new AssertionError("The activity never resumed (finishing=" + finishing[0]
+                    + ", destroyed=" + destroyed[0] + ")");
         }
 
         void onActivity(Consumer<MainActivity> action) {

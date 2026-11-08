@@ -105,13 +105,35 @@ public class HistoryUiTest {
     }
 
     @Test
-    public void aFailedReadShowsTheMessageItWasSavedWith() {
+    public void aFailedReadReadsAsUnreadableInTheListButKeepsItsMessageWhenOpened() {
+        // The stored title is the scan page's card heading, which says nothing on its own.
         long id = store.insertFailure(System.currentTimeMillis(), "",
-                "Couldn't read this label", "No text was found in this photo.");
+                context.getString(R.string.ingredient_result_title),
+                context.getString(R.string.ocr_empty_result));
 
         try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
             openHistory(scan);
-            assertEquals("Couldn't read this label", awaitSummaryFor(scan, id));
+            assertEquals("the list should read as a verdict",
+                    context.getString(R.string.status_unreadable_title),
+                    awaitSummaryFor(scan, id));
+
+            clickRowFor(scan, id);
+            awaitTrue(scan, activity -> {
+                View page = activity.findViewById(R.id.scan_detail_page);
+                if (page == null || !page.isShown()) {
+                    return false;
+                }
+                TextView verdict = page.findViewById(R.id.verdict_title);
+                return verdict != null && context.getString(R.string.ingredient_result_title)
+                        .contentEquals(verdict.getText());
+            }, "opening it should reproduce the message the scan showed");
+
+            scan.onActivity(activity -> {
+                View page = activity.findViewById(R.id.scan_detail_page);
+                TextView body = page.findViewById(R.id.verdict_message);
+                assertEquals(context.getString(R.string.ocr_empty_result),
+                        body.getText().toString());
+            });
         }
     }
 

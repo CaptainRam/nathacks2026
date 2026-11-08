@@ -65,10 +65,13 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
         setHasStableIds(true);
     }
 
+    @android.annotation.SuppressLint("NotifyDataSetChanged")
     void submit(@NonNull List<ScanHistoryItem> replacement) {
         items.clear();
         items.addAll(replacement);
-        // The list is small and arrives whole, so there is nothing for DiffUtil to earn here.
+        // The whole list arrives at once from a single query and is bounded by the retention
+        // window, so per-item events would cost more to work out than they save. Swipe removal and
+        // undo do use specific events, since those animate.
         notifyDataSetChanged();
     }
 

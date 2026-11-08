@@ -34,9 +34,12 @@ final class HistorySummary {
     /** The one-line quick result, e.g. "Milk, Soy, and Wheat detected". */
     @NonNull
     String line(@NonNull ScanHistoryItem item) {
-        // A scan that never produced a report carries the headline it showed at the time.
-        if (item.isFailure() && item.messageTitle() != null) {
-            return item.messageTitle();
+        // A failed read gets the verdict wording, not the headline it was stored with: the scan
+        // page shows that title above an explanatory body ("Ingredient extraction"), which says
+        // nothing on its own in a list. The stored title and body are still what the detail page
+        // renders, so nothing is lost.
+        if (item.isFailure()) {
+            return resources.getString(R.string.status_unreadable_title);
         }
         ScanSummaryShape shape = ScanSummaryShape.of(item.status());
         switch (shape) {
