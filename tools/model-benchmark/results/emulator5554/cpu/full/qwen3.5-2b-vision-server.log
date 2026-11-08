@@ -1,0 +1,113 @@
+0.00.005.607 W Setting 'enable_thinking' via --chat-template-kwargs is deprecated. Use --reasoning on / --reasoning off instead.
+0.00.005.923 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.006.499 W srv  llama_server: -----------------
+0.00.006.583 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.006.591 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.006.591 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.006.591 W srv  llama_server: -----------------
+0.00.008.283 I srv    load_model: loading model '/data/local/tmp/allergy-emulator-benchmark/models/qwen3.5-2b/Qwen3.5-2B-Q4_K_M.gguf'
+0.03.607.407 I cmn          init: llama threadpool init, n_threads = 1
+0.03.887.602 W load_hparams: Qwen-VL models require at minimum 1024 image tokens to function correctly on grounding tasks
+0.03.888.863 W load_hparams: if you encounter problems with accuracy, try adding --image-min-tokens 1024
+0.03.888.890 W load_hparams: more info: https://github.com/ggml-org/llama.cpp/issues/16842
+
+0.11.857.753 I srv    load_model: loaded multimodal model, '/data/local/tmp/allergy-emulator-benchmark/models/qwen3.5-2b/mmproj-F16.gguf'
+0.16.542.868 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 8192, kv_unified = 'false'
+0.16.579.806 I srv  llama_server: model loaded
+0.16.579.820 I srv  llama_server: listening on http://127.0.0.1:18775
+0.16.802.095 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.16.802.521 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.38.724.119 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =    357, progress = 0.16, t =  21.92 s / 16.29 tokens per second
+3.52.022.386 W find_slot: non-consecutive token position 357 after 356 for sequence 0 with 128 new tokens
+3.52.022.530 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+3.52.022.538 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+3.52.022.554 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+3.52.025.947 W find_slot: non-consecutive token position 357 after 356 for sequence 0 with 128 new tokens
+3.54.845.997 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+3.57.152.854 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+3.59.342.365 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.01.530.613 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.01.530.747 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.01.530.758 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.01.530.769 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.01.531.595 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.03.775.505 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.06.355.908 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.08.670.156 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.10.977.135 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.10.977.352 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.10.977.365 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.10.977.373 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.10.978.292 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.13.286.428 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.15.768.832 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.18.169.721 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.20.592.790 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.20.592.984 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.20.592.995 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 108 new tokens
+4.20.593.754 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.22.971.250 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+4.25.418.989 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 108 new tokens
+4.27.656.060 W find_slot: non-consecutive token position 412 after 357 for sequence 0 with 6 new tokens
+4.27.656.242 W find_slot: non-consecutive token position 412 after 357 for sequence 0 with 6 new tokens
+4.27.811.668 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2263, progress = 1.00, t = 251.01 s / 9.02 tokens per second
+4.33.382.668 I slot print_timing: id  0 | task 0 | n_gen =    100, tg =  19.85 t/s, tg_3s =  20.05 t/s
+4.36.412.230 I slot print_timing: id  0 | task 0 | n_gen =    155, tg =  19.21 t/s, tg_3s =  18.15 t/s
+4.39.429.008 I slot print_timing: id  0 | task 0 | n_gen =    213, tg =  19.22 t/s, tg_3s =  19.23 t/s
+4.40.997.272 I slot print_timing: id  0 | task 0 | prompt eval time =  251593.52 ms /  2267 tokens (  110.98 ms per token,     9.01 tokens per second)
+4.40.997.429 I slot print_timing: id  0 | task 0 |        eval time =   12601.10 ms /   244 tokens (   51.86 ms per token,    19.28 tokens per second)
+4.40.997.430 I slot print_timing: id  0 | task 0 |       total time =  264194.62 ms /  2511 tokens
+4.40.997.430 I slot print_timing: id  0 | task 0 |    graphs reused =        248
+4.41.000.225 I slot      release: id  0 | task 0 | stop processing: n_tokens = 2510, truncated = 0
+4.41.185.777 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 0.157 (> 0.100 thold), f_keep = 0.142
+4.41.248.222 I slot launch_slot_: id  0 | task 247 | processing task, is_child = 0
+4.48.485.005 I slot print_timing: id  0 | task 247 | prompt processing, n_tokens =    357, progress = 0.16, t =   7.24 s / 49.34 tokens per second
+7.56.441.019 W find_slot: non-consecutive token position 357 after 356 for sequence 0 with 128 new tokens
+7.56.443.226 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+7.56.443.232 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+7.56.443.233 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+7.56.445.687 W find_slot: non-consecutive token position 357 after 356 for sequence 0 with 128 new tokens
+7.59.811.623 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.02.086.781 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.04.336.988 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.06.647.927 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.06.648.128 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.06.648.139 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.06.648.151 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.06.648.895 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.08.864.765 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.11.104.200 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.13.387.310 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.15.781.403 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.15.781.577 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.15.781.588 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.15.781.599 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.15.782.265 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.18.122.019 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.20.485.025 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.22.918.132 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.25.338.104 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.25.338.109 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.25.338.113 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 108 new tokens
+8.25.338.472 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.28.048.398 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+8.30.511.798 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 108 new tokens
+8.32.815.320 W find_slot: non-consecutive token position 412 after 357 for sequence 0 with 6 new tokens
+8.32.815.602 W find_slot: non-consecutive token position 412 after 357 for sequence 0 with 6 new tokens
+8.32.980.268 I slot print_timing: id  0 | task 247 | prompt processing, n_tokens =   2263, progress = 1.00, t = 231.73 s / 9.77 tokens per second
+8.38.091.874 I slot print_timing: id  0 | task 247 | prompt eval time =  232039.23 ms /  2267 tokens (  102.36 ms per token,     9.77 tokens per second)
+8.38.092.144 I slot print_timing: id  0 | task 247 |        eval time =    4801.98 ms /    84 tokens (   57.86 ms per token,    17.28 tokens per second)
+8.38.092.159 I slot print_timing: id  0 | task 247 |       total time =  236841.21 ms /  2351 tokens
+8.38.092.176 I slot print_timing: id  0 | task 247 |    graphs reused =        335
+8.38.093.536 I slot      release: id  0 | task 247 | stop processing: n_tokens = 2350, truncated = 0
+8.38.172.989 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 0.249 (> 0.100 thold), f_keep = 0.152
+8.38.204.589 I slot launch_slot_: id  0 | task 334 | processing task, is_child = 0
+8.44.170.952 I slot print_timing: id  0 | task 334 | prompt processing, n_tokens =    357, progress = 0.25, t =   5.97 s / 59.84 tokens per second
+9.57.285.361 W srv          stop: cancel task, id_task = 334
+9.59.202.020 W find_slot: non-consecutive token position 357 after 356 for sequence 0 with 128 new tokens
+9.59.202.094 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+9.59.202.096 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+9.59.202.099 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+9.59.223.752 W find_slot: non-consecutive token position 357 after 356 for sequence 0 with 128 new tokens
+10.07.402.248 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens
+10.09.766.454 W find_slot: non-consecutive token position 357 after 357 for sequence 0 with 128 new tokens

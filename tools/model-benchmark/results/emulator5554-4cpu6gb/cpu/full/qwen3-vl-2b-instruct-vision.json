@@ -1,0 +1,2101 @@
+{
+  "schema_version": 1,
+  "platform": "android_emulator",
+  "physical_device": false,
+  "hardware": {
+    "ro.product.model": "sdk_gphone64_arm64",
+    "ro.build.version.release": "17",
+    "ro.build.version.sdk": "37",
+    "ro.product.cpu.abi": "arm64-v8a",
+    "ro.hardware": "ranchu",
+    "ro.kernel.qemu": "1",
+    "physical_device": false,
+    "platform": "android_emulator",
+    "serial": "emulator-5554",
+    "captured_at": "2026-11-08T03:37:38.232485+00:00",
+    "online_cpu_count": 4,
+    "memory_kib": {
+      "MemTotal": 6062644,
+      "MemAvailable": 4332948,
+      "SwapTotal": 4546976,
+      "SwapFree": 4121248
+    },
+    "disk_before": "Filesystem      1K-blocks    Used Available Use% Mounted on\n/dev/block/dm-5  10167132 2187912   7831764  22% /data/user/0\n",
+    "limitations": "Virtual CPU/memory, CPU backend only. No physical GPU/NPU, thermal, battery, or APK lifecycle conclusions."
+  },
+  "model": {
+    "id": "qwen3-vl-2b-instruct",
+    "repo": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+    "revision": "52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+    "file": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+    "bytes": 1107409952,
+    "projector": "mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+    "projector_bytes": 819394848,
+    "vision": true
+  },
+  "mode": "vision",
+  "scope": "full",
+  "runtime": "version: 0.4.0-dev (build 10809, commit 5266f24da)\nbuilt with Clang 21.0.0 for Android aarch64\n",
+  "started_at": "2026-11-08T03:48:01.774221+00:00",
+  "settings": {
+    "backend": "cpu",
+    "threads": 4,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "temperature": 0,
+    "seed": 0,
+    "prompt_caching": false,
+    "case_wall_timeout_seconds": 300,
+    "quantization": "Q4_K_M"
+  },
+  "artifacts": {
+    "model": {
+      "id": "qwen3-vl-2b-instruct",
+      "repo": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+      "revision": "52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+      "file": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+      "bytes": 1107409952,
+      "projector": "mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+      "projector_bytes": 819394848,
+      "vision": true
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+        "bytes": 1107409952,
+        "sha256": "089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae"
+      },
+      {
+        "file": "mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+        "bytes": 819394848,
+        "sha256": "c3d5afbef5287953acd57b4043d2269456e5761a4eaccb3b71b062996970aea5"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "vision",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice flour, rice starch, soy lecithin, peanut, salt, rice flour, chichory root fibre, natural flavour, peanuts, cocoa butter, vegetable glycerin, palm kernel oil, soy protein isolate, palm kernel oil, soy protein concentrate, organic)\n- Peanut\n- Soy\n- Milk\n- Sesame\n- Tree nuts\n- Sugar\n- Rice flour\n- Rice starch\n- Soy lecithin\n- Peanut\n- Salt\n- Rice flour\n- Chichory root fibre\n- Natural flavour\n- Peanuts\n- Cocoa butter\n- Vegetable glycerin\n- Palm kernel oil\n- Soy protein isolate\n- Palm kernel oil\n- Soy protein concentrate\n- Organic\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n- Soja\n- Peut contenir\n- Lait\n- Sésame\n- Noix\n- Arachides\n-",
+      "reasoning": "",
+      "elapsed_seconds": 93.01630233299511,
+      "first_token_seconds": 77.42884041598882,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 2254,
+        "total_tokens": 2766,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2254,
+        "prompt_ms": 77377.222,
+        "prompt_per_token_ms": 34.32884738243123,
+        "prompt_per_second": 29.130019684604342,
+        "predicted_n": 512,
+        "predicted_ms": 15587.925,
+        "predicted_per_token_ms": 30.504745596868883,
+        "predicted_per_second": 32.78178461854288
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice flour, rice starch, soy lecithin, peanut, salt, rice flour, chichory root fibre, natural flavour, peanuts, cocoa butter, vegetable glycerin, palm kernel oil, soy protein isolate, palm kernel oil, soy protein concentrate, organic)",
+        "Peanut",
+        "Soy",
+        "Milk",
+        "Sesame",
+        "Tree nuts",
+        "Sugar",
+        "Rice flour",
+        "Rice starch",
+        "Soy lecithin",
+        "Peanut",
+        "Salt",
+        "Rice flour",
+        "Chichory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa butter",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Soy protein isolate",
+        "Palm kernel oil",
+        "Soy protein concentrate",
+        "Organic",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides",
+        "Soja",
+        "Peut contenir",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Arachides"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 12,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.75,
+        "precision": 0.5454545454545454,
+        "f1": 0.631578947368421,
+        "missing": [
+          "Chicory root fibre",
+          "Cocoa",
+          "Peanut butter",
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Soy",
+          "Milk",
+          "Sesame",
+          "Tree nuts",
+          "Chichory root fibre",
+          "Organic",
+          "Soja",
+          "Peut contenir",
+          "Lait",
+          "Noix"
+        ],
+        "optional_found": [],
+        "duplicate_count": 74,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "unexpected": [
+              "chichory root fibre",
+              "rice flour",
+              "rice starch",
+              "soy lecithin",
+              "peanut",
+              "salt",
+              "natural flavour",
+              "peanuts",
+              "cocoa butter",
+              "vegetable glycerin",
+              "palm kernel oil",
+              "soy protein isolate",
+              "soy protein concentrate",
+              "organic"
+            ]
+          }
+        ],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "real_upright_enhanced",
+      "mode": "vision",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Sugars (invert cane syrup*, cane sugar*, brown rice syrup*)\n- Soy protein isolate\n- Vegetable glycerin\n- Palm kernel oil\n- Rice flour*\n- Chicory root fibre\n- Natural flavour\n- Peanuts*\n- Cocoa butter\n- Cocoa\n- Peanut butter*\n- Soy protein concentrate*\n- Salt\n- Rice starch\n- Soy lecithin\n- Tocopherols\n- Peanut\n- Soy\n- Milk\n- Sesame\n- Tree nuts\n- Arachides\n- Soja\n- Lait\n- Sésame\n- Noix",
+      "reasoning": "",
+      "elapsed_seconds": 66.34887166699627,
+      "first_token_seconds": 62.52008695898985,
+      "usage": {
+        "completion_tokens": 124,
+        "prompt_tokens": 2254,
+        "total_tokens": 2378,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2254,
+        "prompt_ms": 62214.582,
+        "prompt_per_token_ms": 27.60185536823425,
+        "prompt_per_second": 36.22944858811396,
+        "predicted_n": 124,
+        "predicted_ms": 3828.443,
+        "predicted_per_token_ms": 31.125552845528457,
+        "predicted_per_second": 32.127943396310194
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Sugars (invert cane syrup*, cane sugar*, brown rice syrup*)",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Rice flour",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Salt",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols",
+        "Peanut",
+        "Soy",
+        "Milk",
+        "Sesame",
+        "Tree nuts",
+        "Arachides",
+        "Soja",
+        "Lait",
+        "Sésame",
+        "Noix"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 16,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 1.0,
+        "precision": 0.6956521739130435,
+        "f1": 0.8205128205128205,
+        "missing": [],
+        "unexpected": [
+          "Soy",
+          "Milk",
+          "Sesame",
+          "Tree nuts",
+          "Soja",
+          "Lait",
+          "Noix"
+        ],
+        "optional_found": [],
+        "duplicate_count": 3,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "clean_wheat_fixture",
+      "mode": "vision",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "reply": "- Wheat flour\n- sugar\n- milk powder\n- cocoa butter\n- salt\n- soy lecithin",
+      "reasoning": "",
+      "elapsed_seconds": 27.02169487500214,
+      "first_token_seconds": 26.559783000004245,
+      "usage": {
+        "completion_tokens": 25,
+        "prompt_tokens": 1418,
+        "total_tokens": 1443,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1418,
+        "prompt_ms": 26342.176,
+        "prompt_per_token_ms": 18.57699294781382,
+        "prompt_per_second": 53.83002527961244,
+        "predicted_n": 25,
+        "predicted_ms": 460.263,
+        "predicted_per_token_ms": 19.177625,
+        "predicted_per_second": 52.14410022096063
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "score": {
+        "required_total": 6,
+        "matched_required": 6,
+        "matched": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "clean_granola_fixture",
+      "mode": "vision",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "reply": "- Whole grain oats\n- honey\n- almonds\n- sunflower oil\n- dried cranberries\n- pumpkin seeds\n- sea salt\n- cinnamon",
+      "reasoning": "",
+      "elapsed_seconds": 21.149333790992387,
+      "first_token_seconds": 20.518426582988468,
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 1272,
+        "total_tokens": 1304,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1272,
+        "prompt_ms": 20379.563,
+        "prompt_per_token_ms": 16.02166902515723,
+        "prompt_per_second": 62.415469850850094,
+        "predicted_n": 32,
+        "predicted_ms": 628.441,
+        "predicted_per_token_ms": 20.272290322580645,
+        "predicted_per_second": 49.32841746480577
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Whole grain oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "score": {
+        "required_total": 8,
+        "matched_required": 8,
+        "matched": [
+          "Whole grain oats",
+          "honey",
+          "almonds",
+          "sunflower oil",
+          "dried cranberries",
+          "pumpkin seeds",
+          "sea salt",
+          "cinnamon"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    }
+  ],
+  "performance_repeats": [],
+  "server_metrics": {
+    "command": [
+      "/data/local/tmp/allergy-emulator-benchmark/runtime/llama-server",
+      "-m",
+      "/data/local/tmp/allergy-emulator-benchmark/models/qwen3-vl-2b-instruct/Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18775",
+      "--ctx-size",
+      "8192",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "4",
+      "--threads-batch",
+      "4",
+      "--gpu-layers",
+      "0",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}",
+      "--mmproj",
+      "/data/local/tmp/allergy-emulator-benchmark/models/qwen3-vl-2b-instruct/mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+      "--image-max-tokens",
+      "2048"
+    ],
+    "load_seconds": 3.592045291996328,
+    "peak_sampled_rss_bytes": 4746403840,
+    "kernel_peak_rss_bytes": 4812095488,
+    "peak_sampled_pss_bytes": 4743416832,
+    "peak_sampled_swap_bytes": 0,
+    "minimum_system_available_bytes": 790081536,
+    "process_returncode": 0,
+    "exited_before_cleanup": null,
+    "termination_requested": true,
+    "backend": "cpu",
+    "samples": [
+      {
+        "VmHWM": 41132032,
+        "VmRSS": 41132032,
+        "VmSwap": 0,
+        "Pss": 46187520,
+        "MemAvailable": 4877271040,
+        "elapsed_seconds": 0.04930216699722223
+      },
+      {
+        "VmHWM": 1661628416,
+        "VmRSS": 1661628416,
+        "VmSwap": 0,
+        "Pss": 1662623744,
+        "MemAvailable": 4288909312,
+        "elapsed_seconds": 1.1200764590030303
+      },
+      {
+        "VmHWM": 2833711104,
+        "VmRSS": 2833711104,
+        "VmSwap": 0,
+        "Pss": 2847135744,
+        "MemAvailable": 3024379904,
+        "elapsed_seconds": 2.189157458997215
+      },
+      {
+        "VmHWM": 4071759872,
+        "VmRSS": 4021915648,
+        "VmSwap": 0,
+        "Pss": 4018931712,
+        "MemAvailable": 2011205632,
+        "elapsed_seconds": 3.2374270419968525
+      },
+      {
+        "VmHWM": 4075692032,
+        "VmRSS": 4062478336,
+        "VmSwap": 0,
+        "Pss": 4059492352,
+        "MemAvailable": 1913143296,
+        "elapsed_seconds": 4.308181208994938
+      },
+      {
+        "VmHWM": 4300713984,
+        "VmRSS": 4300713984,
+        "VmSwap": 0,
+        "Pss": 4297729024,
+        "MemAvailable": 1725263872,
+        "elapsed_seconds": 5.403877292003017
+      },
+      {
+        "VmHWM": 4381102080,
+        "VmRSS": 4381102080,
+        "VmSwap": 0,
+        "Pss": 4378118144,
+        "MemAvailable": 1692241920,
+        "elapsed_seconds": 6.500623917003395
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435446784,
+        "MemAvailable": 1661562880,
+        "elapsed_seconds": 7.580302792004659
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435452928,
+        "MemAvailable": 1689772032,
+        "elapsed_seconds": 8.651202666995232
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435452928,
+        "MemAvailable": 1685745664,
+        "elapsed_seconds": 9.731796709005721
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435453952,
+        "MemAvailable": 1682149376,
+        "elapsed_seconds": 10.806730333992164
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435451904,
+        "MemAvailable": 1679450112,
+        "elapsed_seconds": 11.88666462499532
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435453952,
+        "MemAvailable": 1676546048,
+        "elapsed_seconds": 12.962006667003152
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435453952,
+        "MemAvailable": 1679310848,
+        "elapsed_seconds": 14.03929179199622
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435451904,
+        "MemAvailable": 1674985472,
+        "elapsed_seconds": 15.110958000004757
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435452928,
+        "MemAvailable": 1675112448,
+        "elapsed_seconds": 16.192208459004178
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435451904,
+        "MemAvailable": 1677344768,
+        "elapsed_seconds": 17.26590466700145
+      },
+      {
+        "VmHWM": 4438437888,
+        "VmRSS": 4438437888,
+        "VmSwap": 0,
+        "Pss": 4435444736,
+        "MemAvailable": 1675792384,
+        "elapsed_seconds": 18.343776416993933
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470120448,
+        "MemAvailable": 1656582144,
+        "elapsed_seconds": 19.42828350000491
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470120448,
+        "MemAvailable": 1656455168,
+        "elapsed_seconds": 20.50628187500115
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470119424,
+        "MemAvailable": 1654112256,
+        "elapsed_seconds": 21.568192999999155
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470121472,
+        "MemAvailable": 1648435200,
+        "elapsed_seconds": 22.640069208995556
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470122496,
+        "MemAvailable": 1641156608,
+        "elapsed_seconds": 23.70625391700014
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470113280,
+        "MemAvailable": 1638789120,
+        "elapsed_seconds": 24.77465720899636
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470122496,
+        "MemAvailable": 1635536896,
+        "elapsed_seconds": 25.847168833992328
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470121472,
+        "MemAvailable": 1637404672,
+        "elapsed_seconds": 26.928491917002248
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470122496,
+        "MemAvailable": 1630654464,
+        "elapsed_seconds": 27.994739999994636
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470121472,
+        "MemAvailable": 1604108288,
+        "elapsed_seconds": 29.070150458996068
+      },
+      {
+        "VmHWM": 4473106432,
+        "VmRSS": 4473106432,
+        "VmSwap": 0,
+        "Pss": 4470120448,
+        "MemAvailable": 1608286208,
+        "elapsed_seconds": 30.140197291999357
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504788992,
+        "MemAvailable": 1588170752,
+        "elapsed_seconds": 31.215074084000662
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504788992,
+        "MemAvailable": 1583394816,
+        "elapsed_seconds": 32.289693917002296
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504788992,
+        "MemAvailable": 1577476096,
+        "elapsed_seconds": 33.36476433399366
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504790016,
+        "MemAvailable": 1576349696,
+        "elapsed_seconds": 34.4368661250046
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504791040,
+        "MemAvailable": 1568194560,
+        "elapsed_seconds": 35.512224916994455
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504790016,
+        "MemAvailable": 1565786112,
+        "elapsed_seconds": 36.58807816699846
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504791040,
+        "MemAvailable": 1562935296,
+        "elapsed_seconds": 37.66449570900295
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504791040,
+        "MemAvailable": 1559982080,
+        "elapsed_seconds": 38.76396791699517
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504790016,
+        "MemAvailable": 1557536768,
+        "elapsed_seconds": 39.851252541993745
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504779776,
+        "MemAvailable": 1564229632,
+        "elapsed_seconds": 40.92689266700472
+      },
+      {
+        "VmHWM": 4507774976,
+        "VmRSS": 4507774976,
+        "VmSwap": 0,
+        "Pss": 4504780800,
+        "MemAvailable": 1561391104,
+        "elapsed_seconds": 41.99470487500366
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539457536,
+        "MemAvailable": 1527271424,
+        "elapsed_seconds": 43.076319625004544
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539456512,
+        "MemAvailable": 1525563392,
+        "elapsed_seconds": 44.15083612500166
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539457536,
+        "MemAvailable": 1526222848,
+        "elapsed_seconds": 45.22239337499195
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539457536,
+        "MemAvailable": 1534525440,
+        "elapsed_seconds": 46.29690008399484
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539450368,
+        "MemAvailable": 1535758336,
+        "elapsed_seconds": 47.38418525000452
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539457536,
+        "MemAvailable": 1533669376,
+        "elapsed_seconds": 48.45913208399725
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539450368,
+        "MemAvailable": 1530503168,
+        "elapsed_seconds": 49.59547012500116
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539448320,
+        "MemAvailable": 1532628992,
+        "elapsed_seconds": 50.674613708994
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539448320,
+        "MemAvailable": 1533128704,
+        "elapsed_seconds": 51.75424595900404
+      },
+      {
+        "VmHWM": 4542443520,
+        "VmRSS": 4542443520,
+        "VmSwap": 0,
+        "Pss": 4539448320,
+        "MemAvailable": 1531342848,
+        "elapsed_seconds": 52.82849683400127
+      },
+      {
+        "VmHWM": 4545105920,
+        "VmRSS": 4545105920,
+        "VmSwap": 0,
+        "Pss": 4542110720,
+        "MemAvailable": 1528664064,
+        "elapsed_seconds": 54.43268637500296
+      },
+      {
+        "VmHWM": 4545105920,
+        "VmRSS": 4545105920,
+        "VmSwap": 0,
+        "Pss": 4542120960,
+        "MemAvailable": 1526718464,
+        "elapsed_seconds": 55.80430758399598
+      },
+      {
+        "VmHWM": 4545105920,
+        "VmRSS": 4545105920,
+        "VmSwap": 0,
+        "Pss": 4542120960,
+        "MemAvailable": 1525055488,
+        "elapsed_seconds": 57.370211083994946
+      },
+      {
+        "VmHWM": 4545105920,
+        "VmRSS": 4545105920,
+        "VmSwap": 0,
+        "Pss": 4542120960,
+        "MemAvailable": 1529946112,
+        "elapsed_seconds": 59.23440945899347
+      },
+      {
+        "VmHWM": 4545105920,
+        "VmRSS": 4545105920,
+        "VmSwap": 0,
+        "Pss": 4542121984,
+        "MemAvailable": 1528307712,
+        "elapsed_seconds": 60.61382662500546
+      },
+      {
+        "VmHWM": 4544712704,
+        "VmRSS": 4542795776,
+        "VmSwap": 0,
+        "Pss": 4539810816,
+        "MemAvailable": 1543548928,
+        "elapsed_seconds": 62.52250783400086
+      },
+      {
+        "VmHWM": 4544712704,
+        "VmRSS": 4542795776,
+        "VmSwap": 0,
+        "Pss": 4539808768,
+        "MemAvailable": 1538523136,
+        "elapsed_seconds": 64.19761854200624
+      },
+      {
+        "VmHWM": 4544712704,
+        "VmRSS": 4542795776,
+        "VmSwap": 0,
+        "Pss": 4539809792,
+        "MemAvailable": 1535102976,
+        "elapsed_seconds": 65.67322908400092
+      },
+      {
+        "VmHWM": 4544712704,
+        "VmRSS": 4542795776,
+        "VmSwap": 0,
+        "Pss": 4539811840,
+        "MemAvailable": 1541390336,
+        "elapsed_seconds": 67.13603999999759
+      },
+      {
+        "VmHWM": 4544712704,
+        "VmRSS": 4542795776,
+        "VmSwap": 0,
+        "Pss": 4539802624,
+        "MemAvailable": 1538285568,
+        "elapsed_seconds": 69.26269062499341
+      },
+      {
+        "VmHWM": 4544712704,
+        "VmRSS": 4542795776,
+        "VmSwap": 0,
+        "Pss": 4539804672,
+        "MemAvailable": 1541431296,
+        "elapsed_seconds": 70.34054325000034
+      },
+      {
+        "VmHWM": 4544712704,
+        "VmRSS": 4542795776,
+        "VmSwap": 0,
+        "Pss": 4539809792,
+        "MemAvailable": 1538899968,
+        "elapsed_seconds": 71.43917595899256
+      },
+      {
+        "VmHWM": 4546703360,
+        "VmRSS": 4542812160,
+        "VmSwap": 0,
+        "Pss": 4539827200,
+        "MemAvailable": 1522896896,
+        "elapsed_seconds": 72.53350224999303
+      },
+      {
+        "VmHWM": 4546703360,
+        "VmRSS": 4542812160,
+        "VmSwap": 0,
+        "Pss": 4539815936,
+        "MemAvailable": 1517957120,
+        "elapsed_seconds": 73.60682050000469
+      },
+      {
+        "VmHWM": 4546703360,
+        "VmRSS": 4542812160,
+        "VmSwap": 0,
+        "Pss": 4539826176,
+        "MemAvailable": 1511534592,
+        "elapsed_seconds": 74.69128283399914
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4542836736,
+        "VmSwap": 0,
+        "Pss": 4539850752,
+        "MemAvailable": 1514184704,
+        "elapsed_seconds": 75.76564945900463
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4542836736,
+        "VmSwap": 0,
+        "Pss": 4539854848,
+        "MemAvailable": 1509949440,
+        "elapsed_seconds": 76.83925612499297
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4542836736,
+        "VmSwap": 0,
+        "Pss": 4539850752,
+        "MemAvailable": 1505996800,
+        "elapsed_seconds": 77.91139737500635
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4542201856,
+        "VmSwap": 0,
+        "Pss": 4539215872,
+        "MemAvailable": 1504985088,
+        "elapsed_seconds": 78.99649908399442
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4538003456,
+        "VmSwap": 0,
+        "Pss": 4535008256,
+        "MemAvailable": 1500246016,
+        "elapsed_seconds": 80.071537041993
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527886336,
+        "VmSwap": 0,
+        "Pss": 4524900352,
+        "MemAvailable": 1508626432,
+        "elapsed_seconds": 81.15146141700097
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527951872,
+        "VmSwap": 0,
+        "Pss": 4524949504,
+        "MemAvailable": 1506594816,
+        "elapsed_seconds": 82.23585820899461
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527955968,
+        "VmSwap": 0,
+        "Pss": 4524972032,
+        "MemAvailable": 1512185856,
+        "elapsed_seconds": 83.34817554199253
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527955968,
+        "VmSwap": 0,
+        "Pss": 4524960768,
+        "MemAvailable": 1507512320,
+        "elapsed_seconds": 84.42781404199195
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527980544,
+        "VmSwap": 0,
+        "Pss": 4524994560,
+        "MemAvailable": 1502126080,
+        "elapsed_seconds": 85.5090039170027
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527988736,
+        "VmSwap": 0,
+        "Pss": 4525000704,
+        "MemAvailable": 1503289344,
+        "elapsed_seconds": 86.60948904200632
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527988736,
+        "VmSwap": 0,
+        "Pss": 4525001728,
+        "MemAvailable": 1499684864,
+        "elapsed_seconds": 87.71628237499681
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4527988736,
+        "VmSwap": 0,
+        "Pss": 4524992512,
+        "MemAvailable": 1528107008,
+        "elapsed_seconds": 88.79201379200094
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4528017408,
+        "VmSwap": 0,
+        "Pss": 4525031424,
+        "MemAvailable": 1527054336,
+        "elapsed_seconds": 89.94434074999299
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4528017408,
+        "VmSwap": 0,
+        "Pss": 4525023232,
+        "MemAvailable": 1525977088,
+        "elapsed_seconds": 91.02932679200603
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4528021504,
+        "VmSwap": 0,
+        "Pss": 4525027328,
+        "MemAvailable": 1530818560,
+        "elapsed_seconds": 92.11218329200346
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4528025600,
+        "VmSwap": 0,
+        "Pss": 4525038592,
+        "MemAvailable": 1527451648,
+        "elapsed_seconds": 93.20087400000193
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4528025600,
+        "VmSwap": 0,
+        "Pss": 4525039616,
+        "MemAvailable": 1526853632,
+        "elapsed_seconds": 94.28372429199226
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4528029696,
+        "VmSwap": 0,
+        "Pss": 4525043712,
+        "MemAvailable": 1523146752,
+        "elapsed_seconds": 95.37371866700414
+      },
+      {
+        "VmHWM": 4546719744,
+        "VmRSS": 4528029696,
+        "VmSwap": 0,
+        "Pss": 4525042688,
+        "MemAvailable": 1527656448,
+        "elapsed_seconds": 96.45151666700258
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4735336448,
+        "VmSwap": 0,
+        "Pss": 4732350464,
+        "MemAvailable": 1326501888,
+        "elapsed_seconds": 97.54182258399669
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4746403840,
+        "VmSwap": 0,
+        "Pss": 4743416832,
+        "MemAvailable": 1215709184,
+        "elapsed_seconds": 98.6444609589962
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668986368,
+        "MemAvailable": 1262497792,
+        "elapsed_seconds": 99.72555641700455
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668989440,
+        "MemAvailable": 1247657984,
+        "elapsed_seconds": 100.80027150000387
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1246650368,
+        "elapsed_seconds": 101.90287816700584
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1240760320,
+        "elapsed_seconds": 102.98269141699711
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1240354816,
+        "elapsed_seconds": 104.07511241700558
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1244418048,
+        "elapsed_seconds": 105.14807887500501
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1241067520,
+        "elapsed_seconds": 106.22858070899383
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1236557824,
+        "elapsed_seconds": 107.30325541700586
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1232322560,
+        "elapsed_seconds": 108.38158283400116
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1227075584,
+        "elapsed_seconds": 109.45670712500578
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1224974336,
+        "elapsed_seconds": 110.54292470899236
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1218252800,
+        "elapsed_seconds": 111.62419837499328
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1216638976,
+        "elapsed_seconds": 112.69600762499613
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1218957312,
+        "elapsed_seconds": 113.76694025000324
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1215311872,
+        "elapsed_seconds": 114.83485975000076
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1210064896,
+        "elapsed_seconds": 115.9146090419963
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1208164352,
+        "elapsed_seconds": 116.98297724999429
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1207005184,
+        "elapsed_seconds": 118.06330158399942
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1209602048,
+        "elapsed_seconds": 119.14412829199864
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1211158528,
+        "elapsed_seconds": 120.22576087499328
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668999680,
+        "MemAvailable": 1212850176,
+        "elapsed_seconds": 121.30003391699574
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1208274944,
+        "elapsed_seconds": 122.38789604199701
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668989440,
+        "MemAvailable": 1204797440,
+        "elapsed_seconds": 123.46806354199362
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1207169024,
+        "elapsed_seconds": 124.54275229199266
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1212944384,
+        "elapsed_seconds": 125.61175120899861
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668987392,
+        "MemAvailable": 1209995264,
+        "elapsed_seconds": 126.69062962499447
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1212878848,
+        "elapsed_seconds": 127.76286470900232
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1206480896,
+        "elapsed_seconds": 128.83503112499602
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1198489600,
+        "elapsed_seconds": 129.93092587499996
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1196269568,
+        "elapsed_seconds": 131.0043980420014
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1197215744,
+        "elapsed_seconds": 132.0841150000051
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1196486656,
+        "elapsed_seconds": 133.16819245899387
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1194471424,
+        "elapsed_seconds": 134.25173533399357
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1193140224,
+        "elapsed_seconds": 135.32802162499866
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1191817216,
+        "elapsed_seconds": 136.40424983399862
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1203388416,
+        "elapsed_seconds": 137.47602691699285
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668996608,
+        "MemAvailable": 1199362048,
+        "elapsed_seconds": 138.55276062499615
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668987392,
+        "MemAvailable": 1198215168,
+        "elapsed_seconds": 139.6282010839932
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668997632,
+        "MemAvailable": 1203777536,
+        "elapsed_seconds": 140.69887612499588
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668988416,
+        "MemAvailable": 1191661568,
+        "elapsed_seconds": 141.78102900000522
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1187377152,
+        "elapsed_seconds": 142.87489116699726
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668987392,
+        "MemAvailable": 1184444416,
+        "elapsed_seconds": 143.94295012499788
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1184935936,
+        "elapsed_seconds": 145.01728775000083
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4671983616,
+        "VmSwap": 0,
+        "Pss": 4668995584,
+        "MemAvailable": 1184530432,
+        "elapsed_seconds": 146.10201337499893
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665520128,
+        "VmSwap": 0,
+        "Pss": 4662532096,
+        "MemAvailable": 1208762368,
+        "elapsed_seconds": 147.17797904199688
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665520128,
+        "VmSwap": 0,
+        "Pss": 4662523904,
+        "MemAvailable": 1204842496,
+        "elapsed_seconds": 148.25833050000074
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665520128,
+        "VmSwap": 0,
+        "Pss": 4662534144,
+        "MemAvailable": 1201254400,
+        "elapsed_seconds": 149.33991458399396
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665528320,
+        "VmSwap": 0,
+        "Pss": 4662542336,
+        "MemAvailable": 1184665600,
+        "elapsed_seconds": 150.42728570899635
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665528320,
+        "VmSwap": 0,
+        "Pss": 4662531072,
+        "MemAvailable": 1188847616,
+        "elapsed_seconds": 151.499159125
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665528320,
+        "VmSwap": 0,
+        "Pss": 4662543360,
+        "MemAvailable": 1169739776,
+        "elapsed_seconds": 152.57030054199276
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665536512,
+        "VmSwap": 0,
+        "Pss": 4662549504,
+        "MemAvailable": 1181618176,
+        "elapsed_seconds": 153.64654558399343
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665536512,
+        "VmSwap": 0,
+        "Pss": 4662540288,
+        "MemAvailable": 1181048832,
+        "elapsed_seconds": 154.727354542003
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4665536512,
+        "VmSwap": 0,
+        "Pss": 4662550528,
+        "MemAvailable": 1184866304,
+        "elapsed_seconds": 155.804819166995
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4664881152,
+        "VmSwap": 0,
+        "Pss": 4661878784,
+        "MemAvailable": 1184649216,
+        "elapsed_seconds": 156.9199373339943
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4660682752,
+        "VmSwap": 0,
+        "Pss": 4657697792,
+        "MemAvailable": 1184886784,
+        "elapsed_seconds": 157.99215816700598
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4648747008,
+        "VmSwap": 0,
+        "Pss": 4645760000,
+        "MemAvailable": 1192767488,
+        "elapsed_seconds": 159.1048147919937
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4650762240,
+        "VmSwap": 0,
+        "Pss": 4647766016,
+        "MemAvailable": 1193746432,
+        "elapsed_seconds": 160.20182775000285
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4650827776,
+        "VmSwap": 0,
+        "Pss": 4647841792,
+        "MemAvailable": 1191124992,
+        "elapsed_seconds": 161.33685487500043
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4650958848,
+        "VmSwap": 0,
+        "Pss": 4647972864,
+        "MemAvailable": 1193422848,
+        "elapsed_seconds": 162.41234795900527
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4629000192,
+        "VmSwap": 0,
+        "Pss": 4626014208,
+        "MemAvailable": 972361728,
+        "elapsed_seconds": 163.48837016700418
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4629000192,
+        "VmSwap": 0,
+        "Pss": 4626014208,
+        "MemAvailable": 985833472,
+        "elapsed_seconds": 164.57531295900117
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601704448,
+        "MemAvailable": 962240512,
+        "elapsed_seconds": 165.64805991700268
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601695232,
+        "MemAvailable": 957820928,
+        "elapsed_seconds": 166.72393420900335
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601704448,
+        "MemAvailable": 956923904,
+        "elapsed_seconds": 167.79884004199994
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601703424,
+        "MemAvailable": 957489152,
+        "elapsed_seconds": 168.867101041993
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601703424,
+        "MemAvailable": 969179136,
+        "elapsed_seconds": 169.9885907919961
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601702400,
+        "MemAvailable": 976568320,
+        "elapsed_seconds": 171.08545383400633
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601694208,
+        "MemAvailable": 974372864,
+        "elapsed_seconds": 172.20957654199447
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601694208,
+        "MemAvailable": 977297408,
+        "elapsed_seconds": 173.30000329199538
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601704448,
+        "MemAvailable": 981360640,
+        "elapsed_seconds": 174.37039108399767
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601704448,
+        "MemAvailable": 979947520,
+        "elapsed_seconds": 175.48066983399622
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601703424,
+        "MemAvailable": 977567744,
+        "elapsed_seconds": 176.56348408399208
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601704448,
+        "MemAvailable": 975691776,
+        "elapsed_seconds": 177.63421304199437
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601703424,
+        "MemAvailable": 978841600,
+        "elapsed_seconds": 178.70325608400162
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601703424,
+        "MemAvailable": 975908864,
+        "elapsed_seconds": 179.7910021669959
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601690112,
+        "MemAvailable": 973627392,
+        "elapsed_seconds": 180.86452495900448
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604690432,
+        "VmSwap": 0,
+        "Pss": 4601704448,
+        "MemAvailable": 975114240,
+        "elapsed_seconds": 181.93527179199737
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4604665856,
+        "VmSwap": 0,
+        "Pss": 4601669632,
+        "MemAvailable": 982761472,
+        "elapsed_seconds": 182.9903837919992
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4608430080,
+        "VmSwap": 0,
+        "Pss": 4605432832,
+        "MemAvailable": 974295040,
+        "elapsed_seconds": 184.05432708399894
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4608430080,
+        "VmSwap": 0,
+        "Pss": 4605433856,
+        "MemAvailable": 974094336,
+        "elapsed_seconds": 185.1322269999946
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4612628480,
+        "VmSwap": 0,
+        "Pss": 4609642496,
+        "MemAvailable": 956022784,
+        "elapsed_seconds": 186.21508495899616
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4608430080,
+        "VmSwap": 0,
+        "Pss": 4605434880,
+        "MemAvailable": 953638912,
+        "elapsed_seconds": 187.30867258399667
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4608430080,
+        "VmSwap": 0,
+        "Pss": 4605444096,
+        "MemAvailable": 951234560,
+        "elapsed_seconds": 188.38347883400274
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4592951296,
+        "VmSwap": 0,
+        "Pss": 4588649472,
+        "MemAvailable": 950566912,
+        "elapsed_seconds": 189.45902108399605
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4637847552,
+        "VmSwap": 0,
+        "Pss": 4634861568,
+        "MemAvailable": 825147392,
+        "elapsed_seconds": 190.55971304200648
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4566335488,
+        "VmSwap": 0,
+        "Pss": 4563338240,
+        "MemAvailable": 898748416,
+        "elapsed_seconds": 191.63254508399405
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604742656,
+        "MemAvailable": 833409024,
+        "elapsed_seconds": 192.70676204199845
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604733440,
+        "MemAvailable": 829812736,
+        "elapsed_seconds": 193.7838060840004
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604743680,
+        "MemAvailable": 830017536,
+        "elapsed_seconds": 194.8677737090038
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604742656,
+        "MemAvailable": 827756544,
+        "elapsed_seconds": 195.94693779200315
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604733440,
+        "MemAvailable": 828776448,
+        "elapsed_seconds": 197.0192823749967
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604742656,
+        "MemAvailable": 825647104,
+        "elapsed_seconds": 198.1000317089929
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604743680,
+        "MemAvailable": 823418880,
+        "elapsed_seconds": 199.18067995899764
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604742656,
+        "MemAvailable": 820621312,
+        "elapsed_seconds": 200.25729520899768
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604734464,
+        "MemAvailable": 819855360,
+        "elapsed_seconds": 201.35588570899563
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604740608,
+        "MemAvailable": 817053696,
+        "elapsed_seconds": 202.42854787499527
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604742656,
+        "MemAvailable": 815894528,
+        "elapsed_seconds": 203.49939583400555
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4607729664,
+        "VmSwap": 0,
+        "Pss": 4604741632,
+        "MemAvailable": 813035520,
+        "elapsed_seconds": 204.56707837499562
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4613234688,
+        "VmSwap": 0,
+        "Pss": 4610248704,
+        "MemAvailable": 811335680,
+        "elapsed_seconds": 205.64290691699716
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4613234688,
+        "VmSwap": 0,
+        "Pss": 4610238464,
+        "MemAvailable": 816709632,
+        "elapsed_seconds": 206.714655208998
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4613234688,
+        "VmSwap": 0,
+        "Pss": 4610248704,
+        "MemAvailable": 811581440,
+        "elapsed_seconds": 207.79064029200526
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4609761280,
+        "VmSwap": 0,
+        "Pss": 4606766080,
+        "MemAvailable": 790429696,
+        "elapsed_seconds": 208.87222433400166
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4609761280,
+        "VmSwap": 0,
+        "Pss": 4606765056,
+        "MemAvailable": 790081536,
+        "elapsed_seconds": 209.9467074169952
+      },
+      {
+        "VmHWM": 4812095488,
+        "VmRSS": 4599046144,
+        "VmSwap": 0,
+        "Pss": 4596049920,
+        "MemAvailable": 805646336,
+        "elapsed_seconds": 211.0314605839958
+      }
+    ],
+    "server_log": "tools/model-benchmark/results/emulator5554-4cpu6gb/cpu/full/qwen3-vl-2b-instruct-vision-server.log",
+    "memory_caveat": "Android emulator native process, /proc sampled ~1s; virtual RAM and CPU, not phone requirements; not app lifecycle/camera/GPU/NPU/thermal/power measurement."
+  },
+  "complete": true,
+  "all_cases_succeeded": true,
+  "completed_at": "2026-11-08T03:51:33.131869+00:00"
+}

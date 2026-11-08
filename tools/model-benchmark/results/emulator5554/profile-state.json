@@ -1,0 +1,29 @@
+{
+  "status": "baseline_stopped_for_separate_profile",
+  "at": "2026-11-08T03:35:08.117051+00:00",
+  "old_profile": {
+    "cpus": 1,
+    "ram_mb": 4096
+  },
+  "new_profile": {
+    "cpus": 4,
+    "ram_mb": 6144
+  },
+  "reason": "Full image cases took110\u2013264s with~1.2GiB native swap on1CPU/4GB. Preserve these diagnostics; run complete suite in a separate temporary profile.",
+  "restore": {
+    "avd": "Medium_Phone_API_37.0",
+    "cpus": 1,
+    "ram_mb": 4096,
+    "cold_boot": true
+  },
+  "stopped_benchmark_pid": 16647,
+  "invalid_preference_probe_sha256": {
+    "allergy_preferences.xml": "b1a6ce15486321aee3312adeb16bed5c85afa2675b285ca1332bf78baef4b317",
+    "local_model.xml": "b1a6ce15486321aee3312adeb16bed5c85afa2675b285ca1332bf78baef4b317"
+  },
+  "preference_verification": {
+    "valid": false,
+    "reason": "The pre-restart run-as probes returned unknown package. Their identical SHA-256 values hashed error text, not XML. Preference preservation was not verified. No application was installed, uninstalled, cleared, or overwritten by this benchmark.",
+    "package_absent_before_first_restart": true
+  }
+}

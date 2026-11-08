@@ -1,0 +1,1841 @@
+{
+  "schema_version": 1,
+  "platform": "android_emulator",
+  "physical_device": false,
+  "hardware": {
+    "ro.product.model": "sdk_gphone64_arm64",
+    "ro.build.version.release": "17",
+    "ro.build.version.sdk": "37",
+    "ro.product.cpu.abi": "arm64-v8a",
+    "ro.hardware": "ranchu",
+    "ro.kernel.qemu": "1",
+    "physical_device": false,
+    "platform": "android_emulator",
+    "serial": "emulator-5554",
+    "captured_at": "2026-11-08T03:37:38.232485+00:00",
+    "online_cpu_count": 4,
+    "memory_kib": {
+      "MemTotal": 6062644,
+      "MemAvailable": 4332948,
+      "SwapTotal": 4546976,
+      "SwapFree": 4121248
+    },
+    "disk_before": "Filesystem      1K-blocks    Used Available Use% Mounted on\n/dev/block/dm-5  10167132 2187912   7831764  22% /data/user/0\n",
+    "limitations": "Virtual CPU/memory, CPU backend only. No physical GPU/NPU, thermal, battery, or APK lifecycle conclusions."
+  },
+  "model": {
+    "id": "qwen3-4b-instruct-2507",
+    "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+    "revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+    "bytes": 2497281120,
+    "vision": false
+  },
+  "mode": "text",
+  "scope": "full",
+  "runtime": "version: 0.4.0-dev (build 10809, commit 5266f24da)\nbuilt with Clang 21.0.0 for Android aarch64\n",
+  "started_at": "2026-11-08T03:44:49.083349+00:00",
+  "settings": {
+    "backend": "cpu",
+    "threads": 4,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "temperature": 0,
+    "seed": 0,
+    "prompt_caching": false,
+    "case_wall_timeout_seconds": 300,
+    "quantization": "Q4_K_M"
+  },
+  "artifacts": {
+    "model": {
+      "id": "qwen3-4b-instruct-2507",
+      "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+      "revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+      "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "bytes": 2497281120,
+      "vision": false
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+        "bytes": 2497281120,
+        "sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- phérols  \n- cocoa butter  \n- cocoa  \n- peanut butter  \n- soy protein concentrate  \n- vegetable oil  \n- salt  \n- rice starch  \n- soy lecithin  \n- palm kernel oil  \n- rice flour  \n- chicory root fibre  \n- natural flavour  \n- peanuts  \n- soy protein isolate  \n- vegetable glycerin  \n- sugars (invert cane syrup, cane sugar, brown rice syrup)  \n- tocopherols  \n\nNote: \"phérols\" is likely a misreading of \"phérols\" → possibly \"phérols\" is a typo for \"phospholipids\" or \"tocopherols\", but given the context and common food label terms, and since \"tocopherols\" appears later, and \"phérols\" is not a known ingredient, it's likely a misreading of \"tocopherols\". However, since \"tocopherols\" appears later in the text and is clearly listed, and \"phérols\" appears first, it may be a typo. But the text says \"phérols.\" and then continues with other ingredients. Given that \"tocopherols\" is explicitly listed later, and \"phérols\" is not a known ingredient, it's likely a misreading of \"tocopherols\" or \"phospholipids\". However, \"phérols\" could also be a misspelling of \"phospholipids\", but no such term is present.\n\nBut looking again: the text says \"phérols.\" — this is likely a misreading of \"tocopherols\" or \"phospholipids\", but \"phospholipids\" is not present. However, \"lecithin\" is already listed as \"soy lecithin\", and \"tocopherols\" is listed later.\n\nWait — the text says: \"phérols.\" — this is likely a typo for \"tocopherols\", which is a common additive. Also, \"phérols\" appears before any other ingredient, and then the list continues.\n\nBut in the text: \"phérols.\" → likely a misreading of \"tocopherols\".\n\nAlso, \"oD.\" → likely \"oil\" or \"od\" → probably \"oil\" or \"vegetable oil\", but \"oil\" is already listed.\n\nBut \"oD. Caca0\" → likely \"oil. Cocoa\" → \"cocoa\" is",
+      "reasoning": "",
+      "elapsed_seconds": 33.590970750010456,
+      "first_token_seconds": 10.621618750010384,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 657,
+        "total_tokens": 1169,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 657,
+        "prompt_ms": 10595.912,
+        "prompt_per_token_ms": 16.1277199391172,
+        "prompt_per_second": 62.00504496451084,
+        "predicted_n": 512,
+        "predicted_ms": 22968.659,
+        "predicted_per_token_ms": 44.94845205479452,
+        "predicted_per_second": 22.247707190916106
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "phérols",
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "soy protein concentrate",
+        "vegetable oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "palm kernel oil",
+        "rice flour",
+        "chicory root fibre",
+        "natural flavour",
+        "peanuts",
+        "soy protein isolate",
+        "vegetable glycerin",
+        "sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 16,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 1.0,
+        "precision": 0.9411764705882353,
+        "f1": 0.9696969696969697,
+        "missing": [],
+        "unexpected": [
+          "phérols"
+        ],
+        "optional_found": [
+          "Vegetable oil"
+        ],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "real_upright_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- ingredients  \n- sugars (invert cane syrup, cane sugar*, brown rice syrup*)  \n- soy protein isolate  \n- vegetable glycerin  \n- palm kernel oil  \n- flour*  \n- rice flour  \n- chicory root fibre  \n- natural flavour  \n- peanuts*  \n- cocoa butter  \n- cocoa  \n- peanut butter*  \n- soy protein concentrate  \n- table oil  \n- salt  \n- rice starch  \n- soy lecithin  \n- tocopherols  \n- peanut  \n- soy  \n\nNote: The original text contains misreadings such as \"edients\" → \"ingredients\", \"sug4r\" → \"sugar\", \"sodlum\" → \"sodium\", \"artifigelts\" → \"artificial\", \"cien\" → \"cience\", \"ains\" → \"ingredients\", \"édients\" → \"ingredients\", \"Sucres\" → \"sugars\", \"arachides\" → \"peanuts\", \"soja\" → \"soy\", \"Peut contenir\" → \"may contain\", \"Beurre d'arachides\" → \"peanut butter\", \"Caca0\" → \"cocoa\", \"Amidon\" → \"starch\", \"Lécithine\" → \"lecithin\", etc. However, per the rules, we only list actual ingredients from the text, corrected where necessary, and maintain order.\n\nBut note: the instruction says to **correct misread words to the real ingredient name**, and **only include ingredients that are actually present**.\n\nWe must extract only the ingredient names, corrected, and in order.\n\nLet’s go step by step through the text, parsing only the ingredient list parts, correcting misreads, and preserving order.\n\n---\n\nOriginal text (cleaned and parsed):\n\n\"edients: Sugars (nvert càne syrup, cane Sugar*, brown rice syrup*), Soy protein isolate, Vegetable glycerin, Palm kernel oil.  \nflour* Rice flour, Chicory root fibre, Natural flavour, Peanuts*, Cocoa butter, Cocoa, Peanut butter* Soy protein concentrate.  \ntable oil , Salt, Rice starch, Soy lecithin, Tocopherols.  \nains: Peanut, Soy. May contain: Milk, Sesame, Tree nuts.  \nARTIFIGTELS  \nCient: Arachides, Soja. Peut contenir : Lait, Sésame, Noix.  \nédients Sucres (sirop de canne",
+      "reasoning": "",
+      "elapsed_seconds": 28.64240324999264,
+      "first_token_seconds": 7.643879082999774,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 643,
+        "total_tokens": 1155,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 643,
+        "prompt_ms": 7549.934,
+        "prompt_per_token_ms": 11.741732503888025,
+        "prompt_per_second": 85.16630741407806,
+        "predicted_n": 512,
+        "predicted_ms": 20996.142,
+        "predicted_per_token_ms": 41.08834050880626,
+        "predicted_per_second": 24.337804535709463
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "ingredients",
+        "sugars (invert cane syrup, cane sugar*, brown rice syrup*)",
+        "soy protein isolate",
+        "vegetable glycerin",
+        "palm kernel oil",
+        "flour",
+        "rice flour",
+        "chicory root fibre",
+        "natural flavour",
+        "peanuts",
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "soy protein concentrate",
+        "table oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "tocopherols",
+        "peanut",
+        "soy"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 16,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 1.0,
+        "precision": 0.8,
+        "f1": 0.888888888888889,
+        "missing": [],
+        "unexpected": [
+          "ingredients",
+          "flour",
+          "table oil",
+          "soy"
+        ],
+        "optional_found": [],
+        "duplicate_count": 1,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "real_sideways_unmodified",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- cocoa butter  \n- cocoa  \n- peanut butter  \n- soy protein concentrate  \n- soy protein isolate  \n- vegetable oil  \n- salt  \n- rice starch  \n- soy lecithin  \n- palm kernel oil  \n- chicory root fiber  \n- natural flavor  \n- sugars (invert cane syrup, cane sugar, brown rice syrup)  \n- tocopherols  \n\n(Note: The original text contains several misread or fragmented words. After correcting OCR errors and preserving order, the following ingredients are derived:)\n\n- cocoa butter  \n- cocoa  \n- peanut butter  \n- soy protein concentrate  \n- soy protein isolate  \n- vegetable oil  \n- salt  \n- rice starch  \n- soy lecithin  \n- palm kernel oil  \n- chicory root fiber  \n- natural flavor  \n- sugars (invert cane syrup, cane sugar, brown rice syrup)  \n- tocopherols  \n\n(All entries are derived from the text, corrected for OCR errors such as \"phéols\" → \"phospholipids\" (but not present), \"d'arachides\" → \"peanut butter\" or \"cocoa butter\", \"édients\" → \"ingredients\", \"sug4r\" → \"sugar\", \"raregridients\" → \"ingredients\", \"arôme\" → \"arôme naturel\", \"farine de soja\" → \"soy flour\", \"amidon de riz\" → \"rice starch\", \"lecithine de soja\" → \"soy lecithin\", \"huile de palmiste\" → \"palm kernel oil\", \"concentré de protéines de soja\" → \"soy protein concentrate\", \"isolat de protéines de soja\" → \"soy protein isolate\", \"arôme naturel\" → \"natural flavor\", \"fibre de racine de chicorée\" → \"chicory root fiber\", \"table oil\" → \"vegetable oil\", \"rice flour\" → \"rice flour\", \"sugars\" with listed types, \"tocopherols\" from \"Cient: Arachides, Soja\" which seems to be a misread of \"tocopherols\" or \"vitamin E\", and \"sodium\" not present, so only listed if in text. The text says \"table oil, salt, rice starch, soy lecithin, tocopherols\" — so included. Also, \"peanut\", \"soy\" marked with * — but not",
+      "reasoning": "",
+      "elapsed_seconds": 30.955770917003974,
+      "first_token_seconds": 10.168676583998604,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 686,
+        "total_tokens": 1198,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 686,
+        "prompt_ms": 10050.382,
+        "prompt_per_token_ms": 14.650702623906705,
+        "prompt_per_second": 68.25611205623827,
+        "predicted_n": 512,
+        "predicted_ms": 20787.307,
+        "predicted_per_token_ms": 40.6796614481409,
+        "predicted_per_second": 24.582308809890574
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "soy protein concentrate",
+        "soy protein isolate",
+        "vegetable oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "palm kernel oil",
+        "chicory root fiber",
+        "natural flavor",
+        "sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "tocopherols",
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "soy protein concentrate",
+        "soy protein isolate",
+        "vegetable oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "palm kernel oil",
+        "chicory root fiber",
+        "natural flavor",
+        "sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 13,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Palm kernel oil",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 0.8125,
+        "precision": 1.0,
+        "f1": 0.896551724137931,
+        "missing": [
+          "Vegetable glycerin",
+          "Rice flour",
+          "Peanuts"
+        ],
+        "unexpected": [],
+        "optional_found": [
+          "Vegetable oil"
+        ],
+        "duplicate_count": 14,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "clean_wheat_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "reply": "- Wheat flour  \n- sugar  \n- milk powder  \n- cocoa butter  \n- salt  \n- soy lecithin",
+      "reasoning": "",
+      "elapsed_seconds": 4.989233625004999,
+      "first_token_seconds": 4.200498499994865,
+      "usage": {
+        "completion_tokens": 25,
+        "prompt_tokens": 388,
+        "total_tokens": 413,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 388,
+        "prompt_ms": 4104.698,
+        "prompt_per_token_ms": 10.579118556701031,
+        "prompt_per_second": 94.52583356924188,
+        "predicted_n": 25,
+        "predicted_ms": 788.087,
+        "predicted_per_token_ms": 32.836958333333335,
+        "predicted_per_second": 30.45349054101895
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "score": {
+        "required_total": 6,
+        "matched_required": 6,
+        "matched": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "clean_granola_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "reply": "- Whole grain oats  \n- honey  \n- almonds  \n- sunflower oil  \n- dried cranberries  \n- pumpkin seeds  \n- sea salt  \n- cinnamon",
+      "reasoning": "",
+      "elapsed_seconds": 5.457855916989502,
+      "first_token_seconds": 4.433037416994921,
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 418,
+        "total_tokens": 450,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 418,
+        "prompt_ms": 4422.315,
+        "prompt_per_token_ms": 10.579700956937797,
+        "prompt_per_second": 94.52063003200813,
+        "predicted_n": 32,
+        "predicted_ms": 1024.451,
+        "predicted_per_token_ms": 33.0468064516129,
+        "predicted_per_second": 30.260110049187322
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Whole grain oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "score": {
+        "required_total": 8,
+        "matched_required": 8,
+        "matched": [
+          "Whole grain oats",
+          "honey",
+          "almonds",
+          "sunflower oil",
+          "dried cranberries",
+          "pumpkin seeds",
+          "sea salt",
+          "cinnamon"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "synthetic_ocr_typos",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_ocr_typos",
+      "reply": "- wheat flour  \n- skim milk powder  \n- canola oil  \n- sea salt",
+      "reasoning": "",
+      "elapsed_seconds": 5.006845124997199,
+      "first_token_seconds": 4.453890666991356,
+      "usage": {
+        "completion_tokens": 18,
+        "prompt_tokens": 409,
+        "total_tokens": 427,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 409,
+        "prompt_ms": 4443.633,
+        "prompt_per_token_ms": 10.86462836185819,
+        "prompt_per_second": 92.04180453246252,
+        "predicted_n": 18,
+        "predicted_ms": 555.08,
+        "predicted_per_token_ms": 32.65176470588236,
+        "predicted_per_second": 30.626216040931034
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "wheat flour",
+        "skim milk powder",
+        "canola oil",
+        "sea salt"
+      ],
+      "score": {
+        "required_total": 4,
+        "matched_required": 4,
+        "matched": [
+          "Wheat flour",
+          "skim milk powder",
+          "canola oil",
+          "sea salt"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "synthetic_nested",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_nested",
+      "reply": "- Chocolate (sugar, cocoa butter, soy lecithin)  \n- wheat flour  \n- salt  \n- citric acid",
+      "reasoning": "",
+      "elapsed_seconds": 4.983351291011786,
+      "first_token_seconds": 4.126208665999002,
+      "usage": {
+        "completion_tokens": 28,
+        "prompt_tokens": 401,
+        "total_tokens": 429,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 401,
+        "prompt_ms": 4116.379,
+        "prompt_per_token_ms": 10.265284289276808,
+        "prompt_per_second": 97.41571415071354,
+        "predicted_n": 28,
+        "predicted_ms": 856.865,
+        "predicted_per_token_ms": 31.73574074074074,
+        "predicted_per_second": 31.51021456122026
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Chocolate (sugar, cocoa butter, soy lecithin)",
+        "wheat flour",
+        "salt",
+        "citric acid"
+      ],
+      "score": {
+        "required_total": 4,
+        "matched_required": 4,
+        "matched": [
+          "Chocolate (sugar, cocoa butter, soy lecithin)",
+          "wheat flour",
+          "salt",
+          "citric acid"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "synthetic_bilingual",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_bilingual",
+      "reply": "- sugar  \n- milk powder  \n- cocoa butter",
+      "reasoning": "",
+      "elapsed_seconds": 4.439203209010884,
+      "first_token_seconds": 4.1446936250140425,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 391,
+        "total_tokens": 402,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 391,
+        "prompt_ms": 4134.293,
+        "prompt_per_token_ms": 10.573639386189257,
+        "prompt_per_second": 94.57481605682035,
+        "predicted_n": 11,
+        "predicted_ms": 296.6,
+        "predicted_per_token_ms": 29.660000000000004,
+        "predicted_per_second": 33.715441672285905
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "sugar",
+        "milk powder",
+        "cocoa butter"
+      ],
+      "score": {
+        "required_total": 3,
+        "matched_required": 3,
+        "matched": [
+          "sugar",
+          "milk powder",
+          "cocoa butter"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "negative_nutrition_only",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "negative_nutrition_only",
+      "reply": "NONE",
+      "reasoning": "",
+      "elapsed_seconds": 4.278406540994183,
+      "first_token_seconds": 4.246353124995949,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 402,
+        "total_tokens": 404,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 402,
+        "prompt_ms": 4238.842,
+        "prompt_per_token_ms": 10.544383084577113,
+        "prompt_per_second": 94.83722205262664,
+        "predicted_n": 2,
+        "predicted_ms": 31.483,
+        "predicted_per_token_ms": 31.483,
+        "predicted_per_second": 31.76317377632373
+      },
+      "finish_reason": "stop",
+      "ingredients": [],
+      "score": {
+        "required_total": 0,
+        "matched_required": 0,
+        "matched": [],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": true,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "negative_precaution_only",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "negative_precaution_only",
+      "reply": "NONE",
+      "reasoning": "",
+      "elapsed_seconds": 3.9436895419930806,
+      "first_token_seconds": 3.913606666988926,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 380,
+        "total_tokens": 382,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 380,
+        "prompt_ms": 3904.942,
+        "prompt_per_token_ms": 10.276163157894738,
+        "prompt_per_second": 97.31258492443678,
+        "predicted_n": 2,
+        "predicted_ms": 29.639,
+        "predicted_per_token_ms": 29.639,
+        "predicted_per_second": 33.73932993690745
+      },
+      "finish_reason": "stop",
+      "ingredients": [],
+      "score": {
+        "required_total": 0,
+        "matched_required": 0,
+        "matched": [],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": true,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    }
+  ],
+  "performance_repeats": [],
+  "server_metrics": {
+    "command": [
+      "/data/local/tmp/allergy-emulator-benchmark/runtime/llama-server",
+      "-m",
+      "/data/local/tmp/allergy-emulator-benchmark/models/qwen3-4b-instruct-2507/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18775",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "4",
+      "--threads-batch",
+      "4",
+      "--gpu-layers",
+      "0",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 10.415609458010294,
+    "peak_sampled_rss_bytes": 4830240768,
+    "kernel_peak_rss_bytes": 4861804544,
+    "peak_sampled_pss_bytes": 4827328512,
+    "peak_sampled_swap_bytes": 0,
+    "minimum_system_available_bytes": 1304301568,
+    "process_returncode": 0,
+    "exited_before_cleanup": null,
+    "termination_requested": true,
+    "backend": "cpu",
+    "samples": [
+      {
+        "VmHWM": 22482944,
+        "VmRSS": 19755008,
+        "VmSwap": 0,
+        "Pss": 20462592,
+        "MemAvailable": 4563709952,
+        "elapsed_seconds": 0.059513917003641836
+      },
+      {
+        "VmHWM": 2964586496,
+        "VmRSS": 2964586496,
+        "VmSwap": 0,
+        "Pss": 2964478976,
+        "MemAvailable": 4044115968,
+        "elapsed_seconds": 1.1093637500016484
+      },
+      {
+        "VmHWM": 3696558080,
+        "VmRSS": 3696558080,
+        "VmSwap": 0,
+        "Pss": 3697306624,
+        "MemAvailable": 3300782080,
+        "elapsed_seconds": 2.1611934170068707
+      },
+      {
+        "VmHWM": 4326457344,
+        "VmRSS": 4326457344,
+        "VmSwap": 0,
+        "Pss": 4327989248,
+        "MemAvailable": 2819796992,
+        "elapsed_seconds": 3.2269275830039987
+      },
+      {
+        "VmHWM": 4656582656,
+        "VmRSS": 4656582656,
+        "VmSwap": 0,
+        "Pss": 4653660160,
+        "MemAvailable": 2626994176,
+        "elapsed_seconds": 4.89396833300998
+      },
+      {
+        "VmHWM": 4656488448,
+        "VmRSS": 4585398272,
+        "VmSwap": 0,
+        "Pss": 4582477824,
+        "MemAvailable": 2625916928,
+        "elapsed_seconds": 5.948889999999665
+      },
+      {
+        "VmHWM": 4656488448,
+        "VmRSS": 4585938944,
+        "VmSwap": 0,
+        "Pss": 4583018496,
+        "MemAvailable": 2672611328,
+        "elapsed_seconds": 7.007233833006467
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4827033600,
+        "VmSwap": 0,
+        "Pss": 4824864768,
+        "MemAvailable": 1925767168,
+        "elapsed_seconds": 8.24932762500248
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4830240768,
+        "VmSwap": 0,
+        "Pss": 4827328512,
+        "MemAvailable": 1920172032,
+        "elapsed_seconds": 9.43617929200991
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4803129344,
+        "VmSwap": 0,
+        "Pss": 4757748736,
+        "MemAvailable": 1932128256,
+        "elapsed_seconds": 10.586165042011999
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4706111488,
+        "VmSwap": 0,
+        "Pss": 4703184896,
+        "MemAvailable": 1893261312,
+        "elapsed_seconds": 11.78732033300912
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4706111488,
+        "VmSwap": 0,
+        "Pss": 4703184896,
+        "MemAvailable": 1888935936,
+        "elapsed_seconds": 12.917651208001189
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4707209216,
+        "VmSwap": 0,
+        "Pss": 4704283648,
+        "MemAvailable": 1885483008,
+        "elapsed_seconds": 14.027308167002047
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4707700736,
+        "VmSwap": 0,
+        "Pss": 4704776192,
+        "MemAvailable": 1885220864,
+        "elapsed_seconds": 15.162872958011576
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4707700736,
+        "VmSwap": 0,
+        "Pss": 4704776192,
+        "MemAvailable": 1880764416,
+        "elapsed_seconds": 16.26401920799981
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4708048896,
+        "VmSwap": 0,
+        "Pss": 4705124352,
+        "MemAvailable": 1866944512,
+        "elapsed_seconds": 17.35110120801255
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4708048896,
+        "VmSwap": 0,
+        "Pss": 4705124352,
+        "MemAvailable": 1868197888,
+        "elapsed_seconds": 18.451437750001787
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4708802560,
+        "VmSwap": 0,
+        "Pss": 4705879040,
+        "MemAvailable": 1865166848,
+        "elapsed_seconds": 19.59116341700428
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4708802560,
+        "VmSwap": 0,
+        "Pss": 4705868800,
+        "MemAvailable": 1862447104,
+        "elapsed_seconds": 20.67846950000967
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4710768640,
+        "VmSwap": 0,
+        "Pss": 4707845120,
+        "MemAvailable": 1860157440,
+        "elapsed_seconds": 21.761516042010044
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4710776832,
+        "VmSwap": 0,
+        "Pss": 4707852288,
+        "MemAvailable": 1862221824,
+        "elapsed_seconds": 22.845570417004637
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4710838272,
+        "VmSwap": 0,
+        "Pss": 4707912704,
+        "MemAvailable": 1864699904,
+        "elapsed_seconds": 23.935001208010362
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4710871040,
+        "VmSwap": 0,
+        "Pss": 4707947520,
+        "MemAvailable": 1858662400,
+        "elapsed_seconds": 25.056248583001434
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711018496,
+        "VmSwap": 0,
+        "Pss": 4708092928,
+        "MemAvailable": 1854570496,
+        "elapsed_seconds": 26.158416582999052
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711108608,
+        "VmSwap": 0,
+        "Pss": 4708185088,
+        "MemAvailable": 1844068352,
+        "elapsed_seconds": 27.247333833001903
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711133184,
+        "VmSwap": 0,
+        "Pss": 4708209664,
+        "MemAvailable": 1853300736,
+        "elapsed_seconds": 28.366760167002212
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711145472,
+        "VmSwap": 0,
+        "Pss": 4708220928,
+        "MemAvailable": 1855524864,
+        "elapsed_seconds": 29.46586045800359
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711153664,
+        "VmSwap": 0,
+        "Pss": 4708229120,
+        "MemAvailable": 1849573376,
+        "elapsed_seconds": 30.537590292005916
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711219200,
+        "VmSwap": 0,
+        "Pss": 4708284416,
+        "MemAvailable": 1844621312,
+        "elapsed_seconds": 31.629807707999134
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711251968,
+        "VmSwap": 0,
+        "Pss": 4708327424,
+        "MemAvailable": 1851822080,
+        "elapsed_seconds": 32.79246345801221
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711251968,
+        "VmSwap": 0,
+        "Pss": 4708328448,
+        "MemAvailable": 1861328896,
+        "elapsed_seconds": 33.916882667006576
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711317504,
+        "VmSwap": 0,
+        "Pss": 4708393984,
+        "MemAvailable": 1855934464,
+        "elapsed_seconds": 35.00693200000387
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711489536,
+        "VmSwap": 0,
+        "Pss": 4708555776,
+        "MemAvailable": 1847066624,
+        "elapsed_seconds": 36.09573633300897
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711489536,
+        "VmSwap": 0,
+        "Pss": 4708555776,
+        "MemAvailable": 1851293696,
+        "elapsed_seconds": 37.24335408300976
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711489536,
+        "VmSwap": 0,
+        "Pss": 4708555776,
+        "MemAvailable": 1855201280,
+        "elapsed_seconds": 38.32635108300019
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711493632,
+        "VmSwap": 0,
+        "Pss": 4708568064,
+        "MemAvailable": 1863016448,
+        "elapsed_seconds": 39.42280029199901
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711510016,
+        "VmSwap": 0,
+        "Pss": 4708576256,
+        "MemAvailable": 1860579328,
+        "elapsed_seconds": 40.509456708008656
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711514112,
+        "VmSwap": 0,
+        "Pss": 4708590592,
+        "MemAvailable": 1851752448,
+        "elapsed_seconds": 41.615129208003054
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711542784,
+        "VmSwap": 0,
+        "Pss": 4708608000,
+        "MemAvailable": 1853714432,
+        "elapsed_seconds": 42.68562712499988
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4711546880,
+        "VmSwap": 0,
+        "Pss": 4708620288,
+        "MemAvailable": 1858588672,
+        "elapsed_seconds": 43.76548070801073
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4732698624,
+        "VmSwap": 0,
+        "Pss": 4729775104,
+        "MemAvailable": 1679609856,
+        "elapsed_seconds": 44.837235458006035
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4732698624,
+        "VmSwap": 0,
+        "Pss": 4729774080,
+        "MemAvailable": 1674784768,
+        "elapsed_seconds": 46.00429145801172
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4732698624,
+        "VmSwap": 0,
+        "Pss": 4729773056,
+        "MemAvailable": 1673601024,
+        "elapsed_seconds": 47.08623220800655
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4732715008,
+        "VmSwap": 0,
+        "Pss": 4729781248,
+        "MemAvailable": 1668669440,
+        "elapsed_seconds": 48.165284542003064
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4732747776,
+        "VmSwap": 0,
+        "Pss": 4729814016,
+        "MemAvailable": 1668722688,
+        "elapsed_seconds": 49.24951133300783
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4732768256,
+        "VmSwap": 0,
+        "Pss": 4729844736,
+        "MemAvailable": 1672273920,
+        "elapsed_seconds": 50.328800041999784
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4732768256,
+        "VmSwap": 0,
+        "Pss": 4729834496,
+        "MemAvailable": 1668612096,
+        "elapsed_seconds": 51.40649358301016
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734636032,
+        "VmSwap": 0,
+        "Pss": 4731710464,
+        "MemAvailable": 1664200704,
+        "elapsed_seconds": 52.47612787500839
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734636032,
+        "VmSwap": 0,
+        "Pss": 4731711488,
+        "MemAvailable": 1678229504,
+        "elapsed_seconds": 53.562598708012956
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734636032,
+        "VmSwap": 0,
+        "Pss": 4731711488,
+        "MemAvailable": 1677352960,
+        "elapsed_seconds": 54.65748562500812
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734726144,
+        "VmSwap": 0,
+        "Pss": 4731799552,
+        "MemAvailable": 1678548992,
+        "elapsed_seconds": 55.7442815000104
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734730240,
+        "VmSwap": 0,
+        "Pss": 4731806720,
+        "MemAvailable": 1673162752,
+        "elapsed_seconds": 56.84659337501216
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734767104,
+        "VmSwap": 0,
+        "Pss": 4731833344,
+        "MemAvailable": 1669812224,
+        "elapsed_seconds": 57.959165042004315
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734767104,
+        "VmSwap": 0,
+        "Pss": 4731833344,
+        "MemAvailable": 1669144576,
+        "elapsed_seconds": 59.05424050000147
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734840832,
+        "VmSwap": 0,
+        "Pss": 4731917312,
+        "MemAvailable": 1671159808,
+        "elapsed_seconds": 60.13319587500882
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734849024,
+        "VmSwap": 0,
+        "Pss": 4731914240,
+        "MemAvailable": 1669459968,
+        "elapsed_seconds": 61.33996383300109
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4734922752,
+        "VmSwap": 0,
+        "Pss": 4731999232,
+        "MemAvailable": 1673285632,
+        "elapsed_seconds": 62.427402458008146
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735098880,
+        "VmSwap": 0,
+        "Pss": 4732173312,
+        "MemAvailable": 1671675904,
+        "elapsed_seconds": 63.52034904200991
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735143936,
+        "VmSwap": 0,
+        "Pss": 4732210176,
+        "MemAvailable": 1669468160,
+        "elapsed_seconds": 64.5980027080077
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735234048,
+        "VmSwap": 0,
+        "Pss": 4732308480,
+        "MemAvailable": 1676201984,
+        "elapsed_seconds": 65.72050650000165
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735270912,
+        "VmSwap": 0,
+        "Pss": 4732346368,
+        "MemAvailable": 1672769536,
+        "elapsed_seconds": 66.83095741701254
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735295488,
+        "VmSwap": 0,
+        "Pss": 4732371968,
+        "MemAvailable": 1673744384,
+        "elapsed_seconds": 67.91815500000666
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735295488,
+        "VmSwap": 0,
+        "Pss": 4732369920,
+        "MemAvailable": 1670623232,
+        "elapsed_seconds": 68.99851699999999
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735295488,
+        "VmSwap": 0,
+        "Pss": 4732371968,
+        "MemAvailable": 1667678208,
+        "elapsed_seconds": 70.08162241701211
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735295488,
+        "VmSwap": 0,
+        "Pss": 4732370944,
+        "MemAvailable": 1679982592,
+        "elapsed_seconds": 71.16621904200292
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4735295488,
+        "VmSwap": 0,
+        "Pss": 4732371968,
+        "MemAvailable": 1680183296,
+        "elapsed_seconds": 72.25057854200713
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749287424,
+        "VmSwap": 0,
+        "Pss": 4746363904,
+        "MemAvailable": 1525481472,
+        "elapsed_seconds": 73.33248158301285
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749303808,
+        "VmSwap": 0,
+        "Pss": 4746370048,
+        "MemAvailable": 1524637696,
+        "elapsed_seconds": 74.40972437500022
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749398016,
+        "VmSwap": 0,
+        "Pss": 4746463232,
+        "MemAvailable": 1520406528,
+        "elapsed_seconds": 75.49467879200529
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749398016,
+        "VmSwap": 0,
+        "Pss": 4746472448,
+        "MemAvailable": 1520492544,
+        "elapsed_seconds": 76.59571937500732
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749496320,
+        "VmSwap": 0,
+        "Pss": 4746572800,
+        "MemAvailable": 1520017408,
+        "elapsed_seconds": 77.73450566700194
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749496320,
+        "VmSwap": 0,
+        "Pss": 4746572800,
+        "MemAvailable": 1516212224,
+        "elapsed_seconds": 78.83053741700132
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749524992,
+        "VmSwap": 0,
+        "Pss": 4746591232,
+        "MemAvailable": 1514086400,
+        "elapsed_seconds": 79.95196141701308
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749524992,
+        "VmSwap": 0,
+        "Pss": 4746599424,
+        "MemAvailable": 1508327424,
+        "elapsed_seconds": 81.10170537501108
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4749533184,
+        "VmSwap": 0,
+        "Pss": 4746599424,
+        "MemAvailable": 1506414592,
+        "elapsed_seconds": 82.26183400000446
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4713824256,
+        "VmSwap": 0,
+        "Pss": 4710898688,
+        "MemAvailable": 1510694912,
+        "elapsed_seconds": 83.33838454200304
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4713824256,
+        "VmSwap": 0,
+        "Pss": 4710899712,
+        "MemAvailable": 1510457344,
+        "elapsed_seconds": 84.41786854200473
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4713840640,
+        "VmSwap": 0,
+        "Pss": 4710900736,
+        "MemAvailable": 1509867520,
+        "elapsed_seconds": 85.54150120800477
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4713852928,
+        "VmSwap": 0,
+        "Pss": 4710919168,
+        "MemAvailable": 1500426240,
+        "elapsed_seconds": 86.7485045420035
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4713918464,
+        "VmSwap": 0,
+        "Pss": 4710984704,
+        "MemAvailable": 1498214400,
+        "elapsed_seconds": 87.85299083300924
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4713922560,
+        "VmSwap": 0,
+        "Pss": 4710996992,
+        "MemAvailable": 1496805376,
+        "elapsed_seconds": 89.01060291701287
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4713922560,
+        "VmSwap": 0,
+        "Pss": 4710999040,
+        "MemAvailable": 1494609920,
+        "elapsed_seconds": 90.09453183300502
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714024960,
+        "VmSwap": 0,
+        "Pss": 4711091200,
+        "MemAvailable": 1488318464,
+        "elapsed_seconds": 91.16962608300673
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714033152,
+        "VmSwap": 0,
+        "Pss": 4711108608,
+        "MemAvailable": 1487560704,
+        "elapsed_seconds": 92.24742970800435
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714033152,
+        "VmSwap": 0,
+        "Pss": 4711099392,
+        "MemAvailable": 1488252928,
+        "elapsed_seconds": 93.32962595800927
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714037248,
+        "VmSwap": 0,
+        "Pss": 4711111680,
+        "MemAvailable": 1491890176,
+        "elapsed_seconds": 94.40819179201208
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714041344,
+        "VmSwap": 0,
+        "Pss": 4711114752,
+        "MemAvailable": 1490419712,
+        "elapsed_seconds": 95.48524666701269
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714049536,
+        "VmSwap": 0,
+        "Pss": 4711124992,
+        "MemAvailable": 1489440768,
+        "elapsed_seconds": 96.54961937500047
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714053632,
+        "VmSwap": 0,
+        "Pss": 4711130112,
+        "MemAvailable": 1489657856,
+        "elapsed_seconds": 97.64426870801253
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714057728,
+        "VmSwap": 0,
+        "Pss": 4711133184,
+        "MemAvailable": 1488252928,
+        "elapsed_seconds": 98.721345708007
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714057728,
+        "VmSwap": 0,
+        "Pss": 4711134208,
+        "MemAvailable": 1487454208,
+        "elapsed_seconds": 99.80362091700954
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714082304,
+        "VmSwap": 0,
+        "Pss": 4711157760,
+        "MemAvailable": 1495838720,
+        "elapsed_seconds": 100.93432962500083
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714151936,
+        "VmSwap": 0,
+        "Pss": 4711226368,
+        "MemAvailable": 1490386944,
+        "elapsed_seconds": 102.02677945799951
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4714156032,
+        "VmSwap": 0,
+        "Pss": 4711232512,
+        "MemAvailable": 1488211968,
+        "elapsed_seconds": 103.09324708300119
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704559104,
+        "VmSwap": 0,
+        "Pss": 4701634560,
+        "MemAvailable": 1319251968,
+        "elapsed_seconds": 104.16574900000705
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704616448,
+        "VmSwap": 0,
+        "Pss": 4701682688,
+        "MemAvailable": 1318490112,
+        "elapsed_seconds": 105.25469108301331
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704616448,
+        "VmSwap": 0,
+        "Pss": 4701682688,
+        "MemAvailable": 1319505920,
+        "elapsed_seconds": 106.33029950001219
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704665600,
+        "VmSwap": 0,
+        "Pss": 4701725696,
+        "MemAvailable": 1315946496,
+        "elapsed_seconds": 107.40640212500875
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4706504704,
+        "VmSwap": 0,
+        "Pss": 4703578112,
+        "MemAvailable": 1326018560,
+        "elapsed_seconds": 108.48547733300074
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704673792,
+        "VmSwap": 0,
+        "Pss": 4701750272,
+        "MemAvailable": 1334378496,
+        "elapsed_seconds": 109.57054141700792
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704673792,
+        "VmSwap": 0,
+        "Pss": 4701749248,
+        "MemAvailable": 1332260864,
+        "elapsed_seconds": 110.65783579200797
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704763904,
+        "VmSwap": 0,
+        "Pss": 4701838336,
+        "MemAvailable": 1326161920,
+        "elapsed_seconds": 111.73485304201313
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704948224,
+        "VmSwap": 0,
+        "Pss": 4702014464,
+        "MemAvailable": 1326759936,
+        "elapsed_seconds": 112.8145757500024
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4706787328,
+        "VmSwap": 0,
+        "Pss": 4703852544,
+        "MemAvailable": 1321345024,
+        "elapsed_seconds": 113.88568333300645
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704976896,
+        "VmSwap": 0,
+        "Pss": 4702052352,
+        "MemAvailable": 1324822528,
+        "elapsed_seconds": 114.9607134580001
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4704976896,
+        "VmSwap": 0,
+        "Pss": 4702050304,
+        "MemAvailable": 1323896832,
+        "elapsed_seconds": 116.03729508300603
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705026048,
+        "VmSwap": 0,
+        "Pss": 4702102528,
+        "MemAvailable": 1325670400,
+        "elapsed_seconds": 117.12236516700068
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705034240,
+        "VmSwap": 0,
+        "Pss": 4702100480,
+        "MemAvailable": 1329229824,
+        "elapsed_seconds": 118.20625075000862
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705050624,
+        "VmSwap": 0,
+        "Pss": 4702127104,
+        "MemAvailable": 1324183552,
+        "elapsed_seconds": 119.28720666700974
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705050624,
+        "VmSwap": 0,
+        "Pss": 4702126080,
+        "MemAvailable": 1339576320,
+        "elapsed_seconds": 120.360869791999
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705050624,
+        "VmSwap": 0,
+        "Pss": 4702127104,
+        "MemAvailable": 1337389056,
+        "elapsed_seconds": 121.43535687500844
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705054720,
+        "VmSwap": 0,
+        "Pss": 4702127104,
+        "MemAvailable": 1337217024,
+        "elapsed_seconds": 122.51668595800584
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4706881536,
+        "VmSwap": 0,
+        "Pss": 4703958016,
+        "MemAvailable": 1329995776,
+        "elapsed_seconds": 123.59369216700725
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705058816,
+        "VmSwap": 0,
+        "Pss": 4702125056,
+        "MemAvailable": 1328164864,
+        "elapsed_seconds": 124.67065350001212
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705058816,
+        "VmSwap": 0,
+        "Pss": 4702133248,
+        "MemAvailable": 1323438080,
+        "elapsed_seconds": 125.75068770800135
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705071104,
+        "VmSwap": 0,
+        "Pss": 4702145536,
+        "MemAvailable": 1315221504,
+        "elapsed_seconds": 126.82524012500653
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705071104,
+        "VmSwap": 0,
+        "Pss": 4702131200,
+        "MemAvailable": 1318674432,
+        "elapsed_seconds": 127.90563791700697
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705071104,
+        "VmSwap": 0,
+        "Pss": 4702147584,
+        "MemAvailable": 1313288192,
+        "elapsed_seconds": 128.99466850000317
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705071104,
+        "VmSwap": 0,
+        "Pss": 4702146560,
+        "MemAvailable": 1319329792,
+        "elapsed_seconds": 130.0908573330089
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705071104,
+        "VmSwap": 0,
+        "Pss": 4702149632,
+        "MemAvailable": 1318711296,
+        "elapsed_seconds": 131.17425654199906
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705112064,
+        "VmSwap": 0,
+        "Pss": 4702186496,
+        "MemAvailable": 1320239104,
+        "elapsed_seconds": 132.242355667011
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705116160,
+        "VmSwap": 0,
+        "Pss": 4702190592,
+        "MemAvailable": 1310638080,
+        "elapsed_seconds": 133.309120875012
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705116160,
+        "VmSwap": 0,
+        "Pss": 4702190592,
+        "MemAvailable": 1307377664,
+        "elapsed_seconds": 134.38685645800433
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705239040,
+        "VmSwap": 0,
+        "Pss": 4702304256,
+        "MemAvailable": 1304301568,
+        "elapsed_seconds": 135.46429904201068
+      },
+      {
+        "VmHWM": 4861804544,
+        "VmRSS": 4705239040,
+        "VmSwap": 0,
+        "Pss": 4702311424,
+        "MemAvailable": 1306271744,
+        "elapsed_seconds": 136.53380341701268
+      }
+    ],
+    "server_log": "tools/model-benchmark/results/emulator5554-4cpu6gb/cpu/full/qwen3-4b-instruct-2507-text-server.log",
+    "memory_caveat": "Android emulator native process, /proc sampled ~1s; virtual RAM and CPU, not phone requirements; not app lifecycle/camera/GPU/NPU/thermal/power measurement."
+  },
+  "complete": true,
+  "all_cases_succeeded": true,
+  "completed_at": "2026-11-08T03:47:06.037371+00:00"
+}

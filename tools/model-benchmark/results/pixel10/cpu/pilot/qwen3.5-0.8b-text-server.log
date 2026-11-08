@@ -1,0 +1,20 @@
+0.00.028.878 W Setting 'enable_thinking' via --chat-template-kwargs is deprecated. Use --reasoning on / --reasoning off instead.
+0.00.029.426 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.035.455 W srv  llama_server: -----------------
+0.00.035.497 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.035.499 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.035.501 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.035.503 W srv  llama_server: -----------------
+0.00.039.960 I srv    load_model: loading model '/data/local/tmp/allergy-model-benchmark/models/qwen3.5-0.8b/Qwen3.5-0.8B-Q4_K_M.gguf'
+0.01.622.211 I cmn          init: llama threadpool init, n_threads = 6
+0.01.809.500 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 4096, kv_unified = 'false'
+0.01.817.400 I srv  llama_server: model loaded
+0.01.817.408 I srv  llama_server: listening on http://127.0.0.1:18765
+0.02.472.468 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.02.473.104 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.05.767.886 I slot print_timing: id  0 | task 0 | prompt eval time =    2007.39 ms /   404 tokens (    4.97 ms per token,   201.26 tokens per second)
+0.05.767.899 I slot print_timing: id  0 | task 0 |        eval time =    1287.28 ms /    27 tokens (   49.51 ms per token,    20.20 tokens per second)
+0.05.767.901 I slot print_timing: id  0 | task 0 |       total time =    3294.66 ms /   431 tokens
+0.05.767.902 I slot print_timing: id  0 | task 0 |    graphs reused =         26
+0.05.767.968 I slot      release: id  0 | task 0 | stop processing: n_tokens = 430, truncated = 0
+0.06.177.882 I srv    operator(): operator(): cleaning up before exit...

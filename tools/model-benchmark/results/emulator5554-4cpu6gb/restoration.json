@@ -1,0 +1,22 @@
+{
+  "restored": true,
+  "online_cpus": 1,
+  "memory": "MemTotal:        4009484 kB\nMemFree:          116588 kB\nMemAvailable:    2167656 kB\nBuffers:           18536 kB\nCached:          2274468 kB",
+  "preferences_unchanged": null,
+  "userdata_preserved": null,
+  "preference_preservation_verified": false,
+  "application_state": {
+    "package": "com.example.allergycheck",
+    "absent_at_pre_restart_probe": true,
+    "absent_after_restore": true,
+    "installation_changed_by_benchmark": false,
+    "explanation": "The pre-restart run-as probes returned unknown package. Their identical SHA-256 values hashed error text, not XML. Preference preservation was not verified. No application was installed, uninstalled, cleared, or overwritten by this benchmark."
+  },
+  "photo_sha256_verified": {
+    "1698.jpeg": "e89a90ca59fdead51aadd00ac31c71dfbb64ba596a49da102ffcb78512f7f120",
+    "label_test.jpg": "f78b805af82fec44fb95409d6f6aa768f5491bdb4cb19a8c25c9cce3599d65a7",
+    "sample-label.png": "fb96c936cf56d35580f057eb772fee7f3152bdf5345d9565ce4044c242ac94d4"
+  },
+  "test_adb_forward_removed": true,
+  "temporary_native_files_removed": true
+}

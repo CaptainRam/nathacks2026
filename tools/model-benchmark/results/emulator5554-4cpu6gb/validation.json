@@ -1,0 +1,10 @@
+{
+  "all_model_modes_succeeded": true,
+  "counts": {
+    "text": 50,
+    "vision": 12
+  },
+  "model_modes": 8,
+  "physical_device": false,
+  "threads": 4
+}

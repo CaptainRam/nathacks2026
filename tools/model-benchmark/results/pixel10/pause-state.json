@@ -1,0 +1,8 @@
+{
+  "status": "paused_by_user",
+  "at": "2026-11-08T03:05:29.525854+00:00",
+  "phone_model": "Pixel 10",
+  "phone_test_server_running": false,
+  "completed": "CPU pilot for Qwen3.5-0.8B; full five-model phone suite has not started.",
+  "retained": "Results, transferred models, partial transfer, NDK and interrupted Vulkan build retained for resume."
+}

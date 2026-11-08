@@ -1,0 +1,49 @@
+{
+  "ro.product.model": "Pixel 10",
+  "ro.build.version.release": "16",
+  "ro.build.version.sdk": "36",
+  "ro.soc.model": "Tensor G5",
+  "ro.product.cpu.abilist": "arm64-v8a",
+  "ro.hardware.vulkan": "powervr",
+  "physical_device": true,
+  "captured_at": "2026-11-08T03:01:00.320548+00:00",
+  "memory_kib": {
+    "MemTotal": 11841016,
+    "MemAvailable": 3333544,
+    "SwapTotal": 5920504,
+    "SwapFree": 1159504
+  },
+  "initial_thermal": {
+    "battery_celsius": 27.3,
+    "thermal_status": 0.0,
+    "battery_level": 100.0,
+    "externally_powered": true,
+    "sensors": {
+      "LITTLE": {
+        "celsius": 32.0,
+        "status": 0
+      },
+      "soc_therm": {
+        "celsius": 28.703001,
+        "status": 0
+      },
+      "battery": {
+        "celsius": 27.300001,
+        "status": 0
+      },
+      "BIG": {
+        "celsius": 32.0,
+        "status": 0
+      },
+      "MID": {
+        "celsius": 31.000002,
+        "status": 0
+      },
+      "VIRTUAL-SKIN": {
+        "celsius": 27.511524,
+        "status": 0
+      }
+    }
+  },
+  "serial_sha256": "639c6783df17a2465967243228a7b7d46dece0af5dd040f4abdb82911442d8ba"
+}

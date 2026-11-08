@@ -1,0 +1,323 @@
+{
+  "schema_version": 1,
+  "platform": "physical_android",
+  "hardware": {
+    "ro.product.model": "Pixel 10",
+    "ro.build.version.release": "16",
+    "ro.build.version.sdk": "36",
+    "ro.soc.model": "Tensor G5",
+    "ro.product.cpu.abilist": "arm64-v8a",
+    "ro.hardware.vulkan": "powervr",
+    "physical_device": true,
+    "captured_at": "2026-11-08T03:01:00.320548+00:00",
+    "memory_kib": {
+      "MemTotal": 11841016,
+      "MemAvailable": 3333544,
+      "SwapTotal": 5920504,
+      "SwapFree": 1159504
+    },
+    "initial_thermal": {
+      "battery_celsius": 27.3,
+      "thermal_status": 0.0,
+      "battery_level": 100.0,
+      "externally_powered": true,
+      "sensors": {
+        "LITTLE": {
+          "celsius": 32.0,
+          "status": 0
+        },
+        "soc_therm": {
+          "celsius": 28.703001,
+          "status": 0
+        },
+        "battery": {
+          "celsius": 27.300001,
+          "status": 0
+        },
+        "BIG": {
+          "celsius": 32.0,
+          "status": 0
+        },
+        "MID": {
+          "celsius": 31.000002,
+          "status": 0
+        },
+        "VIRTUAL-SKIN": {
+          "celsius": 27.511524,
+          "status": 0
+        }
+      }
+    },
+    "serial_sha256": "639c6783df17a2465967243228a7b7d46dece0af5dd040f4abdb82911442d8ba"
+  },
+  "started_at": "2026-11-08T03:01:01.193039+00:00",
+  "model": {
+    "id": "qwen3.5-0.8b",
+    "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+    "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+    "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+    "bytes": 532517120,
+    "projector": "mmproj-F16.gguf",
+    "projector_bytes": 204987232,
+    "vision": true
+  },
+  "mode": "text",
+  "scope": "pilot",
+  "runtime": "",
+  "settings": {
+    "backend": "cpu",
+    "threads": 6,
+    "temperature": 0,
+    "seed": 0,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "prompt_caching": false,
+    "quantization": "Q4_K_M"
+  },
+  "artifacts": {
+    "model": {
+      "id": "qwen3.5-0.8b",
+      "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+      "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+      "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+      "bytes": 532517120,
+      "projector": "mmproj-F16.gguf",
+      "projector_bytes": 204987232,
+      "vision": true
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+        "bytes": 532517120,
+        "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517"
+      },
+      {
+        "file": "mmproj-F16.gguf",
+        "bytes": 204987232,
+        "sha256": "56e4c6cfe73b0c82e3e82bc518d7591997e61d81f723fc41a586f4fa69ea2453"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "clean_wheat_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "reply": "- Wheat flour\n- sugar\n- milk powder\n- cocoa butter\n- salt\n- soy lecithin\n- peanuts",
+      "reasoning": "",
+      "elapsed_seconds": 3.3663352920048055,
+      "first_token_seconds": 2.0749488750007004,
+      "usage": {
+        "completion_tokens": 27,
+        "prompt_tokens": 404,
+        "total_tokens": 431,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 404,
+        "prompt_ms": 2007.39,
+        "prompt_per_token_ms": 4.968787128712871,
+        "prompt_per_second": 201.25635775808385,
+        "predicted_n": 27,
+        "predicted_ms": 1287.275,
+        "predicted_per_token_ms": 49.510576923076925,
+        "predicted_per_second": 20.197704453205414
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin",
+        "peanuts"
+      ],
+      "score": {
+        "required_total": 6,
+        "matched_required": 6,
+        "matched": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "recall": 1.0,
+        "precision": 0.8571428571428571,
+        "f1": 0.923076923076923,
+        "missing": [],
+        "unexpected": [
+          "peanuts"
+        ],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "thermal_before": {
+        "battery_celsius": 27.3,
+        "thermal_status": 0.0,
+        "battery_level": 100.0,
+        "externally_powered": true,
+        "sensors": {
+          "LITTLE": {
+            "celsius": 36.0,
+            "status": 0
+          },
+          "soc_therm": {
+            "celsius": 28.903002,
+            "status": 0
+          },
+          "battery": {
+            "celsius": 27.300001,
+            "status": 0
+          },
+          "BIG": {
+            "celsius": 37.0,
+            "status": 0
+          },
+          "MID": {
+            "celsius": 36.0,
+            "status": 0
+          },
+          "VIRTUAL-SKIN": {
+            "celsius": 27.488678,
+            "status": 0
+          }
+        }
+      },
+      "thermal_after": {
+        "battery_celsius": 27.3,
+        "thermal_status": 0.0,
+        "battery_level": 100.0,
+        "externally_powered": true,
+        "sensors": {
+          "LITTLE": {
+            "celsius": 50.000004,
+            "status": 0
+          },
+          "soc_therm": {
+            "celsius": 30.758001,
+            "status": 1
+          },
+          "battery": {
+            "celsius": 27.400002,
+            "status": 0
+          },
+          "BIG": {
+            "celsius": 51.000004,
+            "status": 0
+          },
+          "MID": {
+            "celsius": 52.000004,
+            "status": 0
+          },
+          "VIRTUAL-SKIN": {
+            "celsius": 27.427763,
+            "status": 0
+          }
+        }
+      }
+    }
+  ],
+  "performance_repeats": [],
+  "server_metrics": {
+    "command": [
+      "/data/local/tmp/allergy-model-benchmark/runtime/llama-server",
+      "-m",
+      "/data/local/tmp/allergy-model-benchmark/models/qwen3.5-0.8b/Qwen3.5-0.8B-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18765",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "6",
+      "--threads-batch",
+      "6",
+      "--gpu-layers",
+      "0",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 2.2386794999983977,
+    "peak_sampled_rss_bytes": 1271320576,
+    "kernel_peak_rss_bytes": 1271320576,
+    "peak_sampled_pss_bytes": 1268401152,
+    "peak_sampled_swap_bytes": 0,
+    "minimum_system_available_bytes": 2705997824,
+    "requested_backend": "cpu",
+    "offloaded_layers": 0,
+    "samples": [
+      {
+        "VmHWM": 21630976,
+        "VmRSS": 21630976,
+        "VmSwap": 0,
+        "Pss": 29852672,
+        "MemAvailable": 3384213504,
+        "elapsed_seconds": 0.44048395800200524
+      },
+      {
+        "VmHWM": 870080512,
+        "VmRSS": 870080512,
+        "VmSwap": 0,
+        "Pss": 1016173568,
+        "MemAvailable": 2793385984,
+        "elapsed_seconds": 1.8302741669976967
+      },
+      {
+        "VmHWM": 1225658368,
+        "VmRSS": 1225658368,
+        "VmSwap": 0,
+        "Pss": 1222738944,
+        "MemAvailable": 2792488960,
+        "elapsed_seconds": 3.140300125000067
+      },
+      {
+        "VmHWM": 1248071680,
+        "VmRSS": 1248071680,
+        "VmSwap": 0,
+        "Pss": 1245152256,
+        "MemAvailable": 2765656064,
+        "elapsed_seconds": 4.531722457999422
+      },
+      {
+        "VmHWM": 1271320576,
+        "VmRSS": 1271320576,
+        "VmSwap": 0,
+        "Pss": 1268401152,
+        "MemAvailable": 2705997824,
+        "elapsed_seconds": 5.69655645799503
+      }
+    ],
+    "server_log": "/Users/lcwhhh/Program/nathacks2026/tools/model-benchmark/results/pixel10/cpu/pilot/qwen3.5-0.8b-text-server.log",
+    "memory_caveat": "Physical Android native process; /proc sampled about once per second. RSS/PSS exclude unaccounted device/GPU allocations. Native adb shell process is not an Android APK lifecycle measurement."
+  },
+  "complete": true,
+  "completed_at": "2026-11-08T03:01:08.063407+00:00"
+}

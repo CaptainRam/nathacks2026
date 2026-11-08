@@ -1,0 +1,21 @@
+{
+  "runtime_build": "10809",
+  "runtime_commit": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "local_binary_sha256": "db82377125f69e87c06b402bba1af072e2a4c4cc9945946e4d6378cc213a84d7",
+  "origin": "Retained official llama-b10809-bin-android-arm64 release archive",
+  "platform": "Android aarch64",
+  "version_recorded_separately": true,
+  "emulator_binary_sha256": "db82377125f69e87c06b402bba1af072e2a4c4cc9945946e4d6378cc213a84d7",
+  "emulator_binary_matches_local": true,
+  "verified_version_output": "version: 0.4.0-dev (build 10809, commit 5266f24da)\nbuilt with Clang 21.0.0 for Android aarch64\n",
+  "baseline_profile_notes": [
+    "The initial full run started before metadata hardening changes. Native version writes stderr, so original runtime strings may be empty; verified same binary is documented here.",
+    "Native process is intentionally SIGTERMed during normal teardown; returncode143 alone is not OOM evidence. HTTP no-data read timeout180s and wall timeout300s are operational failures, not NONE or an accuracy score."
+  ],
+  "active_profile": {
+    "cpus": 4,
+    "memory_mb": 6144,
+    "native_threads": 4,
+    "gpu_layers": 0
+  }
+}

@@ -1,0 +1,1485 @@
+{
+  "schema_version": 1,
+  "platform": "android_emulator",
+  "physical_device": false,
+  "hardware": {
+    "ro.product.model": "sdk_gphone64_arm64",
+    "ro.build.version.release": "17",
+    "ro.build.version.sdk": "37",
+    "ro.product.cpu.abi": "arm64-v8a",
+    "ro.hardware": "ranchu",
+    "ro.kernel.qemu": "1",
+    "physical_device": false,
+    "platform": "android_emulator",
+    "serial": "emulator-5554",
+    "captured_at": "2026-11-08T03:37:38.232485+00:00",
+    "online_cpu_count": 4,
+    "memory_kib": {
+      "MemTotal": 6062644,
+      "MemAvailable": 4332948,
+      "SwapTotal": 4546976,
+      "SwapFree": 4121248
+    },
+    "disk_before": "Filesystem      1K-blocks    Used Available Use% Mounted on\n/dev/block/dm-5  10167132 2187912   7831764  22% /data/user/0\n",
+    "limitations": "Virtual CPU/memory, CPU backend only. No physical GPU/NPU, thermal, battery, or APK lifecycle conclusions."
+  },
+  "model": {
+    "id": "qwen3.5-2b",
+    "repo": "unsloth/Qwen3.5-2B-GGUF",
+    "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+    "file": "Qwen3.5-2B-Q4_K_M.gguf",
+    "bytes": 1280835840,
+    "projector": "mmproj-F16.gguf",
+    "projector_bytes": 668227264,
+    "vision": true
+  },
+  "mode": "text",
+  "scope": "full",
+  "runtime": "version: 0.4.0-dev (build 10809, commit 5266f24da)\nbuilt with Clang 21.0.0 for Android aarch64\n",
+  "started_at": "2026-11-08T03:40:25.808201+00:00",
+  "settings": {
+    "backend": "cpu",
+    "threads": 4,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "temperature": 0,
+    "seed": 0,
+    "prompt_caching": false,
+    "case_wall_timeout_seconds": 300,
+    "quantization": "Q4_K_M"
+  },
+  "artifacts": {
+    "model": {
+      "id": "qwen3.5-2b",
+      "repo": "unsloth/Qwen3.5-2B-GGUF",
+      "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+      "file": "Qwen3.5-2B-Q4_K_M.gguf",
+      "bytes": 1280835840,
+      "projector": "mmproj-F16.gguf",
+      "projector_bytes": 668227264,
+      "vision": true
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3.5-2B-Q4_K_M.gguf",
+        "bytes": 1280835840,
+        "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223"
+      },
+      {
+        "file": "mmproj-F16.gguf",
+        "bytes": 668227264,
+        "sha256": "7035e9cb8d7c6a9681d07eef9a364783e86ea4cd73faab2eabb4f43a101830c7"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Cocoa butter\n- Cocoa\n- Peanut butter\n- Soy protein concentrate\n- Soy protein isolate\n- Vegetable glycerin\n- Palm kernel oil\n- Sugar\n- Brown rice syrup\n- Invert cane syrup\n- Cane sugar\n- Rice flour\n- Rice starch\n- Chicory root fibre\n- Natural flavour\n- Peanuts\n- Tree nuts\n- Milk\n- Sesame\n- Lait\n- Arachides\n- Soja\n- Arôme naturel\n- Fibre de racine de chicorée\n- Farine de riz\n- Farine de soja\n- Huile végétale\n- Huile de palmiste\n- Beurre d'arachides\n- Beurre\n- Concentré de protéines de soja\n- Isolat de protéines de soja\n- Glycérine\n- Lécithine de soja\n- Phérols\n- O.D.\n- Caca0\n- Ber HRE\n- MEILLEUR AVANT\n- table oil\n- Salt\n- Pea nut\n- Raregridients\n- Ingredients\n- Nutritious\n- Nutrition\n- Allergen\n- Warning\n- Note\n- Heading\n- Brand\n- Date\n- Location\n- Contact\n- Disclaimer\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n- Policy\n- Terms\n- Conditions\n- Privacy\n- Return\n- Refund\n- Warranty\n- Guarantee\n",
+      "reasoning": "",
+      "elapsed_seconds": 13.092860999997356,
+      "first_token_seconds": 3.5263664579979377,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 659,
+        "total_tokens": 1171,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 659,
+        "prompt_ms": 3516.739,
+        "prompt_per_token_ms": 5.336477996965098,
+        "prompt_per_second": 187.3895105664651,
+        "predicted_n": 512,
+        "predicted_ms": 9565.797,
+        "predicted_per_token_ms": 18.719759295499024,
+        "predicted_per_second": 53.41949029443129
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Sugar",
+        "Brown rice syrup",
+        "Invert cane syrup",
+        "Cane sugar",
+        "Rice flour",
+        "Rice starch",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Tree nuts",
+        "Milk",
+        "Sesame",
+        "Lait",
+        "Arachides",
+        "Soja",
+        "Arôme naturel",
+        "Fibre de racine de chicorée",
+        "Farine de riz",
+        "Farine de soja",
+        "Huile végétale",
+        "Huile de palmiste",
+        "Beurre d'arachides",
+        "Beurre",
+        "Concentré de protéines de soja",
+        "Isolat de protéines de soja",
+        "Glycérine",
+        "Lécithine de soja",
+        "Phérols",
+        "O.D",
+        "Caca0",
+        "Ber HRE",
+        "MEILLEUR AVANT",
+        "table oil",
+        "Salt",
+        "Pea nut",
+        "Raregridients",
+        "Ingredients",
+        "Nutritious",
+        "Nutrition",
+        "Allergen",
+        "Warning",
+        "Note",
+        "Heading",
+        "Brand",
+        "Date",
+        "Location",
+        "Contact",
+        "Disclaimer",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee",
+        "Policy",
+        "Terms",
+        "Conditions",
+        "Privacy",
+        "Return",
+        "Refund",
+        "Warranty",
+        "Guarantee"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 15,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.9375,
+        "precision": 0.28846153846153844,
+        "f1": 0.44117647058823534,
+        "missing": [
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Brown rice syrup",
+          "Invert cane syrup",
+          "Cane sugar",
+          "Tree nuts",
+          "Milk",
+          "Sesame",
+          "Lait",
+          "Soja",
+          "Beurre",
+          "Phérols",
+          "O.D",
+          "Caca0",
+          "Ber HRE",
+          "MEILLEUR AVANT",
+          "table oil",
+          "Pea nut",
+          "Raregridients",
+          "Ingredients",
+          "Nutritious",
+          "Nutrition",
+          "Allergen",
+          "Warning",
+          "Note",
+          "Heading",
+          "Brand",
+          "Date",
+          "Location",
+          "Contact",
+          "Disclaimer",
+          "Terms",
+          "Conditions",
+          "Privacy",
+          "Return",
+          "Refund",
+          "Warranty",
+          "Guarantee",
+          "Policy"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 80,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "missing": [
+              "invert cane syrup",
+              "cane sugar",
+              "brown rice syrup"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "real_upright_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- sugar\n- cane syrup\n- brown rice syrup\n- soy protein isolate\n- vegetable glycerin\n- palm kernel oil\n- flour\n- rice flour\n- chicory root fibre\n- natural flavour\n- peanuts\n- cocoa butter\n- peanut butter\n- table oil\n- salt\n- rice starch\n- soy lecithin\n- tocopherols\n- arachides\n- soja\n- milk\n- sesame\n- tree nuts",
+      "reasoning": "",
+      "elapsed_seconds": 4.918418583001767,
+      "first_token_seconds": 3.2169034170001396,
+      "usage": {
+        "completion_tokens": 96,
+        "prompt_tokens": 640,
+        "total_tokens": 736,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 640,
+        "prompt_ms": 3172.31,
+        "prompt_per_token_ms": 4.956734375,
+        "prompt_per_second": 201.74573102880868,
+        "predicted_n": 96,
+        "predicted_ms": 1701.858,
+        "predicted_per_token_ms": 17.914294736842105,
+        "predicted_per_second": 55.82134349634342
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "sugar",
+        "cane syrup",
+        "brown rice syrup",
+        "soy protein isolate",
+        "vegetable glycerin",
+        "palm kernel oil",
+        "flour",
+        "rice flour",
+        "chicory root fibre",
+        "natural flavour",
+        "peanuts",
+        "cocoa butter",
+        "peanut butter",
+        "table oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "tocopherols",
+        "arachides",
+        "soja",
+        "milk",
+        "sesame",
+        "tree nuts"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 14,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Peanut butter",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 0.875,
+        "precision": 0.6363636363636364,
+        "f1": 0.7368421052631579,
+        "missing": [
+          "Cocoa",
+          "Soy protein concentrate"
+        ],
+        "unexpected": [
+          "cane syrup",
+          "brown rice syrup",
+          "flour",
+          "table oil",
+          "soja",
+          "milk",
+          "sesame",
+          "tree nuts"
+        ],
+        "optional_found": [],
+        "duplicate_count": 1,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "missing": [
+              "invert cane syrup",
+              "cane sugar",
+              "brown rice syrup"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "real_sideways_unmodified",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Cocoa butter\n- Cocoa\n- Peanut butter\n- Peanut\n- Soy protein concentrate\n- Soy protein isolate\n- Vegetable glycerin\n- Palm kernel oil\n- Salt\n- Rice starch\n- Rice flour\n- Chicory root\n- Fibre de racine de chicorée\n- Natural flavour\n- Arôme naturel\n- Arachides\n- Beurre d'arachides\n- Huile végétale\n- Huile de palmiste\n- Sel\n- Concentré de protéines de soja\n- Lécithine de soja\n- Glycérine\n- Isolat de protéines de soja\n- Sucres\n- Sirop de canne inverti\n- Sucre de canne\n- Sirop de riz brun\n- Riz\n- Farine de riz\n- Farine de soja\n- Arôme naturel\n- Arachides\n- Beurre d'édients\n- Sucres\n- Sirop de canne inverti\n- Sucre de canne\n- Sirop de riz brun\n- Isolat de protéines de soja\n- Glycérine\n- Lécithine de soja\n- Glycérine\n- Isolat de protéines de soja\n- Huile de palmiste\n- Farine de soja\n- Fibre de racine de chicorée\n- Arôme naturel\n- Arachides\n- Beurre d'édients\n- Sucres\n- Sirop de canne inverti\n- Sucre de canne\n- Sirop de riz brun\n- Isolat de protéines de soja\n- Glycérine\n- Glycérine\n- Lécithine de soja\n- Glycérine\n- Isolat de protéines de soja\n- Huile de palmiste\n- Farine de soja\n- Fibre de racine de chicorée\n- Arôme naturel\n- Arachides\n- Beurre d'édients\n- Sucres\n- Sirop de canne inverti\n- Sucre de canne\n- Sirop de riz brun\n- Isolat de protéines de soja\n- Glycérine\n- Glycérine\n- Lécithine de soja\n- Glycérine\n- Isolat de protéines de soja\n- Huile de palmiste\n- Farine de soja\n- Fibre de racine de chicorée\n- Arôme naturel\n- Arachides",
+      "reasoning": "",
+      "elapsed_seconds": 12.40526850000606,
+      "first_token_seconds": 3.39116216700495,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 699,
+        "total_tokens": 1211,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 699,
+        "prompt_ms": 3344.5,
+        "prompt_per_token_ms": 4.784692417739628,
+        "prompt_per_second": 208.99985050082225,
+        "predicted_n": 512,
+        "predicted_ms": 9015.834,
+        "predicted_per_token_ms": 17.643510763209395,
+        "predicted_per_second": 56.678062173726794
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Peanut",
+        "Soy protein concentrate",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Salt",
+        "Rice starch",
+        "Rice flour",
+        "Chicory root",
+        "Fibre de racine de chicorée",
+        "Natural flavour",
+        "Arôme naturel",
+        "Arachides",
+        "Beurre d'arachides",
+        "Huile végétale",
+        "Huile de palmiste",
+        "Sel",
+        "Concentré de protéines de soja",
+        "Lécithine de soja",
+        "Glycérine",
+        "Isolat de protéines de soja",
+        "Sucres",
+        "Sirop de canne inverti",
+        "Sucre de canne",
+        "Sirop de riz brun",
+        "Riz",
+        "Farine de riz",
+        "Farine de soja",
+        "Arôme naturel",
+        "Arachides",
+        "Beurre d'édients",
+        "Sucres",
+        "Sirop de canne inverti",
+        "Sucre de canne",
+        "Sirop de riz brun",
+        "Isolat de protéines de soja",
+        "Glycérine",
+        "Lécithine de soja",
+        "Glycérine",
+        "Isolat de protéines de soja",
+        "Huile de palmiste",
+        "Farine de soja",
+        "Fibre de racine de chicorée",
+        "Arôme naturel",
+        "Arachides",
+        "Beurre d'édients",
+        "Sucres",
+        "Sirop de canne inverti",
+        "Sucre de canne",
+        "Sirop de riz brun",
+        "Isolat de protéines de soja",
+        "Glycérine",
+        "Glycérine",
+        "Lécithine de soja",
+        "Glycérine",
+        "Isolat de protéines de soja",
+        "Huile de palmiste",
+        "Farine de soja",
+        "Fibre de racine de chicorée",
+        "Arôme naturel",
+        "Arachides",
+        "Beurre d'édients",
+        "Sucres",
+        "Sirop de canne inverti",
+        "Sucre de canne",
+        "Sirop de riz brun",
+        "Isolat de protéines de soja",
+        "Glycérine",
+        "Glycérine",
+        "Lécithine de soja",
+        "Glycérine",
+        "Isolat de protéines de soja",
+        "Huile de palmiste",
+        "Farine de soja",
+        "Fibre de racine de chicorée",
+        "Arôme naturel",
+        "Arachides"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 15,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.9375,
+        "precision": 0.7142857142857143,
+        "f1": 0.8108108108108109,
+        "missing": [
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Chicory root",
+          "Sirop de canne inverti",
+          "Sucre de canne",
+          "Sirop de riz brun",
+          "Riz",
+          "Beurre d'édients"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 57,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "missing": [
+              "invert cane syrup",
+              "cane sugar",
+              "brown rice syrup"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "clean_wheat_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "reply": "- Wheat flour\n- sugar\n- milk powder\n- cocoa butter\n- salt\n- soy lecithin",
+      "reasoning": "",
+      "elapsed_seconds": 2.45666324999911,
+      "first_token_seconds": 2.031993500000681,
+      "usage": {
+        "completion_tokens": 24,
+        "prompt_tokens": 404,
+        "total_tokens": 428,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 404,
+        "prompt_ms": 1987.756,
+        "prompt_per_token_ms": 4.920188118811882,
+        "prompt_per_second": 203.24426136809547,
+        "predicted_n": 24,
+        "predicted_ms": 424.752,
+        "predicted_per_token_ms": 18.467478260869566,
+        "predicted_per_second": 54.14924473575169
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "score": {
+        "required_total": 6,
+        "matched_required": 6,
+        "matched": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "clean_granola_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "reply": "- Whole grain oats\n- honey\n- almonds\n- sunflower oil\n- dried cranberries\n- pumpkin seeds\n- sea salt\n- cinnamon",
+      "reasoning": "",
+      "elapsed_seconds": 2.792515250002907,
+      "first_token_seconds": 2.07301604100212,
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 435,
+        "total_tokens": 467,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 435,
+        "prompt_ms": 2064.311,
+        "prompt_per_token_ms": 4.7455425287356325,
+        "prompt_per_second": 210.72406241113862,
+        "predicted_n": 32,
+        "predicted_ms": 719.87,
+        "predicted_per_token_ms": 23.221612903225807,
+        "predicted_per_second": 43.06333087918652
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Whole grain oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "score": {
+        "required_total": 8,
+        "matched_required": 8,
+        "matched": [
+          "Whole grain oats",
+          "honey",
+          "almonds",
+          "sunflower oil",
+          "dried cranberries",
+          "pumpkin seeds",
+          "sea salt",
+          "cinnamon"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "synthetic_ocr_typos",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_ocr_typos",
+      "reply": "- Whey flour\n- skim milk powder\n- canola oil\n- sea salt",
+      "reasoning": "",
+      "elapsed_seconds": 2.320015124998463,
+      "first_token_seconds": 2.0145645829979912,
+      "usage": {
+        "completion_tokens": 19,
+        "prompt_tokens": 422,
+        "total_tokens": 441,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 422,
+        "prompt_ms": 2007.88,
+        "prompt_per_token_ms": 4.758009478672986,
+        "prompt_per_second": 210.17192262485804,
+        "predicted_n": 19,
+        "predicted_ms": 305.133,
+        "predicted_per_token_ms": 16.951833333333333,
+        "predicted_per_second": 58.990669642418226
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Whey flour",
+        "skim milk powder",
+        "canola oil",
+        "sea salt"
+      ],
+      "score": {
+        "required_total": 4,
+        "matched_required": 3,
+        "matched": [
+          "skim milk powder",
+          "canola oil",
+          "sea salt"
+        ],
+        "recall": 0.75,
+        "precision": 0.75,
+        "f1": 0.75,
+        "missing": [
+          "Wheat flour"
+        ],
+        "unexpected": [
+          "Whey flour"
+        ],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "synthetic_nested",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_nested",
+      "reply": "- Chocolate\n- sugar\n- cocoa butter\n- soy lecithin\n- wheat flour\n- salt\n- citric acid",
+      "reasoning": "",
+      "elapsed_seconds": 2.422862916995655,
+      "first_token_seconds": 1.9576031249962398,
+      "usage": {
+        "completion_tokens": 28,
+        "prompt_tokens": 414,
+        "total_tokens": 442,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 414,
+        "prompt_ms": 1952.012,
+        "prompt_per_token_ms": 4.7150048309178745,
+        "prompt_per_second": 212.08886010946654,
+        "predicted_n": 28,
+        "predicted_ms": 464.956,
+        "predicted_per_token_ms": 17.220592592592592,
+        "predicted_per_second": 58.07001092576501
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Chocolate",
+        "sugar",
+        "cocoa butter",
+        "soy lecithin",
+        "wheat flour",
+        "salt",
+        "citric acid"
+      ],
+      "score": {
+        "required_total": 4,
+        "matched_required": 4,
+        "matched": [
+          "Chocolate (sugar, cocoa butter, soy lecithin)",
+          "wheat flour",
+          "salt",
+          "citric acid"
+        ],
+        "recall": 1.0,
+        "precision": 0.5714285714285714,
+        "f1": 0.7272727272727273,
+        "missing": [],
+        "unexpected": [
+          "sugar",
+          "cocoa butter",
+          "soy lecithin"
+        ],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Chocolate (sugar, cocoa butter, soy lecithin)",
+            "missing": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "synthetic_bilingual",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_bilingual",
+      "reply": "- sugar\n- milk powder\n- cocoa butter",
+      "reasoning": "",
+      "elapsed_seconds": 2.0847986250009853,
+      "first_token_seconds": 1.8998368750035297,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 400,
+        "total_tokens": 411,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 400,
+        "prompt_ms": 1894.276,
+        "prompt_per_token_ms": 4.73569,
+        "prompt_per_second": 211.16247051644007,
+        "predicted_n": 11,
+        "predicted_ms": 184.566,
+        "predicted_per_token_ms": 18.4566,
+        "predicted_per_second": 54.18116012700064
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "sugar",
+        "milk powder",
+        "cocoa butter"
+      ],
+      "score": {
+        "required_total": 3,
+        "matched_required": 3,
+        "matched": [
+          "sugar",
+          "milk powder",
+          "cocoa butter"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "negative_nutrition_only",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "negative_nutrition_only",
+      "reply": "NONE",
+      "reasoning": "",
+      "elapsed_seconds": 1.9709082079934888,
+      "first_token_seconds": 1.9540993749978952,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 417,
+        "total_tokens": 419,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 417,
+        "prompt_ms": 1948.2,
+        "prompt_per_token_ms": 4.6719424460431656,
+        "prompt_per_second": 214.0437326763166,
+        "predicted_n": 2,
+        "predicted_ms": 16.615,
+        "predicted_per_token_ms": 16.615,
+        "predicted_per_second": 60.186578393018365
+      },
+      "finish_reason": "stop",
+      "ingredients": [],
+      "score": {
+        "required_total": 0,
+        "matched_required": 0,
+        "matched": [],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": true,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    },
+    {
+      "id": "negative_precaution_only",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "negative_precaution_only",
+      "reply": "NONE",
+      "reasoning": "",
+      "elapsed_seconds": 1.9352117079979507,
+      "first_token_seconds": 1.9185140829940792,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 395,
+        "total_tokens": 397,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 395,
+        "prompt_ms": 1912.056,
+        "prompt_per_token_ms": 4.840648101265823,
+        "prompt_per_second": 206.58390758429667,
+        "predicted_n": 2,
+        "predicted_ms": 16.315,
+        "predicted_per_token_ms": 16.315,
+        "predicted_per_second": 61.293288384921844
+      },
+      "finish_reason": "stop",
+      "ingredients": [],
+      "score": {
+        "required_total": 0,
+        "matched_required": 0,
+        "matched": [],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": true,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    }
+  ],
+  "performance_repeats": [],
+  "server_metrics": {
+    "command": [
+      "/data/local/tmp/allergy-emulator-benchmark/runtime/llama-server",
+      "-m",
+      "/data/local/tmp/allergy-emulator-benchmark/models/qwen3.5-2b/Qwen3.5-2B-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18775",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "4",
+      "--threads-batch",
+      "4",
+      "--gpu-layers",
+      "0",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 2.5713560840013088,
+    "peak_sampled_rss_bytes": 2986409984,
+    "kernel_peak_rss_bytes": 2986409984,
+    "peak_sampled_pss_bytes": 2983290880,
+    "peak_sampled_swap_bytes": 0,
+    "minimum_system_available_bytes": 2752552960,
+    "process_returncode": 0,
+    "exited_before_cleanup": null,
+    "termination_requested": true,
+    "backend": "cpu",
+    "samples": [
+      {
+        "VmHWM": 22048768,
+        "VmRSS": 22048768,
+        "VmSwap": 0,
+        "Pss": 21886976,
+        "MemAvailable": 4335218688,
+        "elapsed_seconds": 0.056024042001808994
+      },
+      {
+        "VmHWM": 1606893568,
+        "VmRSS": 1606893568,
+        "VmSwap": 0,
+        "Pss": 1606273024,
+        "MemAvailable": 4031270912,
+        "elapsed_seconds": 1.0960687090046122
+      },
+      {
+        "VmHWM": 2436620288,
+        "VmRSS": 2436620288,
+        "VmSwap": 0,
+        "Pss": 2440095744,
+        "MemAvailable": 3277922304,
+        "elapsed_seconds": 2.1369138340014615
+      },
+      {
+        "VmHWM": 2725322752,
+        "VmRSS": 2725322752,
+        "VmSwap": 0,
+        "Pss": 2722203648,
+        "MemAvailable": 2998833152,
+        "elapsed_seconds": 3.204320374999952
+      },
+      {
+        "VmHWM": 2725322752,
+        "VmRSS": 2725322752,
+        "VmSwap": 0,
+        "Pss": 2722203648,
+        "MemAvailable": 3004043264,
+        "elapsed_seconds": 4.273577625004691
+      },
+      {
+        "VmHWM": 2745516032,
+        "VmRSS": 2745516032,
+        "VmSwap": 0,
+        "Pss": 2742396928,
+        "MemAvailable": 2990051328,
+        "elapsed_seconds": 5.354658834003203
+      },
+      {
+        "VmHWM": 2768764928,
+        "VmRSS": 2768764928,
+        "VmSwap": 0,
+        "Pss": 2765645824,
+        "MemAvailable": 2966175744,
+        "elapsed_seconds": 6.438961792002374
+      },
+      {
+        "VmHWM": 2768764928,
+        "VmRSS": 2768764928,
+        "VmSwap": 0,
+        "Pss": 2765645824,
+        "MemAvailable": 2992136192,
+        "elapsed_seconds": 7.514361667002959
+      },
+      {
+        "VmHWM": 2768764928,
+        "VmRSS": 2768764928,
+        "VmSwap": 0,
+        "Pss": 2765645824,
+        "MemAvailable": 2990960640,
+        "elapsed_seconds": 8.587426917001721
+      },
+      {
+        "VmHWM": 2768781312,
+        "VmRSS": 2768781312,
+        "VmSwap": 0,
+        "Pss": 2765662208,
+        "MemAvailable": 2992381952,
+        "elapsed_seconds": 9.667574541999784
+      },
+      {
+        "VmHWM": 2768781312,
+        "VmRSS": 2768781312,
+        "VmSwap": 0,
+        "Pss": 2765662208,
+        "MemAvailable": 2980229120,
+        "elapsed_seconds": 10.738304625003366
+      },
+      {
+        "VmHWM": 2768818176,
+        "VmRSS": 2768818176,
+        "VmSwap": 0,
+        "Pss": 2765699072,
+        "MemAvailable": 2982612992,
+        "elapsed_seconds": 11.822199041998829
+      },
+      {
+        "VmHWM": 2768818176,
+        "VmRSS": 2768818176,
+        "VmSwap": 0,
+        "Pss": 2765699072,
+        "MemAvailable": 2981933056,
+        "elapsed_seconds": 12.89982733400393
+      },
+      {
+        "VmHWM": 2768826368,
+        "VmRSS": 2768826368,
+        "VmSwap": 0,
+        "Pss": 2765707264,
+        "MemAvailable": 2996879360,
+        "elapsed_seconds": 13.963642000002437
+      },
+      {
+        "VmHWM": 2768826368,
+        "VmRSS": 2768826368,
+        "VmSwap": 0,
+        "Pss": 2765707264,
+        "MemAvailable": 3003416576,
+        "elapsed_seconds": 15.038366000000678
+      },
+      {
+        "VmHWM": 2843541504,
+        "VmRSS": 2800594944,
+        "VmSwap": 0,
+        "Pss": 2797475840,
+        "MemAvailable": 2949660672,
+        "elapsed_seconds": 16.127893959004723
+      },
+      {
+        "VmHWM": 2843541504,
+        "VmRSS": 2800594944,
+        "VmSwap": 0,
+        "Pss": 2797475840,
+        "MemAvailable": 2948378624,
+        "elapsed_seconds": 17.200878458999796
+      },
+      {
+        "VmHWM": 2843541504,
+        "VmRSS": 2820800512,
+        "VmSwap": 0,
+        "Pss": 2817681408,
+        "MemAvailable": 2928672768,
+        "elapsed_seconds": 18.257658667003852
+      },
+      {
+        "VmHWM": 2843987968,
+        "VmRSS": 2843987968,
+        "VmSwap": 0,
+        "Pss": 2840868864,
+        "MemAvailable": 2930589696,
+        "elapsed_seconds": 19.322487292003643
+      },
+      {
+        "VmHWM": 2843987968,
+        "VmRSS": 2843987968,
+        "VmSwap": 0,
+        "Pss": 2840868864,
+        "MemAvailable": 2925940736,
+        "elapsed_seconds": 20.39930583399837
+      },
+      {
+        "VmHWM": 2913230848,
+        "VmRSS": 2870333440,
+        "VmSwap": 0,
+        "Pss": 2867214336,
+        "MemAvailable": 2960474112,
+        "elapsed_seconds": 21.466127625004447
+      },
+      {
+        "VmHWM": 2913230848,
+        "VmRSS": 2870333440,
+        "VmSwap": 0,
+        "Pss": 2867214336,
+        "MemAvailable": 2956206080,
+        "elapsed_seconds": 22.54709145900415
+      },
+      {
+        "VmHWM": 2913230848,
+        "VmRSS": 2890539008,
+        "VmSwap": 0,
+        "Pss": 2887419904,
+        "MemAvailable": 2924167168,
+        "elapsed_seconds": 23.61769233400264
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2892460032,
+        "elapsed_seconds": 24.73418125000171
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2892390400,
+        "elapsed_seconds": 25.811082792002708
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2895413248,
+        "elapsed_seconds": 26.87375737500406
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2903064576,
+        "elapsed_seconds": 27.94490429200232
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2897297408,
+        "elapsed_seconds": 29.013892542003305
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2892275712,
+        "elapsed_seconds": 30.08382666700345
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2893496320,
+        "elapsed_seconds": 31.15474620900204
+      },
+      {
+        "VmHWM": 2913726464,
+        "VmRSS": 2913726464,
+        "VmSwap": 0,
+        "Pss": 2910607360,
+        "MemAvailable": 2887335936,
+        "elapsed_seconds": 32.23095904200454
+      },
+      {
+        "VmHWM": 2986061824,
+        "VmRSS": 2943016960,
+        "VmSwap": 0,
+        "Pss": 2939897856,
+        "MemAvailable": 2850172928,
+        "elapsed_seconds": 33.304070375001174
+      },
+      {
+        "VmHWM": 2986061824,
+        "VmRSS": 2943016960,
+        "VmSwap": 0,
+        "Pss": 2939897856,
+        "MemAvailable": 2847100928,
+        "elapsed_seconds": 34.3701396250035
+      },
+      {
+        "VmHWM": 2986409984,
+        "VmRSS": 2986409984,
+        "VmSwap": 0,
+        "Pss": 2983290880,
+        "MemAvailable": 2804998144,
+        "elapsed_seconds": 35.43813804200181
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2943029248,
+        "VmSwap": 0,
+        "Pss": 2939910144,
+        "MemAvailable": 2816929792,
+        "elapsed_seconds": 36.50744870900235
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2980360192,
+        "VmSwap": 0,
+        "Pss": 2977241088,
+        "MemAvailable": 2791063552,
+        "elapsed_seconds": 37.582234792003874
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2936958976,
+        "VmSwap": 0,
+        "Pss": 2933839872,
+        "MemAvailable": 2812416000,
+        "elapsed_seconds": 38.653653125002165
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2957164544,
+        "VmSwap": 0,
+        "Pss": 2954045440,
+        "MemAvailable": 2791735296,
+        "elapsed_seconds": 39.7208955419992
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2936958976,
+        "VmSwap": 0,
+        "Pss": 2933839872,
+        "MemAvailable": 2796298240,
+        "elapsed_seconds": 40.78957912500482
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2936958976,
+        "VmSwap": 0,
+        "Pss": 2933839872,
+        "MemAvailable": 2792292352,
+        "elapsed_seconds": 41.863565416999336
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2980352000,
+        "VmSwap": 0,
+        "Pss": 2977232896,
+        "MemAvailable": 2760192000,
+        "elapsed_seconds": 42.93820937500277
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2936967168,
+        "VmSwap": 0,
+        "Pss": 2933848064,
+        "MemAvailable": 2794520576,
+        "elapsed_seconds": 44.006466459002695
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2980360192,
+        "VmSwap": 0,
+        "Pss": 2977241088,
+        "MemAvailable": 2752552960,
+        "elapsed_seconds": 45.081493834004505
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2936967168,
+        "VmSwap": 0,
+        "Pss": 2933848064,
+        "MemAvailable": 2794938368,
+        "elapsed_seconds": 46.15359508400434
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2936967168,
+        "VmSwap": 0,
+        "Pss": 2933848064,
+        "MemAvailable": 2768551936,
+        "elapsed_seconds": 47.22189866700501
+      },
+      {
+        "VmHWM": 2986143744,
+        "VmRSS": 2936967168,
+        "VmSwap": 0,
+        "Pss": 2933848064,
+        "MemAvailable": 2784763904,
+        "elapsed_seconds": 48.29387341700203
+      }
+    ],
+    "server_log": "tools/model-benchmark/results/emulator5554-4cpu6gb/cpu/full/qwen3.5-2b-text-server.log",
+    "memory_caveat": "Android emulator native process, /proc sampled ~1s; virtual RAM and CPU, not phone requirements; not app lifecycle/camera/GPU/NPU/thermal/power measurement."
+  },
+  "complete": true,
+  "all_cases_succeeded": true,
+  "completed_at": "2026-11-08T03:41:15.018758+00:00"
+}

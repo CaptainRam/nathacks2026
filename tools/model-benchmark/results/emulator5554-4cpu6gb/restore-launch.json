@@ -1,0 +1,19 @@
+{
+  "pid": 28184,
+  "command": [
+    "/Users/lcwhhh/Library/Android/sdk/emulator/emulator",
+    "-avd",
+    "Medium_Phone_API_37.0",
+    "-port",
+    "5554",
+    "-cores",
+    "1",
+    "-memory",
+    "4096",
+    "-no-snapshot",
+    "-no-audio",
+    "-no-boot-anim"
+  ],
+  "restoring_original_live_resources": true,
+  "no_wipe_data": true
+}

@@ -1,0 +1,6 @@
+{
+  "preference_preservation_verified": false,
+  "preferences_unchanged_after_cold_boot": null,
+  "userdata_preserved": null,
+  "correction": "The pre-restart run-as probes returned unknown package. Their identical SHA-256 values hashed error text, not XML. Preference preservation was not verified. No application was installed, uninstalled, cleared, or overwritten by this benchmark."
+}

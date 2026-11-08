@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "platform": "android_emulator",
+  "physical_device": false,
+  "hardware": {
+    "ro.product.model": "sdk_gphone64_arm64",
+    "ro.build.version.release": "17",
+    "ro.build.version.sdk": "37",
+    "ro.product.cpu.abi": "arm64-v8a",
+    "ro.hardware": "ranchu",
+    "ro.kernel.qemu": "1",
+    "physical_device": false,
+    "platform": "android_emulator",
+    "serial": "emulator-5554",
+    "captured_at": "2026-11-08T03:12:16.519360+00:00",
+    "online_cpu_count": 1,
+    "memory_kib": {
+      "MemTotal": 4009484,
+      "MemAvailable": 2159428,
+      "SwapTotal": 3007108,
+      "SwapFree": 2280752
+    },
+    "disk_before": "Filesystem      1K-blocks    Used Available Use% Mounted on\n/dev/block/dm-5  10167132 1997000   8022676  20% /data/user/0\n",
+    "limitations": "Virtual CPU/memory, CPU backend only. No physical GPU/NPU, thermal, battery, or APK lifecycle conclusions."
+  },
+  "model": {
+    "id": "qwen3.5-0.8b",
+    "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+    "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+    "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+    "bytes": 532517120,
+    "projector": "mmproj-F16.gguf",
+    "projector_bytes": 204987232,
+    "vision": true
+  },
+  "mode": "text",
+  "scope": "pilot",
+  "runtime": "",
+  "started_at": "2026-11-08T03:12:22.240355+00:00",
+  "settings": {
+    "backend": "cpu",
+    "threads": 1,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "temperature": 0,
+    "seed": 0,
+    "prompt_caching": false,
+    "case_wall_timeout_seconds": 300,
+    "quantization": "Q4_K_M"
+  },
+  "artifacts": {
+    "model": {
+      "id": "qwen3.5-0.8b",
+      "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+      "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+      "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+      "bytes": 532517120,
+      "projector": "mmproj-F16.gguf",
+      "projector_bytes": 204987232,
+      "vision": true
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+        "bytes": 532517120,
+        "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517"
+      },
+      {
+        "file": "mmproj-F16.gguf",
+        "bytes": 204987232,
+        "sha256": "56e4c6cfe73b0c82e3e82bc518d7591997e61d81f723fc41a586f4fa69ea2453"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "clean_wheat_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "reply": "- Wheat flour\n- sugar\n- milk powder\n- cocoa butter\n- salt\n- soy lecithin\n- peanuts",
+      "reasoning": "",
+      "elapsed_seconds": 4.280480041998089,
+      "first_token_seconds": 3.6217302500008373,
+      "usage": {
+        "completion_tokens": 27,
+        "prompt_tokens": 404,
+        "total_tokens": 431,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 404,
+        "prompt_ms": 3595.705,
+        "prompt_per_token_ms": 8.900259900990099,
+        "prompt_per_second": 112.35626949374324,
+        "predicted_n": 27,
+        "predicted_ms": 653.09,
+        "predicted_per_token_ms": 25.118846153846157,
+        "predicted_per_second": 39.81074583901147
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin",
+        "peanuts"
+      ],
+      "score": {
+        "required_total": 6,
+        "matched_required": 6,
+        "matched": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "recall": 1.0,
+        "precision": 0.8571428571428571,
+        "f1": 0.923076923076923,
+        "missing": [],
+        "unexpected": [
+          "peanuts"
+        ],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "execution_platform": "android_emulator"
+    }
+  ],
+  "performance_repeats": [],
+  "server_metrics": {
+    "command": [
+      "/data/local/tmp/allergy-emulator-benchmark/runtime/llama-server",
+      "-m",
+      "/data/local/tmp/allergy-emulator-benchmark/models/qwen3.5-0.8b/Qwen3.5-0.8B-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18775",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "1",
+      "--threads-batch",
+      "1",
+      "--gpu-layers",
+      "0",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 10.77366020900081,
+    "peak_sampled_rss_bytes": 1270321152,
+    "kernel_peak_rss_bytes": 1270321152,
+    "peak_sampled_pss_bytes": 1267356672,
+    "peak_sampled_swap_bytes": 0,
+    "minimum_system_available_bytes": 1623298048,
+    "process_returncode": 0,
+    "backend": "cpu",
+    "samples": [
+      {
+        "VmHWM": 17309696,
+        "VmRSS": 17309696,
+        "VmSwap": 0,
+        "Pss": 15773696,
+        "MemAvailable": 2255450112,
+        "elapsed_seconds": 0.16615900000033434
+      },
+      {
+        "VmHWM": 117547008,
+        "VmRSS": 40144896,
+        "VmSwap": 0,
+        "Pss": 38051840,
+        "MemAvailable": 2068144128,
+        "elapsed_seconds": 1.2655797920015175
+      },
+      {
+        "VmHWM": 653144064,
+        "VmRSS": 653144064,
+        "VmSwap": 0,
+        "Pss": 650293248,
+        "MemAvailable": 1937059840,
+        "elapsed_seconds": 2.3464852920005796
+      },
+      {
+        "VmHWM": 970846208,
+        "VmRSS": 970846208,
+        "VmSwap": 0,
+        "Pss": 968918016,
+        "MemAvailable": 1902534656,
+        "elapsed_seconds": 3.7459730839982512
+      },
+      {
+        "VmHWM": 984342528,
+        "VmRSS": 984342528,
+        "VmSwap": 0,
+        "Pss": 982880256,
+        "MemAvailable": 1879040000,
+        "elapsed_seconds": 6.776918374998786
+      },
+      {
+        "VmHWM": 995504128,
+        "VmRSS": 995504128,
+        "VmSwap": 0,
+        "Pss": 993488896,
+        "MemAvailable": 1851158528,
+        "elapsed_seconds": 7.975973624998005
+      },
+      {
+        "VmHWM": 1154088960,
+        "VmRSS": 1140637696,
+        "VmSwap": 0,
+        "Pss": 1138844672,
+        "MemAvailable": 1710149632,
+        "elapsed_seconds": 9.176349792003748
+      },
+      {
+        "VmHWM": 1216061440,
+        "VmRSS": 1216061440,
+        "VmSwap": 0,
+        "Pss": 1213273088,
+        "MemAvailable": 1684287488,
+        "elapsed_seconds": 10.371199834000436
+      },
+      {
+        "VmHWM": 1225879552,
+        "VmRSS": 1225879552,
+        "VmSwap": 0,
+        "Pss": 1222915072,
+        "MemAvailable": 1664708608,
+        "elapsed_seconds": 11.437802792002913
+      },
+      {
+        "VmHWM": 1226842112,
+        "VmRSS": 1226842112,
+        "VmSwap": 0,
+        "Pss": 1223877632,
+        "MemAvailable": 1655902208,
+        "elapsed_seconds": 12.576966833999904
+      },
+      {
+        "VmHWM": 1247047680,
+        "VmRSS": 1247047680,
+        "VmSwap": 0,
+        "Pss": 1244083200,
+        "MemAvailable": 1653710848,
+        "elapsed_seconds": 13.723482875000627
+      },
+      {
+        "VmHWM": 1270321152,
+        "VmRSS": 1270321152,
+        "VmSwap": 0,
+        "Pss": 1267356672,
+        "MemAvailable": 1623298048,
+        "elapsed_seconds": 14.791902541997842
+      }
+    ],
+    "server_log": "/Users/lcwhhh/Program/nathacks2026/tools/model-benchmark/results/emulator5554/cpu/pilot/qwen3.5-0.8b-text-server.log",
+    "memory_caveat": "Android emulator native process, /proc sampled ~1s; virtual RAM and CPU, not phone requirements; not app lifecycle/camera/GPU/NPU/thermal/power measurement."
+  },
+  "complete": true,
+  "all_cases_succeeded": true,
+  "completed_at": "2026-11-08T03:12:37.626997+00:00"
+}

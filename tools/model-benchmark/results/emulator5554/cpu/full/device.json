@@ -1,0 +1,21 @@
+{
+  "ro.product.model": "sdk_gphone64_arm64",
+  "ro.build.version.release": "17",
+  "ro.build.version.sdk": "37",
+  "ro.product.cpu.abi": "arm64-v8a",
+  "ro.hardware": "ranchu",
+  "ro.kernel.qemu": "1",
+  "physical_device": false,
+  "platform": "android_emulator",
+  "serial": "emulator-5554",
+  "captured_at": "2026-11-08T03:13:19.478096+00:00",
+  "online_cpu_count": 1,
+  "memory_kib": {
+    "MemTotal": 4009484,
+    "MemAvailable": 2250364,
+    "SwapTotal": 3007108,
+    "SwapFree": 2272896
+  },
+  "disk_before": "Filesystem      1K-blocks    Used Available Use% Mounted on\n/dev/block/dm-5  10167132 2517056   7502620  26% /data/user/0\n",
+  "limitations": "Virtual CPU/memory, CPU backend only. No physical GPU/NPU, thermal, battery, or APK lifecycle conclusions."
+}

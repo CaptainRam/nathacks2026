@@ -1,0 +1,7 @@
+{
+  "boot_completed": true,
+  "online_cpus": "4",
+  "memory": "MemTotal:        6062644 kB\nMemFree:         3764648 kB\nMemAvailable:    4995360 kB\nBuffers:           17972 kB\nCached:          1464576 kB",
+  "runtime_present": "-rwxrwxrwx 1 shell shell 7192 2026-09-04 09:29 /data/local/tmp/allergy-emulator-benchmark/runtime/llama-server",
+  "host_available_bytes": 5799313408
+}

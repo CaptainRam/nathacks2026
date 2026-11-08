@@ -15,7 +15,8 @@ python3 tools/model-benchmark/score.py --self-check
 python3 tools/model-benchmark/download_models.py
 python3 tools/model-benchmark/run_benchmark.py
 python3 tools/model-benchmark/run_benchmark.py --performance-only --note 'No concurrent model inference'
-python3 tools/model-benchmark/analyze_results.py
+python3 tools/model-benchmark/compile_analysis.py
+python3 tools/model-benchmark/analyze_results.py --app-classes /tmp/allergy-emulator-analysis/classes
 python3 tools/model-benchmark/build_report.py
 ```
 
@@ -31,7 +32,7 @@ The first long-input attempt timed out after 120 s and remains as evidence. The 
 
 ## Downstream app behavior and mobile limitations
 
-`analyze_results.py` compiles `AnalyzeLists.java` temporarily and invokes the actual compiled app `Analyzer`. It requires a JDK and the app's compiled debug Java classes; build those with Gradle if absent. It checks that the 10 deterministic baseline reports match the emulator. For model lists, it preserves the original OCR text for allergen statements, including in image experiments. This simulates a hybrid integration; it does not mean the app already uses these Qwen models or that a vision model alone read the warning correctly.
+`compile_analysis.py` builds the current pure Java rule sources in an isolated temporary directory, with a source/class hash manifest. This avoids stale Gradle classes from another build without modifying app code or producing an APK. `analyze_results.py` then compiles `AnalyzeLists.java` temporarily and invokes that `Analyzer`. A JDK and Android SDK jar are required. The 10 deterministic baseline reports were checked against the emulator. For model lists, it preserves the original OCR text for allergen statements, including in image experiments. This simulates a hybrid integration; it does not mean the app already uses these Qwen models or that a vision model alone read the warning correctly.
 
 Mac RSS is sampled every 100 ms and does not account for every shared GPU allocation. File size, Mac RSS and emulator memory are not Android RAM minima. No physical phone was available. Android deployment support, source-attributed external phone measurements, and explicitly estimated starting device classes are documented in `phone-research.md` and the final report. Switching the app from its MediaPipe `.task` reader requires runtime, model-format and prompt-template integration work.
 
@@ -43,3 +44,27 @@ Mac RSS is sampled every 100 ms and does not account for every shared GPU alloca
 - `cases.json`, `fixtures/`, `dataset_notes.md`: inputs, reference answers, provenance and ambiguity notes.
 
 This harness adds diagnostic tools and an opt-in instrumentation test; it does not change production scanning behavior.
+
+## Android emulator run
+
+`run_emulator_benchmark.py` runs the same model inputs inside an Android ARM64 native process. It verifies `ro.kernel.qemu=1`, uses one CPU thread by default, and writes to `results/emulator5554/`. Physical-device results are separate. A matching Android `llama-server` and its shared libraries must first be copied into `/data/local/tmp/allergy-emulator-benchmark/runtime/`.
+
+```sh
+python3 tools/model-benchmark/run_emulator_benchmark.py --scope full
+python3 tools/model-benchmark/build_emulator_report.py
+```
+
+Each model is deployed with checksum verification, tested serially, then its newly copied emulator weights are removed to bound disk use. Host weights remain available. A pilot can use `--model qwen3.5-0.8b --mode text --scope pilot`. Output-token limits, prompts and contexts match the Mac protocol. Default HTTP no-data timeout is 180 seconds and the request wall limit is 300 seconds; either is an operational failure, not a NONE answer. Native processes are intentionally terminated on teardown, so exit code143 alone does not establish OOM.
+
+The emulator run measures virtual CPU and memory in the guest, including sampled RSS/PSS/swap. It does not measure handset GPU/NPU acceleration, temperature, battery life or the app's full camera/UI lifecycle. CPU and Metal numerical differences can change model outputs even with the same seed; emulator replies are scored independently. Runtime build and binary verification are recorded in `results/emulator5554/runtime.json`.
+
+The completed comparison is under `results/emulator5554-4cpu6gb/`: 4 virtual CPUs, 6144 MB requested RAM, four native inference threads. The original 1-CPU/4096-MB diagnostic remains separately under `results/emulator5554/`. Launch the temporary resource profile first (exact launch parameters are saved in `launch.json`), copy the matching native runtime, then reproduce with:
+
+```sh
+python3 tools/model-benchmark/run_emulator_benchmark.py --scope full --threads 4 --output tools/model-benchmark/results/emulator5554-4cpu6gb/cpu/full
+python3 tools/model-benchmark/compile_analysis.py
+python3 tools/model-benchmark/analyze_results.py --app-classes /tmp/allergy-emulator-analysis/classes --results-dir tools/model-benchmark/results/emulator5554-4cpu6gb/cpu/full --output tools/model-benchmark/results/emulator5554-4cpu6gb/downstream-allergens.json
+python3 tools/model-benchmark/build_emulator_report.py --results tools/model-benchmark/results/emulator5554-4cpu6gb
+```
+
+After this run the original 1-CPU/4096-MB live resources were restored, the three photo hashes matched, and the temporary native runtime/weights were removed from the emulator. Preference preservation was not verified: the pre-restart `run-as` probe already returned an unknown-package error, and its text had initially been hashed incorrectly. That validation was withdrawn in `restoration.json`; no app installation or removal was performed by this harness.
