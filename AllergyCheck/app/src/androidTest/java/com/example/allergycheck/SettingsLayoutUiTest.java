@@ -1,25 +1,50 @@
 package com.example.allergycheck;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /** The settings section switch, its entry points, and the unsaved-draft guard. Saves nothing. */
 @RunWith(AndroidJUnit4.class)
 public class SettingsLayoutUiTest {
     private final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private Set<String> originalAllergens;
+
+    @Before
+    public void clearAllergens() {
+        originalAllergens = new HashSet<>(AllergenPreferences.selectedAllergenIds(
+                context, AllergenDictionaryProvider.get(context)));
+        AllergenPreferences.saveSelectedAllergenIds(context, Collections.emptySet());
+    }
+
+    @After
+    public void restoreAllergens() {
+        AllergenPreferences.saveSelectedAllergenIds(context, originalAllergens);
+    }
 
     @Test
     public void opensOnAllergensAndSwitchesToModelWithoutSaveBar() {
@@ -59,6 +84,78 @@ public class SettingsLayoutUiTest {
                 assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
             });
         }
+    }
+
+    @Test
+    public void keepEditingLeavesOneDialogThatSurvivesRotation() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                editDraftAndPressBack(activity);
+                // A second back request while the question is up must not stack another one.
+                activity.getOnBackPressedDispatcher().onBackPressed();
+                assertEquals(1, activity.getSupportFragmentManager().getFragments().size());
+            });
+            scenario.recreate();
+            scenario.onActivity(activity -> click(activity, DialogInterface.BUTTON_NEUTRAL));
+            // Dialog button handlers and the dismissal run on a later main-thread turn.
+            scenario.onActivity(activity -> {
+                activity.getSupportFragmentManager().executePendingTransactions();
+                assertNull(discardDialog(activity));
+                assertFalse(activity.isFinishing());
+            });
+        }
+    }
+
+    @Test
+    public void discardLeavesWithoutSaving() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                editDraftAndPressBack(activity);
+                click(activity, DialogInterface.BUTTON_NEGATIVE);
+            });
+            // Blocks until the activity finishes, which the posted handler does.
+            assertEquals(Activity.RESULT_CANCELED, scenario.getResult().getResultCode());
+        }
+        assertTrue(AllergenPreferences.selectedAllergenIds(
+                context, AllergenDictionaryProvider.get(context)).isEmpty());
+    }
+
+    @Test
+    public void saveFromDialogStoresDraftAndReturnsOk() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                editDraftAndPressBack(activity);
+                click(activity, DialogInterface.BUTTON_POSITIVE);
+            });
+            assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+        }
+        String firstId = AllergenDictionaryProvider.get(context).allergens().iterator().next().id();
+        assertEquals(Collections.singleton(firstId), AllergenPreferences.selectedAllergenIds(
+                context, AllergenDictionaryProvider.get(context)));
+    }
+
+    /** Checks the first allergen chip, then asks to leave, which must raise the question. */
+    private static void editDraftAndPressBack(SettingsActivity activity) {
+        ViewGroup chips = activity.findViewById(R.id.allergen_options_container);
+        chips.getChildAt(0).performClick();
+        activity.getOnBackPressedDispatcher().onBackPressed();
+        assertNotNull(discardDialog(activity));
+        assertFalse(activity.isFinishing());
+    }
+
+    private static DialogFragment discardDialog(SettingsActivity activity) {
+        return (DialogFragment) activity.getSupportFragmentManager()
+                .findFragmentByTag(SettingsActivity.DiscardChangesDialog.TAG);
+    }
+
+    private static void click(SettingsActivity activity, int which) {
+        DialogFragment fragment = discardDialog(activity);
+        assertNotNull(fragment);
+        AlertDialog dialog = (AlertDialog) fragment.requireDialog();
+        assertTrue(dialog.getButton(which).performClick());
     }
 
     private static void assertSection(SettingsActivity activity, boolean model) {

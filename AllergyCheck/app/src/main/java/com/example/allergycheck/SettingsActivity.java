@@ -1,5 +1,6 @@
 package com.example.allergycheck;
 
+import android.app.Dialog;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -18,6 +19,8 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenDictionary;
@@ -64,21 +67,43 @@ public class SettingsActivity extends AppCompatActivity {
     private View modelDetails;
     private View modelTerms;
     private MaterialButton modelDetailsButton;
+    /** Pill colors, resolved once: they only differ between FAILED and every other state. */
+    private ColorStateList pillBackground;
+    private ColorStateList pillFailedBackground;
+    private int pillText;
+    private int pillFailedText;
     private final LocalModelManager.Listener modelListener = this::renderModelStatus;
 
     /** Leaving with an unsaved allergen draft asks first instead of dropping it silently. */
     private final OnBackPressedCallback unsavedChangesCallback = new OnBackPressedCallback(false) {
         @Override
         public void handleOnBackPressed() {
-            new MaterialAlertDialogBuilder(SettingsActivity.this)
-                    .setTitle(R.string.discard_changes_title)
-                    .setMessage(R.string.discard_changes_message)
-                    .setPositiveButton(R.string.save, (dialog, which) -> savePreferences())
-                    .setNegativeButton(R.string.discard, (dialog, which) -> finish())
-                    .setNeutralButton(R.string.keep_editing, null)
-                    .show();
+            FragmentManager fragments = getSupportFragmentManager();
+            // showNow commits at once, so a fast second tap finds this one and adds no other.
+            if (fragments.findFragmentByTag(DiscardChangesDialog.TAG) == null
+                    && !fragments.isStateSaved()) {
+                new DiscardChangesDialog().showNow(fragments, DiscardChangesDialog.TAG);
+            }
         }
     };
+
+    /** A fragment, so the question survives rotation instead of leaking its window. */
+    public static class DiscardChangesDialog extends DialogFragment {
+        static final String TAG = "discard_changes_dialog";
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            SettingsActivity activity = (SettingsActivity) requireActivity();
+            return new MaterialAlertDialogBuilder(activity)
+                    .setTitle(R.string.discard_changes_title)
+                    .setMessage(R.string.discard_changes_message)
+                    .setPositiveButton(R.string.save, (dialog, which) -> activity.savePreferences())
+                    .setNegativeButton(R.string.discard, (dialog, which) -> activity.finish())
+                    .setNeutralButton(R.string.keep_editing, null)
+                    .create();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +140,14 @@ public class SettingsActivity extends AppCompatActivity {
 
         modelManager = LocalModelManager.get(this);
         modelAvailability = findViewById(R.id.model_availability);
+        pillBackground = ColorStateList.valueOf(MaterialColors.getColor(modelAvailability,
+                com.google.android.material.R.attr.colorPrimaryContainer));
+        pillFailedBackground = ColorStateList.valueOf(MaterialColors.getColor(modelAvailability,
+                com.google.android.material.R.attr.colorErrorContainer));
+        pillText = MaterialColors.getColor(modelAvailability,
+                com.google.android.material.R.attr.colorOnPrimaryContainer);
+        pillFailedText = MaterialColors.getColor(modelAvailability,
+                com.google.android.material.R.attr.colorOnErrorContainer);
         modelStatus = findViewById(R.id.model_download_status);
         modelProgress = findViewById(R.id.model_download_progress);
         modelDownloadButton = findViewById(R.id.model_download_button);
@@ -221,12 +254,8 @@ public class SettingsActivity extends AppCompatActivity {
         boolean installing = status.state == LocalModelManager.State.INSTALLING;
         boolean failed = status.state == LocalModelManager.State.FAILED;
         modelAvailability.setText(badgeText(status, installed));
-        modelAvailability.setBackgroundTintList(ColorStateList.valueOf(MaterialColors.getColor(
-                modelAvailability, failed ? com.google.android.material.R.attr.colorErrorContainer
-                        : com.google.android.material.R.attr.colorPrimaryContainer)));
-        modelAvailability.setTextColor(MaterialColors.getColor(modelAvailability,
-                failed ? com.google.android.material.R.attr.colorOnErrorContainer
-                        : com.google.android.material.R.attr.colorOnPrimaryContainer));
+        modelAvailability.setBackgroundTintList(failed ? pillFailedBackground : pillBackground);
+        modelAvailability.setTextColor(failed ? pillFailedText : pillText);
         modelDownloadButton.setVisibility(installed ? View.GONE : View.VISIBLE);
         modelDownloadButton.setEnabled(!installed && !downloading && !installing);
         modelDownloadButton.setText(failed

@@ -64,13 +64,11 @@
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
     <!-- Settings: every section is a title and one hint above a card. -->
-    <style name="Widget.AllergyCheck.SettingsSectionTitle" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
+    <style name="Widget.AllergyCheck.SettingsSectionTitle" parent="Widget.AllergyCheck.ResultSectionTitle">
         <item name="android:layout_marginHorizontal">4dp</item>
-        <item name="android:accessibilityHeading">true</item>
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
     <style name="Widget.AllergyCheck.SettingsSectionHint" parent="">
         <item name="android:layout_width">match_parent</item>

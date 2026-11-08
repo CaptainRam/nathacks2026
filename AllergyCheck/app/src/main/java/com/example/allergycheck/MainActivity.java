@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         resultView = new AnalysisResultView(analysisResult);
         ocrPipeline = new OcrPipeline();
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
-        modelDownloadController = new ModelDownloadController(this);
+        modelDownloadController = new ModelDownloadController(this, () -> openSettings(true));
 
         getSupportFragmentManager().setFragmentResultListener(
                 AllergenPreferencesDialogFragment.RESULT_KEY, this, (key, result) ->
@@ -783,7 +783,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openSettings() {
-        settingsLauncher.launch(new Intent(this, SettingsActivity.class));
+        openSettings(false);
+    }
+
+    /** Always through the launcher, so a save from either section refreshes this screen. */
+    private void openSettings(boolean showModel) {
+        settingsLauncher.launch(new Intent(this, SettingsActivity.class)
+                .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, showModel));
     }
 
     private void openAllergenPreferences() {
