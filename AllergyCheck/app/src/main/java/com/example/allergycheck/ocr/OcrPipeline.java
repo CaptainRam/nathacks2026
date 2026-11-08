@@ -2,7 +2,6 @@ package com.example.allergycheck.ocr;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,14 +10,11 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -212,7 +208,7 @@ public final class OcrPipeline {
                         recycle(decoded, prepared, ownsDecoded);
                         return;
                     }
-                    OcrResult result = filter.apply(toResult(text));
+                    OcrResult result = filter.apply(MlKitLines.toResult(text));
                     if (result.isEmpty() && prepared != decoded) {
                         retryOnDecoded(decoded, prepared, ownsDecoded, callback);
                     } else {
@@ -245,7 +241,7 @@ public final class OcrPipeline {
                         recycle(decoded, prepared, ownsDecoded);
                         return;
                     }
-                    OcrResult result = filter.apply(toResult(text));
+                    OcrResult result = filter.apply(MlKitLines.toResult(text));
                     recycle(decoded, prepared, ownsDecoded);
                     callback.onSuccess(result);
                 })
@@ -296,19 +292,5 @@ public final class OcrPipeline {
             decoded.recycle();
         }
     }
-
-    /** Flattens ML Kit's block/line tree into our engine-independent {@link OcrResult}. */
-    private static OcrResult toResult(Text text) {
-        List<OcrLine> lines = new ArrayList<>();
-        List<Text.TextBlock> blocks = text.getTextBlocks();
-        for (int blockIndex = 0; blockIndex < blocks.size(); blockIndex++) {
-            List<Text.Line> blockLines = blocks.get(blockIndex).getLines();
-            for (int lineIndex = 0; lineIndex < blockLines.size(); lineIndex++) {
-                Text.Line line = blockLines.get(lineIndex);
-                Rect box = line.getBoundingBox();
-                lines.add(new OcrLine(line.getText(), box, blockIndex, lineIndex, line.getAngle()));
-            }
-        }
-        return OcrResult.of(lines);
-    }
 }
+

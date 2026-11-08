@@ -26,4 +26,19 @@
     <color name="status_warning_container">#FFDEA6</color>
     <color name="status_on_warning_container">#271900</color>
     <color name="scan_line_center">#80386A4A</color>
+    <!-- Capture-screen overlay, drawn on top of the live camera.
+
+         These are the app palette's own tones, pinned to whichever tone is the light one, and
+         deliberately NOT overridden in values-night: what sits behind the overlay is camera output,
+         whose brightness has nothing to do with the app theme. The first version of the guide took
+         its stroke from colorOutlineVariant, which resolves to #3D493E at night — a dark green line,
+         invisible over a preview. -->
+    <color name="camera_scrim">#66000000</color>
+    <!-- md_theme_outline_variant, light tone. -->
+    <color name="camera_guide_neutral">#D3DCD0</color>
+    <!-- status_warning_container, light tone: the same amber the analysis uses for "check this". -->
+    <color name="camera_guide_adjust">#FFDEA6</color>
+    <!-- md_theme_primary, night tone: the brand green at the one tone that reads on a camera image. -->
+    <color name="camera_guide_ready">#9ED4AE</color>
+    <color name="camera_line_highlight">#26FFFFFF</color>
 </resources>

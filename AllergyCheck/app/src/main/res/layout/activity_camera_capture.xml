@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Built to read as an AllergyCheck screen that happens to contain a camera, not as a stock camera
+     app. Everything here mirrors activity_main: the same 64dp top-bar row with a tonal icon button,
+     the same bounded 520dp content column inside 20dp padding, the same filled MaterialCardView with
+     ShapeAppearance.AllergyCheck.Large around the image, the same bg_pill status chip on the preview,
+     and the same PrimaryButton for the action. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/camera_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical"
+    tools:context=".CameraCaptureActivity">
+
+    <!-- Top bar -->
+    <LinearLayout
+        android:id="@+id/camera_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="20dp"
+        android:paddingVertical="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/capture_close_button"
+            style="@style/Widget.AllergyCheck.TonalIconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@string/cancel"
+            app:icon="@drawable/ic_arrow_back" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:accessibilityHeading="true"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/camera_title"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <!-- Checkable, so its fill reports whether auto-capture is armed. Checkable is set in code
+             rather than XML because the attribute differs between MaterialButton and the platform
+             button it extends. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/capture_auto_button"
+            style="@style/Widget.AllergyCheck.TonalIconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="12dp"
+            android:contentDescription="@string/camera_auto_capture"
+            android:tooltipText="@string/camera_auto_capture_hint"
+            app:backgroundTint="@color/camera_auto_background"
+            app:icon="@drawable/ic_auto_capture"
+            app:iconTint="@color/camera_auto_icon" />
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:id="@+id/camera_column"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="520dp">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="@string/camera_subtitle"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <!-- Matches photo_card: filled card, 28dp shape, no elevation, so the live preview sits
+                 in the page exactly the way a chosen photo does. -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/camera_card"
+                style="@style/Widget.Material3.CardView.Filled"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="16dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:cardElevation="0dp"
+                app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Large"
+                app:strokeWidth="0dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.camera.view.PreviewView
+                        android:id="@+id/camera_preview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <!-- Must stay the same size and position as the PreviewView: the overlay reports
+                         its guide window in view coordinates and the analysis maps recognised text
+                         into that same space, so any offset between the two would put the brackets
+                         off the text. -->
+                    <com.example.allergycheck.GuideOverlayView
+                        android:id="@+id/guide_overlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:importantForAccessibility="no" />
+
+                    <!-- The same chip the home screen puts on a chosen photo: bg_pill, an 18dp icon,
+                         and a labelLarge caption. Tinted per verdict in CaptureFeedback. -->
+                    <LinearLayout
+                        android:id="@+id/capture_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|start"
+                        android:layout_margin="12dp"
+                        android:background="@drawable/bg_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="10dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="6dp"
+                        android:screenReaderFocusable="true">
+
+                        <ImageView
+                            android:id="@+id/capture_status_icon"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_search"
+                            app:tint="?attr/colorOnPrimaryContainer" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/capture_status_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:text="@string/camera_state_searching"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            android:textColor="?attr/colorOnPrimaryContainer" />
+                    </LinearLayout>
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/capture_button"
+                style="@style/Widget.AllergyCheck.PrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:enabled="false"
+                android:text="@string/take_photo"
+                app:icon="@drawable/ic_camera"
+                app:iconGravity="textStart" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>
