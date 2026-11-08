@@ -10,6 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Keeps incomplete downloads separate from the model files the inference engine can see. */
@@ -28,7 +29,7 @@ public final class ModelFiles {
         if (isModel(preferred)) {
             return preferred;
         }
-        File[] candidates = directory.listFiles(file -> file.getName().endsWith(".task")
+        File[] candidates = directory.listFiles(file -> hasModelExtension(file)
                 && isModel(file));
         if (candidates == null || candidates.length == 0) {
             return null;
@@ -93,7 +94,7 @@ public final class ModelFiles {
     /** Removes model files and the download only; never traverses or deletes other app files. */
     public void delete() throws IOException {
         IOException failure = null;
-        File[] models = directory.listFiles(file -> file.getName().endsWith(".task")
+        File[] models = directory.listFiles(file -> hasModelExtension(file)
                 && !file.isDirectory());
         if (models == null && directory.exists()) {
             failure = new IOException("The model directory could not be read");
@@ -124,6 +125,10 @@ public final class ModelFiles {
 
     private static boolean isModel(File file) {
         return Files.isRegularFile(file.toPath(), LinkOption.NOFOLLOW_LINKS) && file.length() > 0;
+    }
+
+    private static boolean hasModelExtension(File file) {
+        return file.getName().toLowerCase(Locale.ROOT).endsWith(".task");
     }
 
     private static IOException collect(IOException first, IOException next) {

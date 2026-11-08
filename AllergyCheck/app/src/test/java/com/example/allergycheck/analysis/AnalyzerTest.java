@@ -120,11 +120,17 @@ public class AnalyzerTest {
     }
 
     @Test
-    public void secondIngredientsHeadingDoesNotRestartTheList() {
-        ParsedLabel label = LabelParser.parse("Ingredients: sugar, milk. Ingredients: cocoa, salt.");
-        assertEquals(4, label.ingredients().size());
+    public void secondIngredientsHeadingEndsTheListButLaterStatementsAreRetained() {
+        String raw = "Ingredients: sugar, milk. INGREDIENTS: cocoa, salt. May contain peanuts.";
+        ParsedLabel label = LabelParser.parse(raw);
+        assertEquals(2, label.ingredients().size());
+        assertEquals("sugar", label.ingredients().get(0).original());
+        assertEquals("milk", label.ingredients().get(1).original());
+        assertEquals(1, label.statements().size());
+        assertEquals(ParsedLabel.Kind.MAY_CONTAIN, label.statements().get(0).kind());
         assertEquals(AnalysisReport.Status.CONTAINS,
-                run("Ingredients: sugar, milk. Ingredients: cocoa, salt.", a("MILK")).overall());
+                run(raw, a("MILK")).overall());
+        assertEquals(AnalysisReport.Status.MAY_CONTAIN, run(raw, a("PEANUTS")).overall());
     }
 
     /** Matching is English-only by design; a French panel is kept as text but recognises nothing. */

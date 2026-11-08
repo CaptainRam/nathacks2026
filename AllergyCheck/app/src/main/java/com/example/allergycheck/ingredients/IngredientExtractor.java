@@ -1,249 +1,30 @@
 package com.example.allergycheck.ingredients;
 
+import com.example.allergycheck.analysis.LabelSyntax;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * Pulls the ingredient list out of a label's OCR text — and does nothing else.
- *
- * <p>No allergen matching, no interpretation: it finds the "Ingredients" heading, takes the list
- * that follows, and splits it into items exactly as written. If there is no heading it returns an
- * empty list rather than guessing which text might be ingredients.
- *
- * <p>Pure Java with no Android dependencies, so it is unit-testable without a device.
+ * Pulls the first English ingredient list out of a label's OCR text, without allergen matching.
+ * Uncertain punctuation is retained; recognized warnings and package panels end the list.
+ * Pure Java so the same structural rules are used by the fallback parser and JVM tests.
  */
 public final class IngredientExtractor {
+    private IngredientExtractor() { }
 
-    /** "Ingredients:", "INGREDIENTS", "Ingredient list -". English only. */
-    private static final Pattern HEADING = Pattern.compile(
-            "(?iu)\\bingredients?\\b(?:\\s+list)?(\\s*[:\\-–])?");
-
-    /** Phrases that start a different panel of the package; the list ends before them. */
-    private static final Pattern TERMINATOR = Pattern.compile(
-            "(?iu)\\b(?:nutrition(?:al)? (?:facts|information)|distributed by"
-                    + "|manufactured (?:by|for)|best before|net w(?:eigh)?t|keep refrigerated"
-                    + "|store in)\\b");
-
-    /**
-     * Allergen statements that often follow the list without a full stop ("…, salt Contains: milk").
-     * They are not ingredients, so the list ends before them. "Contains 2% or less of:" has no colon
-     * straight after "contains" and so does not match — it is part of the list.
-     */
-    private static final Pattern STATEMENT_START = Pattern.compile(
-            "(?iu)\\b(?:may contain|might contain|contains?\\s*:"
-                    + "|(?:produced|made|manufactured|processed|packaged|packed)\\s+(?:in|on)\\s+(?:a|an|the)?\\s*"
-                    + "(?:facility|plant|factory|equipment|line))");
-
-    /**
-     * "Contains 2% or less of:", "Less than 2% of", "and 2% or less of each of the following:" …
-     * A label's note about quantities, not an ingredient, so it is removed from the list.
-     */
-    private static final Pattern MINOR_MARKER = Pattern.compile(
-            "(?iu)\\b(?:and\\s+)?(?:contains?\\s+)?"
-                    + "(?:less\\s+than\\s+\\d+(?:[.,]\\d+)?\\s*%|\\d+(?:[.,]\\d+)?\\s*%\\s+or\\s+less)"
-                    + "\\s+of(?:\\s+each\\s+of)?(?:\\s+the\\s+following)?\\s*:?");
-
-    private IngredientExtractor() {
-    }
-
-    /**
-     * Returns the ingredients in label order, each trimmed but otherwise as written (a bracketed
-     * sub-list stays attached to its parent). Empty when no ingredient heading is found.
-     */
     public static List<String> extract(String rawText) {
-        if (rawText == null) {
-            return Collections.emptyList();
-        }
-        String text = prepare(rawText);
+        if (rawText == null) return Collections.emptyList();
+        String text = LabelSyntax.prepare(rawText);
+        LabelSyntax.Heading heading = LabelSyntax.findHeading(text);
+        if (heading == null) return Collections.emptyList();
 
-        int bodyStart = findHeadingEnd(text);
-        if (bodyStart < 0) {
-            return Collections.emptyList();
-        }
-        String body = text.substring(bodyStart);
-
-        int end = body.length();
-        end = Math.min(end, firstAtDepthZero(HEADING, body));       // a second-language list
-        end = Math.min(end, firstAtDepthZero(TERMINATOR, body));
-        end = Math.min(end, firstAtDepthZero(STATEMENT_START, body));
-        end = Math.min(end, firstFullStop(body));
-        body = removeMinorMarkers(body.substring(0, end));
-
-        List<String> items = new ArrayList<>();
-        for (String part : splitTopLevel(body)) {
+        List<String> ingredients = new ArrayList<>();
+        for (String part : LabelSyntax.splitItems(LabelSyntax.ingredientBody(text, heading))) {
             String item = part.trim().replaceAll("^[\\s:;,\\-–•·*]+|[\\s:;,\\-–•·*.]+$", "");
-            if (letterCount(item) >= 2) {
-                items.add(item);
-            }
+            if (LabelSyntax.isUsableIngredient(item)) ingredients.add(item);
         }
-        return items;
-    }
-
-    /**
-     * Replaces each "Contains 2% or less of:"-style phrase outside brackets with an item break, so
-     * "corn, Contains 2% or less of: salt" lists "corn" and "salt". Inside brackets the text is left
-     * as written, since it belongs to that one item.
-     */
-    private static String removeMinorMarkers(String body) {
-        boolean[] literalOpens = unclosedOpens(body);
-        Matcher m = MINOR_MARKER.matcher(body);
-        StringBuilder out = new StringBuilder();
-        int last = 0;
-        while (m.find()) {
-            if (depthAt(body, m.start(), literalOpens) == 0) {
-                out.append(body, last, m.start()).append(',');
-                last = m.end();
-            }
-        }
-        return out.append(body.substring(last)).toString();
-    }
-
-    /** Joins hyphenated line wraps ("pea-\nnut" → "peanut") and flattens newlines to spaces. */
-    private static String prepare(String raw) {
-        String s = raw.replace("\r", "");
-        s = s.replaceAll("(?<=\\p{L})-[ \\t]*\\n[ \\t]*(?=\\p{Ll})", "");
-        s = s.replaceAll("[ \\t]*\\n[ \\t]*", " ");
-        return s.trim();
-    }
-
-    /**
-     * End index of the heading that introduces the list, or -1. A heading followed by ":" or "-" is
-     * preferred, so marketing text such as "no artificial ingredients" earlier on the package does
-     * not win over the real "INGREDIENTS:" heading.
-     */
-    private static int findHeadingEnd(String text) {
-        Matcher m = HEADING.matcher(text);
-        int firstEnd = -1;
-        while (m.find()) {
-            if (m.group(1) != null) {
-                return m.end();
-            }
-            if (firstEnd < 0) {
-                firstEnd = m.end();
-            }
-        }
-        return firstEnd;
-    }
-
-    /** Start of the first match outside brackets, or {@code text.length()} if none. */
-    private static int firstAtDepthZero(Pattern pattern, String text) {
-        boolean[] literalOpens = unclosedOpens(text);
-        Matcher m = pattern.matcher(text);
-        while (m.find()) {
-            if (m.start() > 0 && depthAt(text, m.start(), literalOpens) == 0) {
-                return m.start();
-            }
-        }
-        return text.length();
-    }
-
-    /** Index of the first full stop outside brackets that is not a decimal point, or the length. */
-    private static int firstFullStop(String text) {
-        boolean[] literalOpens = unclosedOpens(text);
-        int depth = 0;
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if ((c == '(' || c == '[') && !literalOpens[i]) {
-                depth++;
-            } else if ((c == ')' || c == ']') && depth > 0) {
-                depth--;
-            } else if (c == '.' && depth == 0) {
-                boolean decimal = i > 0 && i + 1 < text.length()
-                        && Character.isDigit(text.charAt(i - 1)) && Character.isDigit(text.charAt(i + 1));
-                if (!decimal) {
-                    return i;
-                }
-            }
-        }
-        return text.length();
-    }
-
-    /**
-     * Bracket depth just before {@code index}, counting only the opening brackets that
-     * {@code literalOpens} does not mark — see {@link #unclosedOpens(String)}. The mask must have
-     * been built from the same {@code text}.
-     */
-    private static int depthAt(String text, int index, boolean[] literalOpens) {
-        int depth = 0;
-        for (int i = 0; i < index; i++) {
-            char c = text.charAt(i);
-            if ((c == '(' || c == '[') && !literalOpens[i]) {
-                depth++;
-            } else if ((c == ')' || c == ']') && depth > 0) {
-                depth--;
-            }
-        }
-        return depth;
-    }
-
-    /**
-     * Marks every '(' or '[' that is never closed, so the depth checks in this class can treat it as
-     * an ordinary character.
-     *
-     * <p>OCR invents and loses brackets routinely — a smudge read as '(', or a ')' misread as 'J'. A
-     * single unclosed opening bracket otherwise leaves the depth at 1 for the whole remainder of the
-     * text, so nothing after it can split into items and no terminator or allergen statement can end
-     * the list: the nutrition panel gets swallowed into one giant ingredient. Balanced brackets keep
-     * their meaning, and a stray *closing* bracket is still simply clamped at depth 0 by each caller.
-     *
-     * <p>As before, a closing bracket closes the innermost opening one whatever its shape, so "(a]"
-     * counts as balanced; OCR confuses the two shapes too often to be strict about it.
-     */
-    private static boolean[] unclosedOpens(String text) {
-        boolean[] unclosed = new boolean[text.length()];
-        int[] openAt = new int[text.length()];
-        int open = 0;
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c == '(' || c == '[') {
-                openAt[open++] = i;
-            } else if ((c == ')' || c == ']') && open > 0) {
-                open--;
-            }
-        }
-        for (int i = 0; i < open; i++) {
-            unclosed[openAt[i]] = true;
-        }
-        return unclosed;
-    }
-
-    /**
-     * Splits at commas, semicolons and bullets that are not inside brackets. An opening bracket that
-     * is never closed does not open a group, so OCR noise cannot stop the splitting.
-     */
-    private static List<String> splitTopLevel(String text) {
-        boolean[] literalOpens = unclosedOpens(text);
-        List<String> parts = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        int depth = 0;
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if ((c == '(' || c == '[') && !literalOpens[i]) {
-                depth++;
-            } else if ((c == ')' || c == ']') && depth > 0) {
-                depth--;
-            }
-            if (depth == 0 && (c == ',' || c == ';' || c == '•' || c == '·')) {
-                parts.add(current.toString());
-                current.setLength(0);
-            } else {
-                current.append(c);
-            }
-        }
-        parts.add(current.toString());
-        return parts;
-    }
-
-    private static int letterCount(String text) {
-        int count = 0;
-        for (int i = 0; i < text.length(); i++) {
-            if (Character.isLetter(text.charAt(i))) {
-                count++;
-            }
-        }
-        return count;
+        return ingredients;
     }
 }

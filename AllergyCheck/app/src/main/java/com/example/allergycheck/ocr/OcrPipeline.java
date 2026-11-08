@@ -134,13 +134,13 @@ public final class OcrPipeline {
             } catch (IOException | RuntimeException e) {
                 // Surfaced through the same path as recognition errors so callers have one failure branch.
                 recycleDecoded(decoded);
-                mainHandler.post(() -> callback.onFailure(e));
+                reportFailure(e, callback);
                 return;
             } catch (OutOfMemoryError e) {
                 // Reported rather than swallowed: silently returning no text here would read as a
                 // clean, allergen-free label, which is the one outcome a failure must never produce.
                 recycleDecoded(decoded);
-                mainHandler.post(() -> callback.onFailure(new IOException("Image too large to process", e)));
+                reportFailure(new IOException("Image too large to process", e), callback);
                 return;
             }
             Bitmap decodedImage = decoded;
@@ -173,10 +173,10 @@ public final class OcrPipeline {
                 reportStage(Stage.PREPARING, callback);
                 prepared = preparer.prepare(bitmap);
             } catch (RuntimeException e) {
-                mainHandler.post(() -> callback.onFailure(e));
+                reportFailure(e, callback);
                 return;
             } catch (OutOfMemoryError e) {
-                mainHandler.post(() -> callback.onFailure(new IOException("Image too large to process", e)));
+                reportFailure(new IOException("Image too large to process", e), callback);
                 return;
             }
             mainHandler.post(() -> process(bitmap, prepared, /* ownsDecoded= */ false, callback));
@@ -264,6 +264,15 @@ public final class OcrPipeline {
         mainHandler.post(() -> {
             if (!closed) {
                 callback.onStage(stage);
+            }
+        });
+    }
+
+    /** Failure delivery must check cancellation when it runs, rather than when it is queued. */
+    private void reportFailure(@NonNull Exception error, @NonNull Callback callback) {
+        mainHandler.post(() -> {
+            if (!closed) {
+                callback.onFailure(error);
             }
         });
     }

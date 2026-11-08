@@ -8,6 +8,7 @@ import com.example.allergycheck.ocr.OcrResult;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -40,16 +41,29 @@ public final class Analyzer {
     /**
      * Analyses an ingredient list that has already been read out of {@code rawText} elsewhere —
      * see {@link LabelParser#fromIngredients}. The allergen statements still come from the full
-     * text, so a "may contain" warning outside the list is not lost.
+     * text, so a "may contain" warning outside the list is not lost. If the supplied list omits
+     * ingredients found by the full-text parser, those findings are retained and the report is
+     * marked low confidence instead of allowing a truncated reader to hide an allergen.
      */
     public static AnalysisReport analyse(@Nullable List<String> ingredients, @Nullable String rawText,
                                          @NonNull AllergenDictionary dictionary,
                                          @Nullable Collection<Allergen> selected) {
-        return analyse(LabelParser.fromIngredients(rawText, ingredients), dictionary, selected);
+        ParsedLabel label = LabelParser.fromIngredients(rawText, ingredients);
+        ParsedLabel fullText = LabelParser.parse(rawText);
+        boolean omitted = omitsIngredients(label, fullText);
+        // An unusable external list must not leave a nonempty recovered verdict attached to an
+        // empty label, which callers legitimately treat as having nothing to display.
+        if (omitted && label.isEmpty()) label = fullText;
+        return analyse(label, dictionary, selected, omitted ? fullText : null);
     }
 
     public static AnalysisReport analyse(@NonNull ParsedLabel label, @NonNull AllergenDictionary dictionary,
                                          @Nullable Collection<Allergen> selected) {
+        return analyse(label, dictionary, selected, null);
+    }
+
+    private static AnalysisReport analyse(ParsedLabel label, AllergenDictionary dictionary,
+                                          Collection<Allergen> selected, ParsedLabel extraEvidence) {
         Set<Allergen> allergens = selected == null || selected.isEmpty()
                 ? Collections.<Allergen>emptySet() : new TreeSet<>(selected);
 
@@ -65,7 +79,8 @@ public final class Analyzer {
             }
         }
 
-        boolean unreadable = label.isEmpty() || TextUtil.letterCount(label.rawText()) < MIN_LETTERS;
+        boolean unreadable = (label.isEmpty() && (extraEvidence == null || extraEvidence.isEmpty()))
+                || TextUtil.letterCount(label.rawText()) < MIN_LETTERS;
         List<AllergenResult> results = new ArrayList<>();
         for (Allergen allergen : allergens) {
             if (unreadable) {
@@ -74,6 +89,18 @@ public final class Analyzer {
                 continue;
             }
             List<Finding> findings = AllergenMatcher.match(label, allergen, dictionary);
+            if (extraEvidence != null) {
+                for (Finding recovered : AllergenMatcher.match(extraEvidence, allergen, dictionary)) {
+                    boolean duplicate = false;
+                    for (Finding existing : findings) {
+                        if (sameFinding(existing, recovered)) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) findings.add(recovered);
+                }
+            }
             findings.sort((a, b) -> a.level().compareTo(b.level()));
             results.add(new AllergenResult(allergen, statusOf(findings), findings));
         }
@@ -83,7 +110,27 @@ public final class Analyzer {
         });
 
         AnalysisReport.Status overall = unreadable ? AnalysisReport.Status.UNREADABLE : results.get(0).status();
-        return new AnalysisReport(overall, results, label, unreadable || isLowConfidence(label));
+        return new AnalysisReport(overall, results, label,
+                unreadable || extraEvidence != null || isLowConfidence(label));
+    }
+
+    private static boolean omitsIngredients(ParsedLabel supplied, ParsedLabel fullText) {
+        Set<String> names = new HashSet<>();
+        for (IngredientItem item : supplied.ingredients()) {
+            names.add(TextUtil.normalise(item.matchText()));
+        }
+        for (IngredientItem item : fullText.ingredients()) {
+            String name = TextUtil.normalise(item.matchText());
+            if (!name.isEmpty() && !names.contains(name)) return true;
+        }
+        return false;
+    }
+
+    private static boolean sameFinding(Finding left, Finding right) {
+        return left.level() == right.level() && left.source() == right.source()
+                && left.reason() == right.reason()
+                && TextUtil.normalise(left.matchedTerm()).equals(TextUtil.normalise(right.matchedTerm()))
+                && TextUtil.normalise(left.evidence()).equals(TextUtil.normalise(right.evidence()));
     }
 
     private static AnalysisReport.Status statusOf(List<Finding> findings) {

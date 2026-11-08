@@ -20,29 +20,10 @@ public final class LabelParser {
 
     private static final char BREAK = '\u0001';
 
-    /** "Ingredients:", "INGREDIENTS", "Ingredient list" … English only. */
-    private static final Pattern HEADING = Pattern.compile(
-            "(?i)\\bingredients?\\b(?:\\s+list)?\\s*[:\\-–]?");
-
-    /** Where a statement begins mid-text, so it can be split off from the ingredients before it. */
-    private static final Pattern STATEMENT_START = Pattern.compile(
-            "(?i)\\b(?:may contain|might contain|contains?\\s*:"
-                    + "|(?:produced|made|manufactured|processed|packaged|packed)\\s+(?:in|on)\\s+(?:a|an|the)?\\s*"
-                    + "(?:facility|plant|factory|equipment|line)|traces? of)");
-
-    private static final Pattern MAY_CONTAIN = Pattern.compile(
-            "^(?:may contain|might contain|could contain|traces? of"
-                    + "|(?:produced|made|manufactured|processed|packaged|packed) (?:in|on) (?:a |an |the )?"
-                    + "(?:facility|plant|factory|equipment|line)).*");
-
-    /** "Contains:" — but not "Contains 2% or less of:", which is an ingredient prefix. */
-    private static final Pattern CONTAINS = Pattern.compile("^contains?(?:\\s+(?!\\d).*)?$");
-
-    /** Everything from here on belongs to a different panel of the package. */
-    private static final Pattern TERMINATOR = Pattern.compile(
-            "(?i)\\b(?:nutrition(?:al)? (?:facts|information)|distributed by"
-                    + "|manufactured (?:by|for)|best before|net w(?:eigh)?t|keep refrigerated"
-                    + "|store in)\\b");
+    private static final Pattern STATEMENT_START = LabelSyntax.STATEMENT_START;
+    private static final Pattern MAY_CONTAIN = LabelSyntax.MAY_CONTAIN;
+    private static final Pattern CONTAINS = Pattern.compile("^contains?(?:\\s+.*)?$");
+    private static final Pattern TERMINATOR = LabelSyntax.TERMINATOR;
 
     private static final Pattern ALLERGEN_PREFIX = Pattern.compile(
             "(?i)^\\s*(?:allerg(?:en|y|ens|ies)\\s*(?:information|advice|warning|statement|info)?\\s*[:\\-–]?)\\s*");
@@ -52,43 +33,36 @@ public final class LabelParser {
 
     public static ParsedLabel parse(String rawText) {
         String raw = rawText == null ? "" : rawText;
-        String text = prepare(raw);
-
-        // Heading: keep what follows the first one; later ones become breaks, so a repeated
-        // "Ingredients:" starts a new segment instead of restarting the list.
-        Matcher heading = HEADING.matcher(text);
-        boolean headingFound = heading.find();
-        int ingredientsStart = headingFound ? heading.end() : 0;
-        String beforeHeading = headingFound ? text.substring(0, heading.start()) : "";
-        String afterHeading = HEADING.matcher(text.substring(ingredientsStart)).replaceAll(String.valueOf(BREAK) + ". ");
-
+        String text = LabelSyntax.prepare(raw);
+        LabelSyntax.Heading heading = LabelSyntax.findHeading(text);
+        boolean headingFound = heading != null;
         List<ParsedLabel.Statement> statements = new ArrayList<>();
         List<IngredientItem> ingredients = new ArrayList<>();
 
-        // Text before the heading can only contribute statements (e.g. "CONTAINS: MILK" on the front).
+        // Statements can be printed before, after, or away from the ingredient panel. Split the
+        // chosen heading out so a front-of-package warning cannot swallow the list that follows.
+        String beforeHeading = headingFound ? text.substring(0, heading.start) : "";
+        String afterHeading = headingFound ? text.substring(heading.end) : text;
         for (String segment : segments(beforeHeading)) {
             ParsedLabel.Statement statement = asStatement(segment);
-            if (statement != null) {
-                statements.add(statement);
-            }
+            if (statement != null) statements.add(statement);
         }
-
-        boolean ingredientsEnded = false;
         for (String segment : segments(afterHeading)) {
             ParsedLabel.Statement statement = asStatement(segment);
-            if (statement != null) {
-                statements.add(statement);
-                continue;
+            if (statement != null) statements.add(statement);
+        }
+        if (headingFound) {
+            // Keep the same first list and panel boundaries as IngredientExtractor. Periods alone
+            // are not reliable OCR evidence that later ingredients should be discarded.
+            addIngredients(LabelSyntax.ingredientBody(text, heading), 0, ingredients);
+        } else {
+            boolean ingredientsEnded = false;
+            for (String segment : segments(text)) {
+                if (asStatement(segment) != null || ingredientsEnded) continue;
+                int end = LabelSyntax.firstOutsideBrackets(TERMINATOR, segment);
+                if (end < segment.length()) ingredientsEnded = true;
+                addIngredients(segment.substring(0, end), 0, ingredients);
             }
-            if (ingredientsEnded) {
-                continue;
-            }
-            Matcher terminator = TERMINATOR.matcher(segment);
-            if (terminator.find()) {
-                segment = segment.substring(0, terminator.start());
-                ingredientsEnded = true;
-            }
-            addIngredients(segment, 0, ingredients);
         }
         return new ParsedLabel(raw, headingFound, ingredients, statements);
     }
@@ -119,14 +93,6 @@ public final class LabelParser {
         return new ParsedLabel(raw, parsed.ingredientHeadingFound(), ingredients, parsed.statements());
     }
 
-    /** Joins hyphenated line wraps and flattens newlines so the label reads as running text. */
-    private static String prepare(String raw) {
-        String s = raw.replace("\r", "");
-        s = s.replaceAll("(?<=\\p{L})-[ \\t]*\\n[ \\t]*(?=\\p{Ll})", "");
-        s = s.replaceAll("[ \\t]*\\n[ \\t]*", " ");
-        return s.replace(BREAK, ' ').trim();
-    }
-
     /**
      * Splits running text into sentence-like segments at depth-0 full stops and at the start of any
      * statement phrase. Brackets are respected so "(may contain milk)" stays inside its ingredient.
@@ -135,17 +101,16 @@ public final class LabelParser {
         String marked = STATEMENT_START.matcher(text).replaceAll(BREAK + "$0");
         List<String> out = new ArrayList<>();
         StringBuilder current = new StringBuilder();
+        boolean[] unclosed = LabelSyntax.unclosedOpens(marked);
         int depth = 0;
         for (int i = 0; i < marked.length(); i++) {
             char c = marked.charAt(i);
-            if (c == '(' || c == '[') {
+            if ((c == '(' || c == '[') && !unclosed[i]) {
                 depth++;
             } else if ((c == ')' || c == ']') && depth > 0) {
                 depth--;
             }
-            boolean decimalPoint = c == '.' && i > 0 && i + 1 < marked.length()
-                    && Character.isDigit(marked.charAt(i - 1)) && Character.isDigit(marked.charAt(i + 1));
-            if (depth == 0 && (c == BREAK || (c == '.' && !decimalPoint))) {
+            if (depth == 0 && (c == BREAK || (c == '.' && !LabelSyntax.isInternalPoint(marked, i)))) {
                 flush(current, out);
             } else if (c != BREAK) {
                 current.append(c);
@@ -174,7 +139,8 @@ public final class LabelParser {
         if (MAY_CONTAIN.matcher(norm).matches()) {
             return new ParsedLabel.Statement(ParsedLabel.Kind.MAY_CONTAIN, text);
         }
-        if (CONTAINS.matcher(norm).matches()) {
+        if (!LabelSyntax.MINOR_MARKER.matcher(stripped).lookingAt()
+                && !norm.matches("^contains?\\s+\\d.*") && CONTAINS.matcher(norm).matches()) {
             return new ParsedLabel.Statement(ParsedLabel.Kind.CONTAINS, text);
         }
         return null;
@@ -182,10 +148,10 @@ public final class LabelParser {
 
     /** Splits {@code text} at depth-0 commas/semicolons/bullets, recursing into bracketed sub-lists. */
     private static void addIngredients(String text, int depth, List<IngredientItem> out) {
-        String cleaned = ALLERGEN_PREFIX.matcher(text).replaceFirst("");
-        for (String part : splitTopLevel(cleaned)) {
+        String cleaned = LabelSyntax.removeMinorMarkers(ALLERGEN_PREFIX.matcher(text).replaceFirst(""));
+        for (String part : LabelSyntax.splitItems(cleaned)) {
             String original = part.trim().replaceAll("^[\\s:;,\\-–•·*]+|[\\s:;,\\-–•·*]+$", "");
-            if (TextUtil.letterCount(original) < 2) {
+            if (!LabelSyntax.isUsableIngredient(original)) {
                 continue;
             }
             int open = firstOpen(original);
@@ -200,28 +166,6 @@ public final class LabelParser {
             out.add(new IngredientItem(original, (name + " " + rest).trim(), depth));
             addIngredients(inner, depth + 1, out);
         }
-    }
-
-    private static List<String> splitTopLevel(String text) {
-        List<String> parts = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        int depth = 0;
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c == '(' || c == '[') {
-                depth++;
-            } else if ((c == ')' || c == ']') && depth > 0) {
-                depth--;
-            }
-            if (depth == 0 && (c == ',' || c == ';' || c == '•' || c == '·')) {
-                parts.add(current.toString());
-                current.setLength(0);
-            } else {
-                current.append(c);
-            }
-        }
-        parts.add(current.toString());
-        return parts;
     }
 
     private static int firstOpen(String s) {

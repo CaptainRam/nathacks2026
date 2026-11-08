@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Finds evidence for one {@link Allergen} in a {@link ParsedLabel}, using the vocabulary that
@@ -21,12 +22,18 @@ import java.util.Set;
  */
 final class AllergenMatcher {
 
-    /** Fuzzy matching only for terms this long; shorter words collide with ordinary vocabulary. */
+    /** Arbitrary edit-distance matching needs long terms; short names get visual confusions only. */
     private static final int FUZZY_MIN_LENGTH = 6;
+
+    /** Standalone dashes separate list entries; attached/wrapped dashes still join word phrases. */
+    private static final Pattern PHRASE_BOUNDARIES = Pattern.compile(
+            "[,;:.!?/|()\\[\\]{}•·]+|\\s+[\\p{Pd}−]+\\s+");
+    private static final String PHRASE_BREAK = "\u0000";
 
     /** Everyday words one typo away from a term (batter/butter) that must not trigger fuzzy hits. */
     private static final Set<String> FUZZY_STOPLIST = new HashSet<>(Arrays.asList(
-            "better", "batter", "bitter", "butler", "cheers", "lactase", "creams", "sodium"));
+            "better", "batter", "bitter", "butler", "cheers", "lactase", "creams", "sodium",
+            "bake", "bakes"));
 
     private AllergenMatcher() {
     }
@@ -55,7 +62,7 @@ final class AllergenMatcher {
 
     private static Finding matchText(Allergen allergen, String text, String evidence,
                                      Finding.Source source, AllergenDictionary dictionary) {
-        List<String> tokens = TextUtil.tokens(text);
+        List<String> tokens = matchingTokens(text);
         if (tokens.isEmpty()) {
             return null;
         }
@@ -96,24 +103,94 @@ final class AllergenMatcher {
     private static String nearMiss(Allergen allergen, List<String> tokens, boolean[] excluded,
                                    AllergenDictionary dictionary) {
         for (String[] term : dictionary.terms(allergen)) {
-            if (term.length != 1 || term[0].length() < FUZZY_MIN_LENGTH) {
+            if (term.length != 1) {
                 continue;
             }
             String word = term[0];
             for (int i = 0; i < tokens.size(); i++) {
-                if (excluded[i]) {
+                if (excluded[i] || tokens.get(i).equals(PHRASE_BREAK)) {
                     continue;
                 }
-                if (isNear(tokens.get(i), word)) {
+                if (!followedByFree(tokens, i + 1) && isOcrNear(tokens.get(i), word)) {
                     return word;
                 }
-                // A word split by OCR: "pean" + "ut".
-                if (i + 1 < tokens.size() && !excluded[i + 1] && isNear(tokens.get(i) + tokens.get(i + 1), word)) {
-                    return word;
+                // Rejoin only adjacent words in the same phrase, never separate list entries.
+                if (i + 1 < tokens.size() && !excluded[i + 1]
+                        && !tokens.get(i + 1).equals(PHRASE_BREAK)
+                        && !followedByFree(tokens, i + 2)) {
+                    String joined = tokens.get(i) + tokens.get(i + 1);
+                    if (sameWord(joined, word) || isOcrNear(joined, word)) {
+                        return word;
+                    }
                 }
             }
         }
         return null;
+    }
+
+    /** Keep list boundaries so "Milk, Free Range Egg" cannot be read as a milk-free claim. */
+    private static List<String> matchingTokens(String text) {
+        List<String> tokens = new ArrayList<>();
+        if (text == null) {
+            return tokens;
+        }
+        String[] phrases = PHRASE_BOUNDARIES.split(text, -1);
+        for (int i = 0; i < phrases.length; i++) {
+            if (i > 0) {
+                tokens.add(PHRASE_BREAK);
+            }
+            tokens.addAll(TextUtil.tokens(phrases[i]));
+        }
+        return tokens;
+    }
+
+    private static boolean followedByFree(List<String> tokens, int next) {
+        return next < tokens.size() && tokens.get(next).equals("free");
+    }
+
+    /**
+     * Short names get only one known visual OCR confusion, not arbitrary edit distance:
+     * "dish", "silk", "say" and "they" must not become fish, milk, soy and whey.
+     */
+    private static boolean isOcrNear(String token, String term) {
+        if (FUZZY_STOPLIST.contains(token) || term.length() < 3) {
+            return false;
+        }
+        if (oneVisualConfusion(token, term) || oneVisualConfusion(token, term + "s")
+                || oneVisualConfusion(token, term + "es")
+                || (term.endsWith("y")
+                && oneVisualConfusion(token, term.substring(0, term.length() - 1) + "ies"))) {
+            return true;
+        }
+        return term.length() >= FUZZY_MIN_LENGTH && isNear(token, term);
+    }
+
+    private static boolean oneVisualConfusion(String token, String term) {
+        int at = 0;
+        while (at < token.length() && at < term.length() && token.charAt(at) == term.charAt(at)) {
+            at++;
+        }
+        if (at == token.length() || at == term.length()) {
+            return false;
+        }
+        if (token.length() == term.length()) {
+            char read = token.charAt(at);
+            char expected = term.charAt(at);
+            boolean confused = (read == '0' && expected == 'o')
+                    || (read == '1' && (expected == 'i' || expected == 'l'))
+                    || (read == 'i' && expected == 'l') || (read == 'l' && expected == 'i')
+                    || (read == 'b' && expected == 'h') || (read == 'h' && expected == 'b')
+                    || (read == 'q' && expected == 'g') || (read == 'g' && expected == 'q');
+            return confused && token.substring(at + 1).equals(term.substring(at + 1));
+        }
+        // Two joined glyphs are commonly read as one, or vice versa: rn <-> m.
+        if (token.length() == term.length() + 1 && token.startsWith("rn", at)
+                && term.charAt(at) == 'm') {
+            return token.substring(at + 2).equals(term.substring(at + 1));
+        }
+        return term.length() == token.length() + 1 && token.charAt(at) == 'm'
+                && term.startsWith("rn", at)
+                && token.substring(at + 1).equals(term.substring(at + 2));
     }
 
     private static boolean isNear(String token, String term) {
@@ -161,7 +238,7 @@ final class AllergenMatcher {
             }
             int next = start + phrase.length;
             // "peanut free", "gluten free": the label is saying the opposite.
-            if (excluded != null && next < tokens.size() && tokens.get(next).equals("free")) {
+            if (excluded != null && followedByFree(tokens, next)) {
                 continue;
             }
             return start;

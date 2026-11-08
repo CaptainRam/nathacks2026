@@ -17,7 +17,7 @@
     <string name="status_no_allergens_title">No allergens selected</string>
     <string name="status_no_allergens_message">Choose the allergens you want to check for, then scan the label again.</string>
 
-    <string name="low_confidence_warning">Heads up: the label text was thin or missing an \"Ingredients\" heading, so this result may be incomplete. Retaking the photo may help.</string>
+    <string name="low_confidence_warning">Heads up: the label text may be incomplete or unclear. Check the package and consider retaking the photo.</string>
 
     <!-- Sections of the result -->
     <string name="section_allergens">Your allergens</string>
