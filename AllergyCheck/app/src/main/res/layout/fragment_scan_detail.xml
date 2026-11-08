@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One saved scan, expanded. Reuses view_analysis_result so a saved result is rendered by exactly
+     the same code as a live one; the include is given its own root id because the scan page's copy
+     is in this same hierarchy. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scan_detail_page"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="4dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/detail_back_button"
+            style="@style/Widget.AllergyCheck.TonalIconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@string/history_back"
+            app:icon="@drawable/ic_arrow_back" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/detail_timestamp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:accessibilityHeading="true"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Today, 14:32" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="32dp">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/detail_photo"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:background="?attr/colorSurfaceContainerHigh"
+                android:contentDescription="@string/history_thumbnail_description"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Large"
+                tools:visibility="visible" />
+
+            <include
+                android:id="@+id/history_result"
+                layout="@layout/view_analysis_result" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/detail_raw_text_title"
+                style="@style/Widget.AllergyCheck.ResultSectionTitle"
+                android:text="@string/history_raw_text_title"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/detail_raw_text_card"
+                style="@style/Widget.Material3.CardView.Filled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:cardElevation="0dp"
+                app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
+                app:strokeWidth="0dp"
+                tools:visibility="visible">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/detail_raw_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:padding="16dp"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textIsSelectable="true"
+                    tools:text="INGREDIENTS: SUGAR, MILK POWDER" />
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -122,13 +122,18 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     };
 
     /**
-     * Back on the history tab returns to the scan page rather than leaving the app. Only enabled
-     * while history is showing; an open scan detail is handled by the fragment back stack, which
-     * the FragmentManager consumes before this runs.
+     * Back on the history tab closes an open scan detail first, then returns to the scan page
+     * rather than leaving the app. The back stack is popped here explicitly rather than left to
+     * the FragmentManager's own callback: this one is registered later, so it would otherwise win
+     * and swallow the detail's back.
      */
     private final OnBackPressedCallback historyBackCallback = new OnBackPressedCallback(false) {
         @Override
         public void handleOnBackPressed() {
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStack();
+                return;
+            }
             showScanTab();
         }
     };
@@ -517,6 +522,11 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void ensureHistoryFragment() {
         FragmentManager manager = getSupportFragmentManager();
         if (manager.findFragmentByTag(HISTORY_FRAGMENT) != null) {
+            return;
+        }
+        if (manager.isStateSaved()) {
+            // The tab was switched after state was saved, so a committed transaction would throw.
+            // Which tab is showing is already in HISTORY_STATE, so onCreate puts this back.
             return;
         }
         manager.beginTransaction()

@@ -142,7 +142,28 @@ final class ScanTestSupport implements AutoCloseable {
             scan.activity = (MainActivity) scan.instrumentation.startActivitySync(intent);
             assertNotNull(scan.activity);
             scan.instrumentation.waitForIdleSync();
+            scan.awaitResumed();
             return scan;
+        }
+
+        /**
+         * Waits until the activity is actually resumed. A previous test's activity can still be
+         * finishing when this one launches, and acting on one that has already saved its state
+         * fails in ways that have nothing to do with what is being tested.
+         */
+        private void awaitResumed() {
+            long deadline = SystemClock.uptimeMillis() + 10_000;
+            do {
+                boolean[] resumed = {false};
+                onActivity(current -> resumed[0] = !current.isFinishing()
+                        && !current.isDestroyed()
+                        && !current.getSupportFragmentManager().isStateSaved());
+                if (resumed[0]) {
+                    return;
+                }
+                SystemClock.sleep(25);
+            } while (SystemClock.uptimeMillis() < deadline);
+            throw new AssertionError("The activity never became resumed");
         }
 
         void onActivity(Consumer<MainActivity> action) {

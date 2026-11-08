@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One previous scan: the label photo, when it was checked, and the quick result. -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scan_card"
+    style="@style/Widget.Material3.CardView.Filled"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardElevation="0dp"
+    app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/scan_thumbnail"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="?attr/colorSurfaceContainerHigh"
+            android:contentDescription="@string/history_thumbnail_description"
+            android:scaleType="centerCrop"
+            app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
+            tools:src="@drawable/ic_leaf" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/scan_timestamp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Today, 14:32" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/scan_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Milk, Soy, and Wheat detected" />
+        </LinearLayout>
+
+        <!-- Severity at a glance, tinted in code from the same tones as the result page. -->
+        <View
+            android:id="@+id/scan_severity"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_tip_dot"
+            android:importantForAccessibility="no" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
