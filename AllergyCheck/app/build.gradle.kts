@@ -20,6 +20,10 @@ android {
 
     buildTypes {
         release {
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
@@ -36,6 +40,8 @@ dependencies {
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
+    implementation(libs.fragment)
+    implementation(libs.recyclerview)
     implementation(libs.material)
     implementation(libs.mlkit.text.recognition)
     // On-device LLM (Gemma) that reads the OCR text and lists the ingredients.
