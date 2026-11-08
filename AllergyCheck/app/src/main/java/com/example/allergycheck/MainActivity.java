@@ -7,7 +7,6 @@ import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -254,7 +253,8 @@ public class MainActivity extends AppCompatActivity {
                     showPhotoState(true);
                     setLoading(false);
                     photoPreview.announceForAccessibility(getString(R.string.photo_added));
-                    recognizeIngredients(bitmap, request);
+                    // The bitmap above is the on-screen preview only; OCR re-reads the original.
+                    recognizeIngredients(uri, request);
                 });
             } catch (IOException | RuntimeException exception) {
                 Log.w("MainActivity", "Unable to decode selected photo", exception);
@@ -287,10 +287,18 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void recognizeIngredients(Bitmap bitmap, int request) {
+    /**
+     * Reads {@code photo} and analyses it. Deliberately takes the <em>URI</em> rather than the
+     * preview bitmap: the preview is capped at {@link #MAX_PREVIEW_SIZE} for display, which is the
+     * bottom of the band {@code LabelImageDecoder} normalises to, and small print on a tightly
+     * cropped panel is lost at that size. Recognising from the URI lets the decoder pick the
+     * resolution — including upscaling a small crop — so the recogniser sees the best image we can
+     * give it instead of whatever happened to be big enough to draw.
+     */
+    private void recognizeIngredients(Uri photo, int request) {
         updateIngredientDialog(getString(R.string.reading_ingredients),
                 getString(R.string.reading_ingredients_message), true, false, false);
-        ocrPipeline.recognize(bitmap, new OcrPipeline.Callback() {
+        ocrPipeline.recognize(this, photo, new OcrPipeline.Callback() {
             @Override
             public void onSuccess(@NonNull OcrResult result) {
                 if (!isCurrentImageRequest(request)) {
@@ -333,11 +341,10 @@ public class MainActivity extends AppCompatActivity {
 
     /** Re-reads the photo already on screen, if any; a no-op when nothing is loaded. */
     private void rescanCurrentPhoto() {
-        if (selectedPhoto == null || !(photoPreview.getDrawable() instanceof BitmapDrawable)) {
+        if (selectedPhoto == null) {
             return;
         }
-        recognizeIngredients(((BitmapDrawable) photoPreview.getDrawable()).getBitmap(),
-                ++imageRequest);
+        recognizeIngredients(selectedPhoto, ++imageRequest);
     }
 
     private boolean isCurrentImageRequest(int request) {
@@ -523,18 +530,20 @@ public class MainActivity extends AppCompatActivity {
         rescanCurrentPhoto();
     }
 
+    /**
+     * Refreshes the count and the chips from the same dictionary-resolved selection the analyser
+     * is given, so the number on the button can never claim more allergens than are being checked.
+     */
     private void updateAllergenSummary() {
-        Set<String> saved = AllergenPreferences.selectedAllergens(this);
+        Set<Allergen> saved = AllergenPreferences.selectedAllergenSet(
+                this, AllergenDictionaryProvider.get(this));
         int count = saved.size();
         allergensButton.setText(count == 0 ? getString(R.string.set_allergens)
                 : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
 
         allergenChips.removeAllViews();
-        // Keep chips in the same order as the picker rather than HashSet order.
-        for (Allergen allergen : AllergenDictionaryProvider.get(this).allergens()) {
-            if (!saved.contains(allergen.label())) {
-                continue;
-            }
+        // Already in dictionary order, which is the order the pickers list them in.
+        for (Allergen allergen : saved) {
             Chip chip = new Chip(this);
             chip.setText(allergen.label());
             chip.setClickable(false);

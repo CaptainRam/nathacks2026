@@ -66,10 +66,13 @@ public final class LabelImagePreparer implements ImagePreparer {
             return source;
         }
 
+        // One full-frame int[] carries the frame through every pass: the packed pixels become
+        // luminance in place, the stretch is applied in place over that, and the packed result is
+        // written back over it again. A label photo is megapixels, so each array that does not have
+        // to exist is tens of megabytes of peak footprint alongside source and the output bitmap.
         int[] pixels = new int[width * height];
         source.getPixels(pixels, 0, width, 0, 0, width, height);
 
-        int[] luminance = new int[pixels.length];
         int[] histogram = new int[256];
         for (int index = 0; index < pixels.length; index++) {
             int pixel = pixels[index];
@@ -77,7 +80,7 @@ public final class LabelImagePreparer implements ImagePreparer {
             int value = (77 * ((pixel >> 16) & 0xFF)
                     + 150 * ((pixel >> 8) & 0xFF)
                     + 29 * (pixel & 0xFF)) >> 8;
-            luminance[index] = value;
+            pixels[index] = value;
             histogram[value]++;
         }
 
@@ -85,15 +88,19 @@ public final class LabelImagePreparer implements ImagePreparer {
                 histogram, pixels.length,
                 ContrastStretch.DEFAULT_LOW_FRACTION, ContrastStretch.DEFAULT_HIGH_FRACTION);
         int[] lut = ContrastStretch.buildLut(bounds[0], bounds[1]);
-        for (int index = 0; index < luminance.length; index++) {
-            luminance[index] = lut[luminance[index]];
+        for (int index = 0; index < pixels.length; index++) {
+            pixels[index] = lut[pixels[index]];
         }
 
-        if (sharpenAmount != 0f) {
-            luminance = UnsharpMask.apply(luminance, width, height, sharpenAmount);
-        }
+        // Sharpening is the one pass that cannot work in place — the mask reads neighbours of the
+        // unsharpened image — but it allocates its own destination, so the second buffer exists only
+        // when sharpening actually runs.
+        int[] luminance = sharpenAmount == 0f
+                ? pixels
+                : UnsharpMask.apply(pixels, width, height, sharpenAmount);
 
         for (int index = 0; index < pixels.length; index++) {
+            // Safe even when luminance is pixels: index is read before it is overwritten.
             int value = luminance[index];
             pixels[index] = 0xFF000000 | (value << 16) | (value << 8) | value;
         }

@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.ingredients.LocalModelManager;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -32,6 +33,10 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String DRAFT_ALLERGENS = "draft_allergens";
     private static final String MODEL_DETAILS_EXPANDED = "model_details_expanded";
 
+    /**
+     * Allergen ids. Only ids the dictionary defines ever enter this set, so its size is the
+     * number actually checked — which is what {@link #updateSelectionSummary} reports.
+     */
     private final Set<String> selectedAllergens = new HashSet<>();
     private TextView selectionSummary;
     private LocalModelManager modelManager;
@@ -94,28 +99,30 @@ public class SettingsActivity extends AppCompatActivity {
                         .show());
         renderModelStatus(modelManager.getStatus());
 
+        AllergenDictionary dictionary = AllergenDictionaryProvider.get(this);
         ArrayList<String> draft = savedInstanceState == null ? null
                 : savedInstanceState.getStringArrayList(DRAFT_ALLERGENS);
         selectedAllergens.addAll(draft == null
-                ? AllergenPreferences.selectedAllergens(this) : draft);
+                ? AllergenPreferences.selectedAllergenIds(this, dictionary) : draft);
 
         LinearLayout options = findViewById(R.id.allergen_options_container);
-        for (Allergen allergen : AllergenDictionaryProvider.get(this).allergens()) {
-            final String option = allergen.label();
+        for (Allergen allergen : dictionary.allergens()) {
+            // The id is what is stored and counted; the label is only the row text.
+            final String id = allergen.id();
             MaterialCheckBox checkBox = new MaterialCheckBox(this);
-            checkBox.setText(option);
+            checkBox.setText(allergen.label());
             checkBox.setTextAppearance(
                     com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
             checkBox.setMinHeight(dp(60));
             checkBox.setPaddingRelative(dp(16), dp(8), dp(16), dp(8));
             // Draft selection is restored explicitly so generated row IDs are unnecessary.
             checkBox.setSaveEnabled(false);
-            checkBox.setChecked(selectedAllergens.contains(option));
+            checkBox.setChecked(selectedAllergens.contains(id));
             checkBox.setOnCheckedChangeListener((button, checked) -> {
                 if (checked) {
-                    selectedAllergens.add(option);
+                    selectedAllergens.add(id);
                 } else {
-                    selectedAllergens.remove(option);
+                    selectedAllergens.remove(id);
                 }
                 updateSelectionSummary();
             });
@@ -126,7 +133,7 @@ public class SettingsActivity extends AppCompatActivity {
         updateSelectionSummary();
 
         findViewById(R.id.save_preferences_button).setOnClickListener(view -> {
-            AllergenPreferences.saveSelectedAllergens(this, selectedAllergens);
+            AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
             setResult(RESULT_OK);
             finish();
         });

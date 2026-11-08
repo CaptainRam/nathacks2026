@@ -88,11 +88,12 @@ public final class IngredientExtractor {
      * as written, since it belongs to that one item.
      */
     private static String removeMinorMarkers(String body) {
+        boolean[] literalOpens = unclosedOpens(body);
         Matcher m = MINOR_MARKER.matcher(body);
         StringBuilder out = new StringBuilder();
         int last = 0;
         while (m.find()) {
-            if (depthAt(body, m.start()) == 0) {
+            if (depthAt(body, m.start(), literalOpens) == 0) {
                 out.append(body, last, m.start()).append(',');
                 last = m.end();
             }
@@ -129,9 +130,10 @@ public final class IngredientExtractor {
 
     /** Start of the first match outside brackets, or {@code text.length()} if none. */
     private static int firstAtDepthZero(Pattern pattern, String text) {
+        boolean[] literalOpens = unclosedOpens(text);
         Matcher m = pattern.matcher(text);
         while (m.find()) {
-            if (m.start() > 0 && depthAt(text, m.start()) == 0) {
+            if (m.start() > 0 && depthAt(text, m.start(), literalOpens) == 0) {
                 return m.start();
             }
         }
@@ -140,10 +142,11 @@ public final class IngredientExtractor {
 
     /** Index of the first full stop outside brackets that is not a decimal point, or the length. */
     private static int firstFullStop(String text) {
+        boolean[] literalOpens = unclosedOpens(text);
         int depth = 0;
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            if (c == '(' || c == '[') {
+            if ((c == '(' || c == '[') && !literalOpens[i]) {
                 depth++;
             } else if ((c == ')' || c == ']') && depth > 0) {
                 depth--;
@@ -158,11 +161,16 @@ public final class IngredientExtractor {
         return text.length();
     }
 
-    private static int depthAt(String text, int index) {
+    /**
+     * Bracket depth just before {@code index}, counting only the opening brackets that
+     * {@code literalOpens} does not mark — see {@link #unclosedOpens(String)}. The mask must have
+     * been built from the same {@code text}.
+     */
+    private static int depthAt(String text, int index, boolean[] literalOpens) {
         int depth = 0;
         for (int i = 0; i < index; i++) {
             char c = text.charAt(i);
-            if (c == '(' || c == '[') {
+            if ((c == '(' || c == '[') && !literalOpens[i]) {
                 depth++;
             } else if ((c == ')' || c == ']') && depth > 0) {
                 depth--;
@@ -171,14 +179,49 @@ public final class IngredientExtractor {
         return depth;
     }
 
-    /** Splits at commas, semicolons and bullets that are not inside brackets. */
+    /**
+     * Marks every '(' or '[' that is never closed, so the depth checks in this class can treat it as
+     * an ordinary character.
+     *
+     * <p>OCR invents and loses brackets routinely — a smudge read as '(', or a ')' misread as 'J'. A
+     * single unclosed opening bracket otherwise leaves the depth at 1 for the whole remainder of the
+     * text, so nothing after it can split into items and no terminator or allergen statement can end
+     * the list: the nutrition panel gets swallowed into one giant ingredient. Balanced brackets keep
+     * their meaning, and a stray *closing* bracket is still simply clamped at depth 0 by each caller.
+     *
+     * <p>As before, a closing bracket closes the innermost opening one whatever its shape, so "(a]"
+     * counts as balanced; OCR confuses the two shapes too often to be strict about it.
+     */
+    private static boolean[] unclosedOpens(String text) {
+        boolean[] unclosed = new boolean[text.length()];
+        int[] openAt = new int[text.length()];
+        int open = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '(' || c == '[') {
+                openAt[open++] = i;
+            } else if ((c == ')' || c == ']') && open > 0) {
+                open--;
+            }
+        }
+        for (int i = 0; i < open; i++) {
+            unclosed[openAt[i]] = true;
+        }
+        return unclosed;
+    }
+
+    /**
+     * Splits at commas, semicolons and bullets that are not inside brackets. An opening bracket that
+     * is never closed does not open a group, so OCR noise cannot stop the splitting.
+     */
     private static List<String> splitTopLevel(String text) {
+        boolean[] literalOpens = unclosedOpens(text);
         List<String> parts = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         int depth = 0;
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            if (c == '(' || c == '[') {
+            if ((c == '(' || c == '[') && !literalOpens[i]) {
                 depth++;
             } else if ((c == ')' || c == ']') && depth > 0) {
                 depth--;

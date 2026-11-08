@@ -36,8 +36,8 @@ public final class LabelImageDecoder {
 
     /**
      * Above this, photos are downscaled. Caps both the working-set size (an ARGB_8888 bitmap at
-     * 2600px plus the luminance buffers) and recognition latency, with no accuracy cost — label type
-     * is already resolved well before this.
+     * 2600px plus the preparer's luminance buffer) and recognition latency, with no accuracy cost —
+     * label type is already resolved well before this.
      */
     @VisibleForTesting
     static final int MAX_LONG_EDGE_PX = 2600;
@@ -104,7 +104,14 @@ public final class LabelImageDecoder {
         return longEdge;
     }
 
-    /** Bilinearly resizes {@code source} into the band, recycling it if a new bitmap is produced. */
+    /**
+     * Bilinearly resizes {@code source} into the band, recycling it if a new bitmap is produced.
+     *
+     * <p>{@code source} is also recycled when the resize throws. The destination is allocated while
+     * the source is still alive, so a 12 MP photo peaks at both buffers at once and this is exactly
+     * where an {@link OutOfMemoryError} is likely; since {@link #decode} is the only caller and holds
+     * no reference of its own, not freeing it here would leak the source outright.
+     */
     private static Bitmap scaleToBand(@NonNull Bitmap source) {
         int width = source.getWidth();
         int height = source.getHeight();
@@ -117,7 +124,13 @@ public final class LabelImageDecoder {
         float scale = (float) target / longEdge;
         int scaledWidth = Math.max(1, Math.round(width * scale));
         int scaledHeight = Math.max(1, Math.round(height * scale));
-        Bitmap scaled = Bitmap.createScaledBitmap(source, scaledWidth, scaledHeight, /* filter= */ true);
+        Bitmap scaled;
+        try {
+            scaled = Bitmap.createScaledBitmap(source, scaledWidth, scaledHeight, /* filter= */ true);
+        } catch (RuntimeException | OutOfMemoryError e) {
+            source.recycle();
+            throw e;
+        }
         if (scaled != source) {
             source.recycle();
         }
