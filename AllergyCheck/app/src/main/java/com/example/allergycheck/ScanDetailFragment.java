@@ -85,7 +85,8 @@ public class ScanDetailFragment extends Fragment {
         resultRoot.setVisibility(View.VISIBLE);
 
         if (detail.report() != null) {
-            resultView.showReport(detail.report());
+            resultView.showReport(detail.report(),
+                    AllergenPreferences.showNotDetected(requireContext()));
         } else if (detail.item().messageTitle() != null) {
             // A scan that reached the user as a message: show them the same thing again.
             resultView.showMessage(detail.item().messageTitle(),

@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
         // After the analysis callback, so it wins while history is showing.
         getOnBackPressedDispatcher().addCallback(this, historyBackCallback);
-        modelDownloadController = new ModelDownloadController(this);
+        modelDownloadController = new ModelDownloadController(this, () -> openSettings(true));
         // Prune anything past the retention window and sweep images with no row. Cheap from here:
         // it only hands the work to the history worker.
         ScanHistory.get(this).maintain(null);
@@ -437,7 +437,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                             getString(R.string.no_ingredients_found, text));
                     return;
                 }
-                resultView.showReport(report);
+                resultView.showReport(report,
+                        AllergenPreferences.showNotDetected(MainActivity.this));
                 showResult(report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED
                         ? ResultAction.CHOOSE_ALLERGENS
                         : report.overall() == AnalysisReport.Status.UNREADABLE
@@ -512,6 +513,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         }
         contentScroll.setVisibility(show ? View.GONE : View.VISIBLE);
         historyContainer.setVisibility(show ? View.VISIBLE : View.GONE);
+        // Pinned outside content_scroll now, so it no longer leaves with it on its own.
+        restartButton.setVisibility(
+                show || analysisResult.getVisibility() != View.VISIBLE ? View.GONE : View.VISIBLE);
         historyBackCallback.setEnabled(show);
         if (show) {
             HomeMotion.riseIn(historyContainer, dp(24), 200);
@@ -646,6 +650,14 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         tipsGroup.setVisibility(enabled ? View.GONE : View.VISIBLE);
         photoStripScroll.setVisibility(enabled ? View.VISIBLE : View.GONE);
         analysisGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        if (!enabled) {
+            // analysisResult's own flag would otherwise stay stale at VISIBLE even though its
+            // ancestor analysisGroup is now gone, which fools the history-tab restore in
+            // showHistory() into bringing restartButton back on the home screen.
+            analysisResult.setVisibility(View.GONE);
+            // Pinned outside the analysis group now, so it needs its own visibility toggle too.
+            restartButton.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -892,7 +904,13 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     private void openSettings() {
-        settingsLauncher.launch(new Intent(this, SettingsActivity.class));
+        openSettings(false);
+    }
+
+    /** Always through the launcher, so a save from either section refreshes this screen. */
+    private void openSettings(boolean showModel) {
+        settingsLauncher.launch(new Intent(this, SettingsActivity.class)
+                .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, showModel));
     }
 
     private void openAllergenPreferences() {

@@ -1,6 +1,5 @@
 package com.example.allergycheck;
 
-import android.content.Intent;
 import android.text.SpannableStringBuilder;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
@@ -17,6 +16,8 @@ import com.google.android.material.progressindicator.LinearProgressIndicator;
 /** Shared missing-model/download entry point for both launcher screens. */
 final class ModelDownloadController {
     private final AppCompatActivity activity;
+    /** Opens Settings on the model section through the host's result launcher. */
+    private final Runnable openModelSettings;
     private final LocalModelManager manager;
     private final View card;
     private final TextView title;
@@ -26,8 +27,9 @@ final class ModelDownloadController {
     private final LocalModelManager.Listener listener = this::render;
     private AlertDialog introduction;
 
-    ModelDownloadController(AppCompatActivity activity) {
+    ModelDownloadController(AppCompatActivity activity, Runnable openModelSettings) {
         this.activity = activity;
+        this.openModelSettings = openModelSettings;
         manager = LocalModelManager.get(activity);
         card = activity.findViewById(R.id.model_download_card);
         title = activity.findViewById(R.id.model_status_title);
@@ -36,7 +38,7 @@ final class ModelDownloadController {
         progress = activity.findViewById(R.id.model_status_progress);
         action.setOnClickListener(view -> {
             if (manager.getStatus().isBusy()) {
-                activity.startActivity(new Intent(activity, SettingsActivity.class));
+                openModelSettings.run();
             } else {
                 showDownloadPrompt();
             }
