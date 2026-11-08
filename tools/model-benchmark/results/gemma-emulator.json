@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "model": "installed Gemma via LlmIngredientReader",
+  "platform": "android",
+  "started_at": "2026-11-08T02:04:45.389640Z",
+  "environment": {
+    "is_emulator": true,
+    "model": "sdk_gphone64_arm64",
+    "manufacturer": "Google",
+    "hardware": "ranchu",
+    "fingerprint": "google\/sdk_gphone64_arm64\/emu64a:17\/CE2A.260420.051.A2\/16418371:user\/release-keys",
+    "android_release": "17",
+    "sdk_int": 37,
+    "abis": [
+      "arm64-v8a"
+    ],
+    "total_memory_bytes": 4105711616,
+    "available_memory_bytes": 2274594816,
+    "available_processors": 1,
+    "java_max_heap_bytes": 201326592,
+    "target_package": "com.example.allergycheck",
+    "target_version_name": "1.0",
+    "target_version_code": 1
+  },
+  "timeout_per_case_seconds": 120,
+  "cold_timeout_seconds": 240,
+  "raw_response_available": false,
+  "timing_note": "First request includes lazy engine initialization; later requests reuse it. Elapsed time includes prompt fitting, inference, parsing, and callback delivery. Emulator timings do not estimate phone performance.",
+  "model_file": "gemma3-1b-it-int4.task",
+  "model_bytes": 554661243,
+  "cases": [
+    {
+      "id": "clean_wheat_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "status": "ok",
+      "timeout_seconds": 240,
+      "elapsed_ms": 22807,
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa",
+        "butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 26629440
+    },
+    {
+      "id": "clean_granola_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 42526,
+      "ingredients": [
+        "Oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 3260928
+    },
+    {
+      "id": "synthetic_ocr_typos",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_ocr_typos",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 35216,
+      "ingredients": [
+        "Wheal f1our",
+        "sklm milk powder",
+        "cano1a oil",
+        "sea salt"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 3297888
+    },
+    {
+      "id": "synthetic_nested",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_nested",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 15955,
+      "ingredients": [
+        "Chocolate",
+        "sugar",
+        "wheat flour",
+        "salt",
+        "citric acid"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 3400368
+    },
+    {
+      "id": "synthetic_bilingual",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_bilingual",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 9404,
+      "ingredients": [
+        "Sugar",
+        "milk powder",
+        "cocoa butter"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 3470064
+    },
+    {
+      "id": "negative_nutrition_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_nutrition_only",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 10525,
+      "ingredients": [
+        "Calories",
+        "Fat",
+        "Sodium",
+        "Protein"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 3576624
+    },
+    {
+      "id": "negative_precaution_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_precaution_only",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 10466,
+      "ingredients": [
+        "Milk",
+        "peanuts",
+        "soy"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 3658624
+    },
+    {
+      "id": "real_upright_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 38412,
+      "ingredients": [
+        "Sugars (nvert càne syrup, cane Sugar*, brown rice syrup*), Soy protein isolate",
+        "Soy protein concentrate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Peanut butter",
+        "Peanut",
+        "Soy lecithin",
+        "Nut"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 3785664
+    },
+    {
+      "id": "real_sideways_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 108226,
+      "ingredients": [
+        "BER HRE\/ MEILLEUR AVANT"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 2523648
+    },
+    {
+      "id": "real_sideways_unmodified",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "ok",
+      "timeout_seconds": 120,
+      "elapsed_ms": 12623,
+      "ingredients": [
+        "Peanut",
+        "Soy protein"
+      ],
+      "returned_none": false,
+      "java_heap_used_bytes": 2638400
+    }
+  ],
+  "completed_at": "2026-11-08T02:09:51.593944Z"
+}

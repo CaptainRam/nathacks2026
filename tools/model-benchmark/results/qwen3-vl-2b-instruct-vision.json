@@ -1,0 +1,601 @@
+{
+  "schema_version": 1,
+  "model": {
+    "id": "qwen3-vl-2b-instruct",
+    "repo": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+    "revision": "52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+    "file": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+    "bytes": 1107409952,
+    "projector": "mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+    "projector_bytes": 819394848,
+    "vision": true
+  },
+  "mode": "vision",
+  "started_at": "2026-11-08T02:07:35.584596+00:00",
+  "notes": "Accuracy run overlapped Gemma emulator; use timing-only rerun for Mac latency.",
+  "artifacts": {
+    "model": {
+      "id": "qwen3-vl-2b-instruct",
+      "repo": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+      "revision": "52d6c8ffea26cc873ac5ad116f8631268d7eb503",
+      "file": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+      "bytes": 1107409952,
+      "projector": "mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+      "projector_bytes": 819394848,
+      "vision": true
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+        "bytes": 1107409952,
+        "sha256": "089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae"
+      },
+      {
+        "file": "mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+        "bytes": 819394848,
+        "sha256": "c3d5afbef5287953acd57b4043d2269456e5761a4eaccb3b71b062996970aea5"
+      }
+    ]
+  },
+  "hardware": {
+    "machine": "arm64",
+    "system": "macOS-27.3-arm64-arm-64bit",
+    "ram_bytes": 19327352832,
+    "cpu_count": 11
+  },
+  "runtime": "version: 0.4.0 (build 10809, commit 5266f24da)\nbuilt with AppleClang 21.0.0.21000101 for Darwin arm64",
+  "settings": {
+    "temperature": 0,
+    "seed": 0,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "prompt_caching": false,
+    "quantization": "Q4_K_M"
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "vision",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice starch, peanut, soy, soy protein isolate, vegetable glycerin, palm kernel oil, table oil, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour,",
+      "reasoning": "",
+      "elapsed_seconds": 13.048045083000034,
+      "first_token_seconds": 6.016980250002234,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 2254,
+        "total_tokens": 2766,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2254,
+        "prompt_ms": 5981.031,
+        "prompt_per_token_ms": 2.6535186335403727,
+        "prompt_per_second": 376.85810356107504,
+        "predicted_n": 512,
+        "predicted_ms": 7031.09,
+        "predicted_per_token_ms": 13.759471624266146,
+        "predicted_per_second": 72.6772093658309
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice starch, peanut, soy, soy protein isolate, vegetable glycerin, palm kernel oil, table oil, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 1,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)"
+        ],
+        "recall": 0.0625,
+        "precision": 1.0,
+        "f1": 0.11764705882352941,
+        "missing": [
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "unexpected": [
+              "chichory root fibre",
+              "rice starch",
+              "peanut",
+              "soy",
+              "soy protein isolate",
+              "vegetable glycerin",
+              "palm kernel oil",
+              "table oil",
+              "rice flour"
+            ]
+          }
+        ],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "real_upright_enhanced",
+      "mode": "vision",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Sugars (invert cane syrup*, cane sugar*, brown rice syrup*)\n- Soy protein isolate\n- Vegetable glycerin\n- Palm kernel oil\n- Rice flour*\n- Chicory root fibre\n- Natural flavour\n- Peanuts*\n- Cocoa butter\n- Cocoa\n- Peanut butter*\n- Soy protein concentrate*\n- Salt\n- Rice starch\n- Soy lecithin\n- Tocopherols\n- Chocolate (sugar, cocoa butter, soy lecithin)\n- Organic\n- Sucres (sirop de canne inverti*, sucre de canne*, sirop de riz brun*)\n- Isolat de protéines de soja, Glycérine etale, Huile de palmiste, Farine de soja*, Farine de riz*, Fibre de racine de chicorée, Arôme naturel, Arachides*, Beurre de cacao, Beurre d'arachides*, Concentré de protéines de soja*, Huile végétale*, Sel, Amidon de riz, Lécithine de soja,\n- Biologique\n- Arachides, Soja. Peut contenir : Lait, Sésame, Noix.",
+      "reasoning": "",
+      "elapsed_seconds": 9.43324658399797,
+      "first_token_seconds": 5.8951507919991855,
+      "usage": {
+        "completion_tokens": 260,
+        "prompt_tokens": 2254,
+        "total_tokens": 2514,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2254,
+        "prompt_ms": 5724.166,
+        "prompt_per_token_ms": 2.53955900621118,
+        "prompt_per_second": 393.7691534452355,
+        "predicted_n": 260,
+        "predicted_ms": 3538.73,
+        "predicted_per_token_ms": 13.663050193050193,
+        "predicted_per_second": 73.190099272903
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Sugars (invert cane syrup*, cane sugar*, brown rice syrup*)",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Rice flour",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Salt",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols",
+        "Chocolate (sugar, cocoa butter, soy lecithin)",
+        "Organic",
+        "Sucres (sirop de canne inverti*, sucre de canne*, sirop de riz brun*)",
+        "Isolat de protéines de soja, Glycérine etale, Huile de palmiste, Farine de soja*, Farine de riz*, Fibre de racine de chicorée, Arôme naturel, Arachides*, Beurre de cacao, Beurre d'arachides*, Concentré de protéines de soja*, Huile végétale*, Sel, Amidon de riz, Lécithine de soja",
+        "Biologique",
+        "Arachides, Soja. Peut contenir : Lait, Sésame, Noix"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 16,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 1.0,
+        "precision": 0.7619047619047619,
+        "f1": 0.8648648648648648,
+        "missing": [],
+        "unexpected": [
+          "Chocolate (sugar, cocoa butter, soy lecithin)",
+          "Organic",
+          "Isolat de protéines de soja, Glycérine etale, Huile de palmiste, Farine de soja*, Farine de riz*, Fibre de racine de chicorée, Arôme naturel, Arachides*, Beurre de cacao, Beurre d'arachides*, Concentré de protéines de soja*, Huile végétale*, Sel, Amidon de riz, Lécithine de soja",
+          "Biologique",
+          "Arachides, Soja. Peut contenir : Lait, Sésame, Noix"
+        ],
+        "optional_found": [],
+        "duplicate_count": 1,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "clean_wheat_fixture",
+      "mode": "vision",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "reply": "- Wheat flour\n- sugar\n- milk powder\n- cocoa butter\n- salt\n- soy lecithin",
+      "reasoning": "",
+      "elapsed_seconds": 3.2119897500015213,
+      "first_token_seconds": 2.9167102920036996,
+      "usage": {
+        "completion_tokens": 25,
+        "prompt_tokens": 1418,
+        "total_tokens": 1443,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1418,
+        "prompt_ms": 2794.851,
+        "prompt_per_token_ms": 1.9709809590973202,
+        "prompt_per_second": 507.3615731214294,
+        "predicted_n": 25,
+        "predicted_ms": 294.679,
+        "predicted_per_token_ms": 12.278291666666666,
+        "predicted_per_second": 81.44455492247496
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "score": {
+        "required_total": 6,
+        "matched_required": 6,
+        "matched": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "clean_granola_fixture",
+      "mode": "vision",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "reply": "- Whole grain oats\n- honey\n- almonds\n- sunflower oil\n- dried cranberries\n- pumpkin seeds\n- sea salt\n- cinnamon",
+      "reasoning": "",
+      "elapsed_seconds": 2.8568330840062117,
+      "first_token_seconds": 2.456142709001142,
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 1272,
+        "total_tokens": 1304,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 1272,
+        "prompt_ms": 2360.86,
+        "prompt_per_token_ms": 1.8560220125786164,
+        "prompt_per_second": 538.7867133163338,
+        "predicted_n": 32,
+        "predicted_ms": 400.363,
+        "predicted_per_token_ms": 12.914935483870968,
+        "predicted_per_second": 77.42973251774015
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Whole grain oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "score": {
+        "required_total": 8,
+        "matched_required": 8,
+        "matched": [
+          "Whole grain oats",
+          "honey",
+          "almonds",
+          "sunflower oil",
+          "dried cranberries",
+          "pumpkin seeds",
+          "sea salt",
+          "cinnamon"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    }
+  ],
+  "performance_repeats": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "vision",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice starch, peanut, soy, soy protein isolate, vegetable glycerin, palm kernel oil, table oil, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour,",
+      "reasoning": "",
+      "elapsed_seconds": 13.242933207999158,
+      "first_token_seconds": 6.276171624995186,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 2254,
+        "total_tokens": 2766,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2254,
+        "prompt_ms": 5980.24,
+        "prompt_per_token_ms": 2.653167701863354,
+        "prompt_per_second": 376.9079501826014,
+        "predicted_n": 512,
+        "predicted_ms": 6966.262,
+        "predicted_per_token_ms": 13.632606653620352,
+        "predicted_per_second": 73.35354311968169
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice starch, peanut, soy, soy protein isolate, vegetable glycerin, palm kernel oil, table oil, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 1,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)"
+        ],
+        "recall": 0.0625,
+        "precision": 1.0,
+        "f1": 0.11764705882352941,
+        "missing": [
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "unexpected": [
+              "chichory root fibre",
+              "rice starch",
+              "peanut",
+              "soy",
+              "soy protein isolate",
+              "vegetable glycerin",
+              "palm kernel oil",
+              "table oil",
+              "rice flour"
+            ]
+          }
+        ],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "repeat": 1
+    },
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "vision",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice starch, peanut, soy, soy protein isolate, vegetable glycerin, palm kernel oil, table oil, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour,",
+      "reasoning": "",
+      "elapsed_seconds": 12.541335834001075,
+      "first_token_seconds": 5.756298833999608,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 2254,
+        "total_tokens": 2766,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 2254,
+        "prompt_ms": 5717.983,
+        "prompt_per_token_ms": 2.536815882874889,
+        "prompt_per_second": 394.1949460150546,
+        "predicted_n": 512,
+        "predicted_ms": 6784.435,
+        "predicted_per_token_ms": 13.276780821917809,
+        "predicted_per_second": 75.31946285873474
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup, chichory root fibre, rice starch, peanut, soy, soy protein isolate, vegetable glycerin, palm kernel oil, table oil, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour, rice flour"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 1,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)"
+        ],
+        "recall": 0.0625,
+        "precision": 1.0,
+        "f1": 0.11764705882352941,
+        "missing": [
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "unexpected": [
+              "chichory root fibre",
+              "rice starch",
+              "peanut",
+              "soy",
+              "soy protein isolate",
+              "vegetable glycerin",
+              "palm kernel oil",
+              "table oil",
+              "rice flour"
+            ]
+          }
+        ],
+        "relative_order_correct": true
+      },
+      "status": "ok",
+      "repeat": 2
+    }
+  ],
+  "server_metrics": {
+    "command": [
+      "llama-server",
+      "-m",
+      "/tmp/allergy-model-benchmark/models/qwen3-vl-2b-instruct/Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18765",
+      "--ctx-size",
+      "8192",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "5",
+      "--threads-batch",
+      "5",
+      "--gpu-layers",
+      "99",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}",
+      "--mmproj",
+      "/tmp/allergy-model-benchmark/models/qwen3-vl-2b-instruct/mmproj-Qwen3VL-2B-Instruct-F16.gguf",
+      "--image-max-tokens",
+      "2048"
+    ],
+    "load_seconds": 1.7864231249986915,
+    "ready_rss_bytes": 3027058688,
+    "peak_sampled_rss_bytes": 3632644096,
+    "minimum_system_available_bytes": 1959182336,
+    "system_swap_delta_bytes": 1927675904,
+    "memory_caveat": "Mac process RSS sampled every100ms; excludes unaccounted GPU allocations; not phone RAM.",
+    "server_log_note": "Initial accuracy log was superseded by timing run; original accuracy replies, per-request timings and settings remain in this JSON. Final timing log is retained separately."
+  },
+  "complete": true,
+  "completed_at": "2026-11-08T02:08:31.974553+00:00"
+}

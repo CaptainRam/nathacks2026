@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "build_command": "./gradlew :app:assembleDebugAndroidTest --offline",
+  "build_status": "BUILD SUCCESSFUL",
+  "installed_only": "app-debug-androidTest.apk",
+  "instrumentation_class": "com.example.allergycheck.ingredients.IngredientModelBenchmarkTest",
+  "instrumentation_status": "OK (1 test)",
+  "instrumentation_elapsed_seconds": 306.994,
+  "all_10_case_texts_identical_to_corpus": true,
+  "all_10_reader_callbacks_completed": true,
+  "all_10_rule_cases_completed": true,
+  "earlier_attempt": "gemma-emulator-120s-attempt.json",
+  "earlier_attempt_note": "Original real_sideways_enhanced cold request timed out at120s;9latercases were not queued. A single bounded rerun used short cases first,240s for lazy engine initialization and120s for each warm case. No further rerun.",
+  "measurement_limits": [
+    "Emulator extraction baseline, not phone performance or representative accuracy.",
+    "First successful request includes reader engine initialization but OS and model caches may have been warmed by the earlier timed-out attempt.",
+    "java_heap_used_bytes excludes MediaPipe native allocations; no peak native RAM measurement was made.",
+    "Raw response is unavailable from the existing reader public API; only its parsed ingredient lists and errors are captured."
+  ],
+  "preferences_unchanged": true,
+  "preference_sha256_before_and_after": {
+    "allergy_preferences.xml": "16fd526f03892317c4f42fd053cad41d4c994af3fd53f5df12a5d006830591cb",
+    "local_model.xml": "d9e093e965152b58c971a2efbfed4fc001432c8776a91d6def90e8e349215f3a"
+  },
+  "target_apk_path_unchanged": "/data/app/~~HFtmnF7p340gWW4TixmCyw==/com.example.allergycheck-KTbWtvRwaoUBVgR5tC6vzQ==/base.apk"
+}

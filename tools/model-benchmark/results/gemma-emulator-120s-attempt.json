@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "model": "installed Gemma via LlmIngredientReader",
+  "platform": "android",
+  "started_at": "2026-11-08T02:02:04.491852Z",
+  "environment": {
+    "is_emulator": true,
+    "model": "sdk_gphone64_arm64",
+    "manufacturer": "Google",
+    "hardware": "ranchu",
+    "fingerprint": "google\/sdk_gphone64_arm64\/emu64a:17\/CE2A.260420.051.A2\/16418371:user\/release-keys",
+    "android_release": "17",
+    "sdk_int": 37,
+    "abis": [
+      "arm64-v8a"
+    ],
+    "total_memory_bytes": 4105711616,
+    "available_memory_bytes": 2042777600,
+    "available_processors": 1,
+    "java_max_heap_bytes": 201326592,
+    "target_package": "com.example.allergycheck",
+    "target_version_name": "1.0",
+    "target_version_code": 1
+  },
+  "timeout_per_case_seconds": 120,
+  "raw_response_available": false,
+  "timing_note": "First request includes lazy engine initialization; later requests reuse it. Elapsed time includes prompt fitting, inference, parsing, and callback delivery. Emulator timings do not estimate phone performance.",
+  "model_file": "gemma3-1b-it-int4.task",
+  "model_bytes": 554661243,
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "timeout",
+      "elapsed_ms": 120013,
+      "error": "No reader callback within 120 seconds",
+      "java_heap_used_bytes": 2843248
+    },
+    {
+      "id": "real_upright_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "real_sideways_unmodified",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "clean_wheat_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "clean_granola_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "synthetic_ocr_typos",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_ocr_typos",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "synthetic_nested",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_nested",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "synthetic_bilingual",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_bilingual",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "negative_nutrition_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_nutrition_only",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    },
+    {
+      "id": "negative_precaution_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_precaution_only",
+      "status": "skipped_after_timeout",
+      "error": "Earlier generation timed out and cannot be cancelled safely"
+    }
+  ],
+  "completed_at": "2026-11-08T02:04:04.562052Z"
+}

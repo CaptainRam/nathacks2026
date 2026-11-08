@@ -1,0 +1,13 @@
+{
+  "python": "3.12.7",
+  "packages": {
+    "requests": "2.31.0",
+    "psutil": "7.1.3",
+    "huggingface-hub": "0.36.0"
+  },
+  "chip": "Apple M3 Pro",
+  "physical_ram_GiB": 18,
+  "llama_cpp": "0.4.0 build10809 5266f24da",
+  "note": "Accuracy testing used Metal; Android emulator Gemma timings are a different platform.",
+  "benchmark_revision_note": "run_benchmark.py updated to keep timing-phase server logs separate; first timing pass was launched before that logging-only change."
+}

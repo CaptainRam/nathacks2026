@@ -1,0 +1,5 @@
+{
+  "log_retention": "Initial accuracy server logs were superseded by the first timing run. Raw accuracy replies, stop reasons, per-request timings and settings were retained. Logs now explicitly identify the final timing phase. The runner was updated to use separate filenames for future runs.",
+  "model_runs": "Five complete 10-case text runs, three complete 4-case image runs, and eight independent timing runs (one first request and two warm repeats each).",
+  "mobile_scope": "No physical Android phone available. Emulator measurements are not handset performance."
+}

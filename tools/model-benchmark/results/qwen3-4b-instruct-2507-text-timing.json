@@ -1,0 +1,369 @@
+{
+  "schema_version": 1,
+  "model": {
+    "id": "qwen3-4b-instruct-2507",
+    "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+    "revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+    "bytes": 2497281120,
+    "vision": false
+  },
+  "mode": "text",
+  "started_at": "2026-11-08T02:13:46.274989+00:00",
+  "notes": "No concurrent model inference; Android emulator remains running but idle.",
+  "artifacts": {
+    "model": {
+      "id": "qwen3-4b-instruct-2507",
+      "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+      "revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+      "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "bytes": 2497281120,
+      "vision": false
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+        "bytes": 2497281120,
+        "sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597"
+      }
+    ]
+  },
+  "hardware": {
+    "machine": "arm64",
+    "system": "macOS-27.3-arm64-arm-64bit",
+    "ram_bytes": 19327352832,
+    "cpu_count": 11
+  },
+  "runtime": "version: 0.4.0 (build 10809, commit 5266f24da)\nbuilt with AppleClang 21.0.0.21000101 for Darwin arm64",
+  "settings": {
+    "temperature": 0,
+    "seed": 0,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "prompt_caching": false,
+    "quantization": "Q4_K_M"
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- phérols  \n- cocoa butter  \n- cocoa  \n- peanut butter  \n- soy protein concentrate  \n- vegetable oil  \n- salt  \n- rice starch  \n- soy lecithin  \n- palm kernel oil  \n- rice flour  \n- chicory root fibre  \n- natural flavour  \n- peanuts  \n- soy protein isolate  \n- vegetable glycerin  \n- sugars (invert cane syrup, cane sugar, brown rice syrup)  \n- tocopherols  \n\nNote: \"phérols\" is likely a misreading of \"phérols\" → possibly \"phérols\" is a typo for \"phérols\" or \"phérols\" might be intended as \"phospholipids\" or \"phosphorus\", but given context and common food label terms, and since \"phérols\" does not match any known ingredient, and no clear correction exists, it is likely a misread of \"peanuts\" or \"phospholipids\". However, in the text, \"phérols.\" appears immediately after \"BER HRE/ MEILLEUR AVANT\", which may be a misread of \"BER HRE/ MEILLEUR AVANT\" → possibly \"BER HRE\" is a misread of \"BER HRE\" → likely \"BER HRE\" is a misread of \"BER HRE\" → no clear ingredient.  \n\nBut looking again: the text says \"phérols.\" — this is likely a misreading of \"phérols\" → possibly \"phérols\" is a typo for \"phospholipids\" or \"phérols\" → no standard ingredient. However, \"phérols\" may be a misread of \"peanuts\" or \"peanut\" — but \"peanut\" is already listed.  \n\nWait — the text says: \"phérols.\" → likely a misread of \"peanuts\" or \"peanut\" — but \"peanut\" appears later.  \n\nAlternatively, \"phérols\" → could be a misread of \"phospholipids\" or \"lecithin\", but lecithin is already listed.  \n\nGiven that \"phérols\" is not a known ingredient and appears isolated, and no clear correction exists, and the rest of the list is clearly structured, it's likely a typo or misread.  \n\nBut in the text: \"phérols.\" → possibly \"",
+      "reasoning": "",
+      "elapsed_seconds": 14.234354708001774,
+      "first_token_seconds": 1.4531128750022617,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 657,
+        "total_tokens": 1169,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 657,
+        "prompt_ms": 1443.509,
+        "prompt_per_token_ms": 2.1971217656012176,
+        "prompt_per_second": 455.1409101017035,
+        "predicted_n": 512,
+        "predicted_ms": 12780.748,
+        "predicted_per_token_ms": 25.011248532289628,
+        "predicted_per_second": 39.98201044258129
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "phérols",
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "soy protein concentrate",
+        "vegetable oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "palm kernel oil",
+        "rice flour",
+        "chicory root fibre",
+        "natural flavour",
+        "peanuts",
+        "soy protein isolate",
+        "vegetable glycerin",
+        "sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 16,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 1.0,
+        "precision": 0.9411764705882353,
+        "f1": 0.9696969696969697,
+        "missing": [],
+        "unexpected": [
+          "phérols"
+        ],
+        "optional_found": [
+          "Vegetable oil"
+        ],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok"
+    }
+  ],
+  "performance_repeats": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- phérols  \n- cocoa butter  \n- cocoa  \n- peanut butter  \n- soy protein concentrate  \n- vegetable oil  \n- salt  \n- rice starch  \n- soy lecithin  \n- palm kernel oil  \n- rice flour  \n- chicory root fibre  \n- natural flavour  \n- peanuts  \n- soy protein isolate  \n- vegetable glycerin  \n- sugars (invert cane syrup, cane sugar, brown rice syrup)  \n- tocopherols  \n\nNote: \"phérols\" is likely a misreading of \"phérols\" → possibly \"phérols\" is a typo for \"phérols\" or \"phérols\" might be intended as \"phospholipids\" or \"phosphorus\", but given context and common food label terms, and since \"phérols\" does not match any known ingredient, and no clear correction exists, it is likely a misread of \"peanuts\" or \"phospholipids\". However, in the text, \"phérols.\" appears immediately after \"BER HRE/ MEILLEUR AVANT\", which may be a misread of \"BER HRE/ MEILLEUR AVANT\" → possibly \"BER HRE\" is a misread of \"BER HRE\" → likely \"BER HRE\" is a misread of \"BER HRE\" → no clear ingredient.  \n\nBut looking again: the text says \"phérols.\" — this is likely a misreading of \"phérols\" → possibly \"phérols\" is a typo for \"phospholipids\" or \"phérols\" → no standard ingredient. However, \"phérols\" may be a misread of \"peanuts\" or \"peanut\" — but \"peanut\" is already listed.  \n\nWait — the text says: \"phérols.\" → likely a misread of \"peanuts\" or \"peanut\" — but \"peanut\" appears later.  \n\nAlternatively, \"phérols\" → could be a misread of \"phospholipids\" or \"lecithin\", but lecithin is already listed.  \n\nGiven that \"phérols\" is not a known ingredient and appears isolated, and no clear correction exists, and the rest of the list is clearly structured, it's likely a typo or misread.  \n\nBut in the text: \"phérols.\" → possibly \"",
+      "reasoning": "",
+      "elapsed_seconds": 14.45338354100386,
+      "first_token_seconds": 1.4820754579995992,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 657,
+        "total_tokens": 1169,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 657,
+        "prompt_ms": 1470.335,
+        "prompt_per_token_ms": 2.2379528158295283,
+        "prompt_per_second": 446.83694532198444,
+        "predicted_n": 512,
+        "predicted_ms": 12966.274,
+        "predicted_per_token_ms": 25.374313111545987,
+        "predicted_per_second": 39.409933802108455
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "phérols",
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "soy protein concentrate",
+        "vegetable oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "palm kernel oil",
+        "rice flour",
+        "chicory root fibre",
+        "natural flavour",
+        "peanuts",
+        "soy protein isolate",
+        "vegetable glycerin",
+        "sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 16,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 1.0,
+        "precision": 0.9411764705882353,
+        "f1": 0.9696969696969697,
+        "missing": [],
+        "unexpected": [
+          "phérols"
+        ],
+        "optional_found": [
+          "Vegetable oil"
+        ],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 1
+    },
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- phérols  \n- cocoa butter  \n- cocoa  \n- peanut butter  \n- soy protein concentrate  \n- vegetable oil  \n- salt  \n- rice starch  \n- soy lecithin  \n- palm kernel oil  \n- rice flour  \n- chicory root fibre  \n- natural flavour  \n- peanuts  \n- soy protein isolate  \n- vegetable glycerin  \n- sugars (invert cane syrup, cane sugar, brown rice syrup)  \n- tocopherols  \n\nNote: \"phérols\" is likely a misreading of \"phérols\" → possibly \"phérols\" is a typo for \"phérols\" or \"phérols\" might be intended as \"phospholipids\" or \"phosphorus\", but given context and common food label terms, and since \"phérols\" does not match any known ingredient, and no clear correction exists, it is likely a misread of \"peanuts\" or \"phospholipids\". However, in the text, \"phérols.\" appears immediately after \"BER HRE/ MEILLEUR AVANT\", which may be a misread of \"BER HRE/ MEILLEUR AVANT\" → possibly \"BER HRE\" is a misread of \"BER HRE\" → likely \"BER HRE\" is a misread of \"BER HRE\" → no clear ingredient.  \n\nBut looking again: the text says \"phérols.\" — this is likely a misreading of \"phérols\" → possibly \"phérols\" is a typo for \"phospholipids\" or \"phérols\" → no standard ingredient. However, \"phérols\" may be a misread of \"peanuts\" or \"peanut\" — but \"peanut\" is already listed.  \n\nWait — the text says: \"phérols.\" → likely a misread of \"peanuts\" or \"peanut\" — but \"peanut\" appears later.  \n\nAlternatively, \"phérols\" → could be a misread of \"phospholipids\" or \"lecithin\", but lecithin is already listed.  \n\nGiven that \"phérols\" is not a known ingredient and appears isolated, and no clear correction exists, and the rest of the list is clearly structured, it's likely a typo or misread.  \n\nBut in the text: \"phérols.\" → possibly \"",
+      "reasoning": "",
+      "elapsed_seconds": 14.119155083004443,
+      "first_token_seconds": 1.4537488750065677,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 657,
+        "total_tokens": 1169,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 657,
+        "prompt_ms": 1435.487,
+        "prompt_per_token_ms": 2.1849117199391173,
+        "prompt_per_second": 457.68439560929494,
+        "predicted_n": 512,
+        "predicted_ms": 12664.729,
+        "predicted_per_token_ms": 24.784205479452055,
+        "predicted_per_second": 40.34827748781675
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "phérols",
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "soy protein concentrate",
+        "vegetable oil",
+        "salt",
+        "rice starch",
+        "soy lecithin",
+        "palm kernel oil",
+        "rice flour",
+        "chicory root fibre",
+        "natural flavour",
+        "peanuts",
+        "soy protein isolate",
+        "vegetable glycerin",
+        "sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 16,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 1.0,
+        "precision": 0.9411764705882353,
+        "f1": 0.9696969696969697,
+        "missing": [],
+        "unexpected": [
+          "phérols"
+        ],
+        "optional_found": [
+          "Vegetable oil"
+        ],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 2
+    }
+  ],
+  "server_metrics": {
+    "command": [
+      "llama-server",
+      "-m",
+      "/tmp/allergy-model-benchmark/models/qwen3-4b-instruct-2507/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18765",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "5",
+      "--threads-batch",
+      "5",
+      "--gpu-layers",
+      "99",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 4.3938778749943594,
+    "ready_rss_bytes": 3129409536,
+    "peak_sampled_rss_bytes": 3155918848,
+    "minimum_system_available_bytes": 2142748672,
+    "system_swap_delta_bytes": 596246528,
+    "memory_caveat": "Mac process RSS sampled every100ms; excludes unaccounted GPU allocations; not phone RAM.",
+    "server_log": "/Users/lcwhhh/Program/nathacks2026/tools/model-benchmark/results/qwen3-4b-instruct-2507-text-timing-server.log"
+  },
+  "complete": true,
+  "completed_at": "2026-11-08T02:14:33.712857+00:00"
+}

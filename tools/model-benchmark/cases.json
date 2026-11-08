@@ -1,0 +1,487 @@
+{
+  "schema_version": 1,
+  "task": "OCR text -> ingredient list; dash-prefixed item per line, or exactly NONE",
+  "evaluation_notes": [
+    "10 text cases: three correlated OCR variants of one real packaging photo, two clean synthetic image fixtures, three synthetic extraction/robustness cases, two negative cases.",
+    "This is a diagnostic smoke benchmark, not a representative accuracy estimate or safety validation. Report real-photo results separately from synthetic and do not treat the three real variants as independent samples.",
+    "Required-ingredient matching should normalize case, accents, punctuation, organic asterisks, and whitespace. Use expected_aliases for French/English semantic equivalence. Match each canonical ingredient at most once.",
+    "optional_ingredients are neither required for recall nor false positives if returned. Other extra ingredients are false positives.",
+    "Preserve top-level ingredient boundaries and bracketed sublists. Report duplicate ingredients, order violations, and malformed output separately.",
+    "Do not use broad substring matching that confuses Cocoa with Cocoa butter or Soy lecithin with Soy protein concentrate.",
+    "evaluate_vision only identifies image cases. Text accuracy and direct-image accuracy are different tasks and should be reported separately.",
+    "The transcribed real-photo English list is in source_groups.current_packaging_photo.english_transcription; text cases retain actual OCR without fixing it in advance."
+  ],
+  "source_groups": {
+    "current_packaging_photo": {
+      "source_kind": "real",
+      "image_file": "fixtures/current-label.jpeg",
+      "upright_image_file": "fixtures/current-label-upright.png",
+      "sha256": "e89a90ca59fdead51aadd00ac31c71dfbb64ba596a49da102ffcb78512f7f120",
+      "dimensions": [
+        1200,
+        1600
+      ],
+      "distinct_real_photos": 1,
+      "english_transcription": "Ingredients: Sugars (invert cane syrup*, cane sugar*, brown rice syrup*), Soy protein isolate, Vegetable glycerin, Palm kernel oil, Soy flour*, Rice flour*, Chicory root fibre, Natural flavour, Peanuts*, Cocoa butter, Cocoa, Peanut butter*, Soy protein concentrate*, Vegetable oil*, Salt, Rice starch, Soy lecithin, Tocopherols. Contains: Peanut, Soy. May contain: Milk, Sesame, Tree nuts. *Organic",
+      "all_transcribed_ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Soy flour",
+        "Rice flour",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Vegetable oil",
+        "Salt",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols"
+      ],
+      "uncertain_ingredients": [
+        "Soy flour",
+        "Vegetable oil"
+      ],
+      "uncertainty_reason": "Starts of Soy flour and Vegetable oil are folded/partly hidden in the English panel. French duplicate supports these readings, but they are optional for photo/OCR scoring. Contains and Ingredients headings are also partially hidden. The comma between Peanut butter and Soy protein concentrate is not clear; they are separate ingredients based on the English words and French duplicate."
+    },
+    "clean_wheat_fixture": {
+      "source_kind": "synthetic",
+      "image_file": "fixtures/wheat-control.jpg",
+      "sha256": "f78b805af82fec44fb95409d6f6aa768f5491bdb4cb19a8c25c9cce3599d65a7",
+      "dimensions": [
+        900,
+        1200
+      ],
+      "notes": "Large clean rendered text. Not a real packaging photograph."
+    },
+    "clean_granola_fixture": {
+      "source_kind": "synthetic",
+      "image_file": "fixtures/granola-control.png",
+      "sha256": "fb96c936cf56d35580f057eb772fee7f3152bdf5345d9565ce4044c242ac94d4",
+      "dimensions": [
+        1100,
+        850
+      ],
+      "notes": "Explicitly marked SAMPLE LABEL / UI TEST IMAGE. Not a real packaging photograph."
+    }
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "ocr_text": "BER HRE/ MEILLEUR AVANT\nphérols.\noD. Caca0, Beurre d'arachides, Concentré de protéines de soja*,\nHuile végétale*,\nSel, Amidon de riz, Lécithine de soja.\ntale. Huile de palmiste, Farine\nde soja\", Farine de riz*, Fibre\nde racine de chicorée, Arôme naturel, Arachides*, Beurre\nde\nédients\nSucres (sirop de\ncanne\ninverti\", sucre de\ncanne,\nsirop\nde riz\nbrun\"),\nIsolat\nde\nprotéines\nde soja,\nGlycérine\n*Biologique\nCient:Arachides, Soja. Peut contenir: Lait, Sésame, Noix.\nains: Peanut, Soy. May contain: Milk, Sesame, Tree nuts.\ntable oil ,\nSalt, Rice starch, Soy\nlecithin, Tocopherols.\nflour* Rice flour, Chicory root fibre, Natural flavour, Peanuts*, Cocoa butter, Cocoa, Peanut butter Soy protein concentrate\nLoedients: Sugars (invert cane syrup, cane Sugar*, brown rice syrup*), Soy protein isolate, Vegetable glycerin, Palm kernel oil.\n\"Organic\nARTIFIGTELS",
+      "expected_ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Rice flour",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Salt",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols"
+      ],
+      "optional_ingredients": [
+        "Soy flour",
+        "Vegetable oil"
+      ],
+      "expected_aliases": {
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup)": [
+          "Sucres (sirop de canne inverti, sucre de canne, sirop de riz brun)",
+          "Sugar"
+        ],
+        "Soy protein isolate": [
+          "Isolat de protéines de soja"
+        ],
+        "Vegetable glycerin": [
+          "Glycérine végétale",
+          "Vegetable glycerine",
+          "Glycerin",
+          "Glycerine"
+        ],
+        "Palm kernel oil": [
+          "Huile de palmiste"
+        ],
+        "Soy flour": [
+          "Farine de soja"
+        ],
+        "Rice flour": [
+          "Farine de riz"
+        ],
+        "Chicory root fibre": [
+          "Fibre de racine de chicorée",
+          "Chicory root fiber"
+        ],
+        "Natural flavour": [
+          "Arôme naturel",
+          "Natural flavor"
+        ],
+        "Peanuts": [
+          "Arachides",
+          "Peanut"
+        ],
+        "Cocoa butter": [
+          "Beurre de cacao"
+        ],
+        "Cocoa": [
+          "Cacao"
+        ],
+        "Peanut butter": [
+          "Beurre d’arachides",
+          "Beurre d'arachides"
+        ],
+        "Soy protein concentrate": [
+          "Concentré de protéines de soja"
+        ],
+        "Vegetable oil": [
+          "Huile végétale"
+        ],
+        "Salt": [
+          "Sel"
+        ],
+        "Rice starch": [
+          "Amidon de riz"
+        ],
+        "Soy lecithin": [
+          "Lécithine de soja"
+        ],
+        "Tocopherols": [
+          "Tocophérols",
+          "Tocopherol"
+        ]
+      },
+      "expected_none": false,
+      "image_file": "fixtures/current-label.jpeg",
+      "evaluate_vision": true,
+      "notes": "Exact ML Kit text from current-photo-diagnostics.txt, variant current, enhanced. Correlated variant of the same one real photo. French equivalents may match the same canonical ingredient once. Ignore organic markers. Do not include Contains/May contain warnings."
+    },
+    {
+      "id": "real_upright_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "ocr_text": "edients: Sugars (nvert càne syrup, cane Sugar*, brown rice syrup*), Soy protein isolate, Vegetable glycerin, Palm kernel oil.\nflour* Rice flour, Chicory root fibre, Natural flavour, Peanuts*, Cocoa butter, Cocoa, Peanut butter* Soy protein concentrate.\ntable oil , Salt, Rice starch, Soy lecithin, Tocopherols.\nains: Peanut, Soy. May contain: Milk, Sesame, Tree nuts.\nARTIFIGTELS\nCient: Arachides, Soja. Peut contenir : Lait, Sésame, Noix.\nédients Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\"), Isolat de protéines de soja, Glycérine\ntale. Huile de palmiste, Farine de soja\", Farine de riz*, Fibre de racine de chicorée, Arôme naturel, Arachides*, Beurre de\noD. Caca0, Beurre d'arachides, Concentré de protéines de soja*, Huile végétale*, Sel, Amidon de riz, Lécithine de soja.\nphérols.\n*Biologique\nBER HARE/MEILLEUR AVANT\n\"Organic",
+      "expected_ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Rice flour",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Salt",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols"
+      ],
+      "optional_ingredients": [
+        "Soy flour",
+        "Vegetable oil"
+      ],
+      "expected_aliases": {
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup)": [
+          "Sucres (sirop de canne inverti, sucre de canne, sirop de riz brun)",
+          "Sugar"
+        ],
+        "Soy protein isolate": [
+          "Isolat de protéines de soja"
+        ],
+        "Vegetable glycerin": [
+          "Glycérine végétale",
+          "Vegetable glycerine",
+          "Glycerin",
+          "Glycerine"
+        ],
+        "Palm kernel oil": [
+          "Huile de palmiste"
+        ],
+        "Soy flour": [
+          "Farine de soja"
+        ],
+        "Rice flour": [
+          "Farine de riz"
+        ],
+        "Chicory root fibre": [
+          "Fibre de racine de chicorée",
+          "Chicory root fiber"
+        ],
+        "Natural flavour": [
+          "Arôme naturel",
+          "Natural flavor"
+        ],
+        "Peanuts": [
+          "Arachides",
+          "Peanut"
+        ],
+        "Cocoa butter": [
+          "Beurre de cacao"
+        ],
+        "Cocoa": [
+          "Cacao"
+        ],
+        "Peanut butter": [
+          "Beurre d’arachides",
+          "Beurre d'arachides"
+        ],
+        "Soy protein concentrate": [
+          "Concentré de protéines de soja"
+        ],
+        "Vegetable oil": [
+          "Huile végétale"
+        ],
+        "Salt": [
+          "Sel"
+        ],
+        "Rice starch": [
+          "Amidon de riz"
+        ],
+        "Soy lecithin": [
+          "Lécithine de soja"
+        ],
+        "Tocopherols": [
+          "Tocophérols",
+          "Tocopherol"
+        ]
+      },
+      "expected_none": false,
+      "image_file": "fixtures/current-label-upright.png",
+      "evaluate_vision": true,
+      "notes": "Exact ML Kit text from current-photo-diagnostics.txt, variant upright, enhanced. Correlated variant of the same one real photo. French equivalents may match the same canonical ingredient once. Ignore organic markers. Do not include Contains/May contain warnings."
+    },
+    {
+      "id": "real_sideways_unmodified",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "ocr_text": "19AU2? ND 3 63 EE\nBEO HARE/ MEILLEUR AVANT\nphéols.\noD. CAca0, Beurre\nd'arachides,\nConcentré de\nprotéines\nde soja*, Huile\nvégétale*, Sel,\nAmidon de\nriz,\nLécithine de\nsoja.\ntale.\nHuile de\npalmiste,\nFarine\nde soja\", Farine de\nriz*, Fibre\nde racine de\nchicorée,\nArôme\nnaturel,\nArachides\", Beurre\nde\nédients\n: Sucres\n(sirop de\ncanne\ninverti\", sucre de\ncanne,\nsirop\nde riz\nbrun\"),\nIsolat\nde protéines de\nsoja,\nGlycérine\n*Biologique\nCient: Arachides, Soja. Peut contenir: Lait, Sésame, Noix.\nains: Peanut, Soy. May contain: Milk, Sesame, Tree nuts.\ntable oil , Salt, RiCe starch, Soy lecithin, Tocopherols.\nflour Rice\nflour, Chicory root\nfibre, Natural flavour, Peanuts*, Cocoa butter, Cocoa, Peanut butter* Soy\nprotein concentrate\nKredients: Sugars (nvert cane syrup, cane Sugar*, brown rice syrup*), Soy protein isolate, Vegetable glycerin, Palm kernel oil.\n\"Organic\nARTIFIOIELS",
+      "expected_ingredients": [
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Rice flour",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Salt",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols"
+      ],
+      "optional_ingredients": [
+        "Soy flour",
+        "Vegetable oil"
+      ],
+      "expected_aliases": {
+        "Sugars (invert cane syrup, cane sugar, brown rice syrup)": [
+          "Sucres (sirop de canne inverti, sucre de canne, sirop de riz brun)",
+          "Sugar"
+        ],
+        "Soy protein isolate": [
+          "Isolat de protéines de soja"
+        ],
+        "Vegetable glycerin": [
+          "Glycérine végétale",
+          "Vegetable glycerine",
+          "Glycerin",
+          "Glycerine"
+        ],
+        "Palm kernel oil": [
+          "Huile de palmiste"
+        ],
+        "Soy flour": [
+          "Farine de soja"
+        ],
+        "Rice flour": [
+          "Farine de riz"
+        ],
+        "Chicory root fibre": [
+          "Fibre de racine de chicorée",
+          "Chicory root fiber"
+        ],
+        "Natural flavour": [
+          "Arôme naturel",
+          "Natural flavor"
+        ],
+        "Peanuts": [
+          "Arachides",
+          "Peanut"
+        ],
+        "Cocoa butter": [
+          "Beurre de cacao"
+        ],
+        "Cocoa": [
+          "Cacao"
+        ],
+        "Peanut butter": [
+          "Beurre d’arachides",
+          "Beurre d'arachides"
+        ],
+        "Soy protein concentrate": [
+          "Concentré de protéines de soja"
+        ],
+        "Vegetable oil": [
+          "Huile végétale"
+        ],
+        "Salt": [
+          "Sel"
+        ],
+        "Rice starch": [
+          "Amidon de riz"
+        ],
+        "Soy lecithin": [
+          "Lécithine de soja"
+        ],
+        "Tocopherols": [
+          "Tocophérols",
+          "Tocopherol"
+        ]
+      },
+      "expected_none": false,
+      "image_file": "fixtures/current-label.jpeg",
+      "evaluate_vision": false,
+      "notes": "Exact ML Kit text from current-photo-diagnostics.txt, variant current, unmodified. Correlated variant of the same one real photo. French equivalents may match the same canonical ingredient once. Ignore organic markers. Do not include Contains/May contain warnings."
+    },
+    {
+      "id": "clean_wheat_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "ocr_text": "INGREDIENTS:\nWheat flour, sugar,\nmilk powder, cocoa\nbutter, salt, soy\nlecithin.\n\nMay contain peanuts.",
+      "expected_ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "optional_ingredients": [],
+      "expected_aliases": {},
+      "expected_none": false,
+      "notes": "Manual exact transcription of synthetic image; line wrapping joins words, precautionary peanuts must stay excluded.",
+      "image_file": "fixtures/wheat-control.jpg",
+      "evaluate_vision": true
+    },
+    {
+      "id": "clean_granola_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "ocr_text": "OAT & HONEY GRANOLA\nINGREDIENTS\nWhole grain oats, honey, almonds,\nsunflower oil, dried cranberries,\npumpkin seeds, sea salt, cinnamon.\nContains: almonds (tree nuts).\nMay contain: milk, soy, wheat.\nSAMPLE LABEL · UI TEST IMAGE",
+      "expected_ingredients": [
+        "Whole grain oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "optional_ingredients": [],
+      "expected_aliases": {},
+      "expected_none": false,
+      "notes": "Manual exact transcription of synthetic UI fixture. The Contains statement repeats almonds and must not create a duplicate; May contain items are not ingredients.",
+      "image_file": "fixtures/granola-control.png",
+      "evaluate_vision": true
+    },
+    {
+      "id": "synthetic_ocr_typos",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_ocr_typos",
+      "ocr_text": "CRUNCHY BISCUITS\nlngredients: Wheal f1our, sklm milk powder, cano1a oil, sea sa1t. Contains: wheat, milk. Best before 2027-01-10.",
+      "expected_ingredients": [
+        "Wheat flour",
+        "skim milk powder",
+        "canola oil",
+        "sea salt"
+      ],
+      "optional_ingredients": [],
+      "expected_aliases": {},
+      "expected_none": false,
+      "notes": "Synthetic known corruption of a clean ingredient list. Not copied from the prompt example. Corrections are known because the corruption was constructed from these expected ingredients."
+    },
+    {
+      "id": "synthetic_nested",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_nested",
+      "ocr_text": "Ingredients: Chocolate (sugar, cocoa butter, soy lecithin), wheat flour, Contains 2% or less of: salt, citric acid. May contain peanuts. Nutrition Facts Calories 210.",
+      "expected_ingredients": [
+        "Chocolate (sugar, cocoa butter, soy lecithin)",
+        "wheat flour",
+        "salt",
+        "citric acid"
+      ],
+      "optional_ingredients": [],
+      "expected_aliases": {},
+      "expected_none": false,
+      "notes": "Synthetic combines bracket preservation and minor-quantity marker. Do not flatten Chocolate children into extra top-level ingredients."
+    },
+    {
+      "id": "synthetic_bilingual",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_bilingual",
+      "ocr_text": "Ingredients: sugar, milk powder, cocoa butter.\nIngrédients : sucre, poudre de lait, beurre de cacao.\nMay contain peanuts.",
+      "expected_ingredients": [
+        "sugar",
+        "milk powder",
+        "cocoa butter"
+      ],
+      "optional_ingredients": [],
+      "expected_aliases": {
+        "sugar": [
+          "sucre"
+        ],
+        "milk powder": [
+          "poudre de lait"
+        ],
+        "cocoa butter": [
+          "beurre de cacao"
+        ]
+      },
+      "expected_none": false,
+      "notes": "Synthetic duplicate English/French declaration. Evaluate semantic unique ingredients; do not count translated duplicates as new ingredients."
+    },
+    {
+      "id": "negative_nutrition_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_nutrition_only",
+      "ocr_text": "Nutrition Facts\nPer 30 g: Calories 120, Fat 2 g, Sodium 140 mg, Protein 4 g.\nBest before 2027-01-10.",
+      "expected_ingredients": [],
+      "optional_ingredients": [],
+      "expected_aliases": {},
+      "expected_none": true,
+      "notes": "No ingredient list. Must return NONE, not nutrition names or date text."
+    },
+    {
+      "id": "negative_precaution_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_precaution_only",
+      "ocr_text": "ALLERGEN INFORMATION\nMay contain: milk, peanuts, soy.\nProduced in a facility that also processes sesame.",
+      "expected_ingredients": [],
+      "optional_ingredients": [],
+      "expected_aliases": {},
+      "expected_none": true,
+      "notes": "Warnings alone are not an ingredient declaration. Must return NONE; suppressing the warning from the ingredient output does not mean allergens are absent."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+--------- beginning of main
+11-07 19:02:04.496 21139 21184 I IngredientBenchmark: START real_sideways_enhanced
+11-07 19:04:04.537 21139 21184 I IngredientBenchmark: END real_sideways_enhanced timeout 120013ms
+11-07 19:04:04.564 21139 21184 I IngredientBenchmark: RESULTS /storage/emulated/0/Android/data/com.example.allergycheck/files/benchmark/gemma-results.json
+11-07 19:04:45.392 21387 21399 I IngredientBenchmark: START clean_wheat_fixture
+11-07 19:05:08.200 21387 21399 I IngredientBenchmark: END clean_wheat_fixture ok 22807ms
+11-07 19:05:08.200 21387 21399 I IngredientBenchmark: START clean_granola_fixture
+11-07 19:05:50.742 21387 21399 I IngredientBenchmark: END clean_granola_fixture ok 42526ms
+11-07 19:05:50.744 21387 21399 I IngredientBenchmark: START synthetic_ocr_typos
+11-07 19:06:25.963 21387 21399 I IngredientBenchmark: END synthetic_ocr_typos ok 35216ms
+11-07 19:06:25.964 21387 21399 I IngredientBenchmark: START synthetic_nested
+11-07 19:06:41.921 21387 21399 I IngredientBenchmark: END synthetic_nested ok 15955ms
+11-07 19:06:41.922 21387 21399 I IngredientBenchmark: START synthetic_bilingual
+11-07 19:06:51.326 21387 21399 I IngredientBenchmark: END synthetic_bilingual ok 9404ms
+11-07 19:06:51.327 21387 21399 I IngredientBenchmark: START negative_nutrition_only
+11-07 19:07:01.854 21387 21399 I IngredientBenchmark: END negative_nutrition_only ok 10525ms
+11-07 19:07:01.854 21387 21399 I IngredientBenchmark: START negative_precaution_only
+11-07 19:07:12.322 21387 21399 I IngredientBenchmark: END negative_precaution_only ok 10466ms
+11-07 19:07:12.323 21387 21399 I IngredientBenchmark: START real_upright_enhanced
+11-07 19:07:50.736 21387 21399 I IngredientBenchmark: END real_upright_enhanced ok 38412ms
+11-07 19:07:50.737 21387 21399 I IngredientBenchmark: START real_sideways_enhanced
+11-07 19:09:38.965 21387 21399 I IngredientBenchmark: END real_sideways_enhanced ok 108226ms
+11-07 19:09:38.965 21387 21399 I IngredientBenchmark: START real_sideways_unmodified
+11-07 19:09:51.589 21387 21399 I IngredientBenchmark: END real_sideways_unmodified ok 12623ms
+11-07 19:09:51.596 21387 21399 I IngredientBenchmark: RESULTS /storage/emulated/0/Android/data/com.example.allergycheck/files/benchmark/gemma-results.json

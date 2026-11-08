@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "model": {
+    "id": "qwen3.5-2b",
+    "repo": "unsloth/Qwen3.5-2B-GGUF",
+    "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+    "file": "Qwen3.5-2B-Q4_K_M.gguf",
+    "bytes": 1280835840,
+    "projector": "mmproj-F16.gguf",
+    "projector_bytes": 668227264,
+    "vision": true
+  },
+  "mode": "text",
+  "started_at": "2026-11-08T02:13:04.576626+00:00",
+  "notes": "No concurrent model inference; Android emulator remains running but idle.",
+  "artifacts": {
+    "model": {
+      "id": "qwen3.5-2b",
+      "repo": "unsloth/Qwen3.5-2B-GGUF",
+      "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+      "file": "Qwen3.5-2B-Q4_K_M.gguf",
+      "bytes": 1280835840,
+      "projector": "mmproj-F16.gguf",
+      "projector_bytes": 668227264,
+      "vision": true
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3.5-2B-Q4_K_M.gguf",
+        "bytes": 1280835840,
+        "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223"
+      },
+      {
+        "file": "mmproj-F16.gguf",
+        "bytes": 668227264,
+        "sha256": "7035e9cb8d7c6a9681d07eef9a364783e86ea4cd73faab2eabb4f43a101830c7"
+      }
+    ]
+  },
+  "hardware": {
+    "machine": "arm64",
+    "system": "macOS-27.3-arm64-arm-64bit",
+    "ram_bytes": 19327352832,
+    "cpu_count": 11
+  },
+  "runtime": "version: 0.4.0 (build 10809, commit 5266f24da)\nbuilt with AppleClang 21.0.0.21000101 for Darwin arm64",
+  "settings": {
+    "temperature": 0,
+    "seed": 0,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "prompt_caching": false,
+    "quantization": "Q4_K_M"
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Cocoa butter\n- Cocoa\n- Peanut butter\n- Soy protein concentrate\n- Soy protein isolate\n- Vegetable glycerin\n- Palm kernel oil\n- Sugar\n- Brown rice syrup\n- Invert cane syrup\n- Cane sugar\n- Rice flour\n- Rice starch\n- Chicory root fibre\n- Natural flavour\n- Peanuts\n- Tree nuts\n- Milk\n- Sesame\n- Lait\n- Arachides\n- Soja\n- Arôme naturel\n- Fibre de racine de chicorée\n- Farine de riz\n- Farine de soja\n- Huile végétale\n- Huile de palmiste\n- Beurre d'arachides\n- Beurre\n- Concentré de protéines de soja\n- Isolat de protéines de soja\n- Glycérine\n- Lécithine de soja\n- Phérols\n- O.D.\n- BER HRE/ MEILLEUR AVANT\n- table oil\n- Salt\n- \"Organic\n- ARTIFIGTELS",
+      "reasoning": "",
+      "elapsed_seconds": 3.631856040999992,
+      "first_token_seconds": 0.6513580409955466,
+      "usage": {
+        "completion_tokens": 222,
+        "prompt_tokens": 659,
+        "total_tokens": 881,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 659,
+        "prompt_ms": 647.889,
+        "prompt_per_token_ms": 0.9831396054628224,
+        "prompt_per_second": 1017.1495425914006,
+        "predicted_n": 222,
+        "predicted_ms": 2980.07,
+        "predicted_per_token_ms": 13.48447963800905,
+        "predicted_per_second": 74.15933182777584
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Sugar",
+        "Brown rice syrup",
+        "Invert cane syrup",
+        "Cane sugar",
+        "Rice flour",
+        "Rice starch",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Tree nuts",
+        "Milk",
+        "Sesame",
+        "Lait",
+        "Arachides",
+        "Soja",
+        "Arôme naturel",
+        "Fibre de racine de chicorée",
+        "Farine de riz",
+        "Farine de soja",
+        "Huile végétale",
+        "Huile de palmiste",
+        "Beurre d'arachides",
+        "Beurre",
+        "Concentré de protéines de soja",
+        "Isolat de protéines de soja",
+        "Glycérine",
+        "Lécithine de soja",
+        "Phérols",
+        "O.D",
+        "BER HRE/ MEILLEUR AVANT",
+        "table oil",
+        "Salt",
+        "Organic",
+        "ARTIFIGTELS"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 15,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.9375,
+        "precision": 0.5,
+        "f1": 0.6521739130434783,
+        "missing": [
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Brown rice syrup",
+          "Invert cane syrup",
+          "Cane sugar",
+          "Tree nuts",
+          "Milk",
+          "Sesame",
+          "Lait",
+          "Soja",
+          "Beurre",
+          "Phérols",
+          "O.D",
+          "BER HRE/ MEILLEUR AVANT",
+          "table oil",
+          "Organic",
+          "ARTIFIGTELS"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 9,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "missing": [
+              "invert cane syrup",
+              "cane sugar",
+              "brown rice syrup"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok"
+    }
+  ],
+  "performance_repeats": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Cocoa butter\n- Cocoa\n- Peanut butter\n- Soy protein concentrate\n- Soy protein isolate\n- Vegetable glycerin\n- Palm kernel oil\n- Sugar\n- Brown rice syrup\n- Invert cane syrup\n- Cane sugar\n- Rice flour\n- Rice starch\n- Chicory root fibre\n- Natural flavour\n- Peanuts\n- Tree nuts\n- Milk\n- Sesame\n- Lait\n- Arachides\n- Soja\n- Arôme naturel\n- Fibre de racine de chicorée\n- Farine de riz\n- Farine de soja\n- Huile végétale\n- Huile de palmiste\n- Beurre d'arachides\n- Beurre\n- Concentré de protéines de soja\n- Isolat de protéines de soja\n- Glycérine\n- Lécithine de soja\n- Phérols\n- O.D.\n- BER HRE/ MEILLEUR AVANT\n- table oil\n- Salt\n- \"Organic\n- ARTIFIGTELS",
+      "reasoning": "",
+      "elapsed_seconds": 3.668223416003457,
+      "first_token_seconds": 0.6654538330039941,
+      "usage": {
+        "completion_tokens": 222,
+        "prompt_tokens": 659,
+        "total_tokens": 881,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 659,
+        "prompt_ms": 661.581,
+        "prompt_per_token_ms": 1.003916540212443,
+        "prompt_per_second": 996.098739232233,
+        "predicted_n": 222,
+        "predicted_ms": 3002.589,
+        "predicted_per_token_ms": 13.58637556561086,
+        "predicted_per_second": 73.60314715067564
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Sugar",
+        "Brown rice syrup",
+        "Invert cane syrup",
+        "Cane sugar",
+        "Rice flour",
+        "Rice starch",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Tree nuts",
+        "Milk",
+        "Sesame",
+        "Lait",
+        "Arachides",
+        "Soja",
+        "Arôme naturel",
+        "Fibre de racine de chicorée",
+        "Farine de riz",
+        "Farine de soja",
+        "Huile végétale",
+        "Huile de palmiste",
+        "Beurre d'arachides",
+        "Beurre",
+        "Concentré de protéines de soja",
+        "Isolat de protéines de soja",
+        "Glycérine",
+        "Lécithine de soja",
+        "Phérols",
+        "O.D",
+        "BER HRE/ MEILLEUR AVANT",
+        "table oil",
+        "Salt",
+        "Organic",
+        "ARTIFIGTELS"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 15,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.9375,
+        "precision": 0.5,
+        "f1": 0.6521739130434783,
+        "missing": [
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Brown rice syrup",
+          "Invert cane syrup",
+          "Cane sugar",
+          "Tree nuts",
+          "Milk",
+          "Sesame",
+          "Lait",
+          "Soja",
+          "Beurre",
+          "Phérols",
+          "O.D",
+          "BER HRE/ MEILLEUR AVANT",
+          "table oil",
+          "Organic",
+          "ARTIFIGTELS"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 9,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "missing": [
+              "invert cane syrup",
+              "cane sugar",
+              "brown rice syrup"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 1
+    },
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Cocoa butter\n- Cocoa\n- Peanut butter\n- Soy protein concentrate\n- Soy protein isolate\n- Vegetable glycerin\n- Palm kernel oil\n- Sugar\n- Brown rice syrup\n- Invert cane syrup\n- Cane sugar\n- Rice flour\n- Rice starch\n- Chicory root fibre\n- Natural flavour\n- Peanuts\n- Tree nuts\n- Milk\n- Sesame\n- Lait\n- Arachides\n- Soja\n- Arôme naturel\n- Fibre de racine de chicorée\n- Farine de riz\n- Farine de soja\n- Huile végétale\n- Huile de palmiste\n- Beurre d'arachides\n- Beurre\n- Concentré de protéines de soja\n- Isolat de protéines de soja\n- Glycérine\n- Lécithine de soja\n- Phérols\n- O.D.\n- BER HRE/ MEILLEUR AVANT\n- table oil\n- Salt\n- \"Organic\n- ARTIFIGTELS",
+      "reasoning": "",
+      "elapsed_seconds": 3.632676959001401,
+      "first_token_seconds": 0.6430167500002426,
+      "usage": {
+        "completion_tokens": 222,
+        "prompt_tokens": 659,
+        "total_tokens": 881,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 659,
+        "prompt_ms": 639.77,
+        "prompt_per_token_ms": 0.9708194233687405,
+        "prompt_per_second": 1030.057676977664,
+        "predicted_n": 222,
+        "predicted_ms": 2989.309,
+        "predicted_per_token_ms": 13.526285067873305,
+        "predicted_per_second": 73.93012900305722
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Sugar",
+        "Brown rice syrup",
+        "Invert cane syrup",
+        "Cane sugar",
+        "Rice flour",
+        "Rice starch",
+        "Chicory root fibre",
+        "Natural flavour",
+        "Peanuts",
+        "Tree nuts",
+        "Milk",
+        "Sesame",
+        "Lait",
+        "Arachides",
+        "Soja",
+        "Arôme naturel",
+        "Fibre de racine de chicorée",
+        "Farine de riz",
+        "Farine de soja",
+        "Huile végétale",
+        "Huile de palmiste",
+        "Beurre d'arachides",
+        "Beurre",
+        "Concentré de protéines de soja",
+        "Isolat de protéines de soja",
+        "Glycérine",
+        "Lécithine de soja",
+        "Phérols",
+        "O.D",
+        "BER HRE/ MEILLEUR AVANT",
+        "table oil",
+        "Salt",
+        "Organic",
+        "ARTIFIGTELS"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 15,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.9375,
+        "precision": 0.5,
+        "f1": 0.6521739130434783,
+        "missing": [
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Brown rice syrup",
+          "Invert cane syrup",
+          "Cane sugar",
+          "Tree nuts",
+          "Milk",
+          "Sesame",
+          "Lait",
+          "Soja",
+          "Beurre",
+          "Phérols",
+          "O.D",
+          "BER HRE/ MEILLEUR AVANT",
+          "table oil",
+          "Organic",
+          "ARTIFIGTELS"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 9,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "missing": [
+              "invert cane syrup",
+              "cane sugar",
+              "brown rice syrup"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 2
+    }
+  ],
+  "server_metrics": {
+    "command": [
+      "llama-server",
+      "-m",
+      "/tmp/allergy-model-benchmark/models/qwen3.5-2b/Qwen3.5-2B-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18765",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "5",
+      "--threads-batch",
+      "5",
+      "--gpu-layers",
+      "99",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 1.787173333003011,
+    "ready_rss_bytes": 1489125376,
+    "peak_sampled_rss_bytes": 1536573440,
+    "minimum_system_available_bytes": 3398926336,
+    "system_swap_delta_bytes": -100663296,
+    "memory_caveat": "Mac process RSS sampled every100ms; excludes unaccounted GPU allocations; not phone RAM.",
+    "server_log": "/Users/lcwhhh/Program/nathacks2026/tools/model-benchmark/results/qwen3.5-2b-text-timing-server.log"
+  },
+  "complete": true,
+  "completed_at": "2026-11-08T02:13:17.490681+00:00"
+}

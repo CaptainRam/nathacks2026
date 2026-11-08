@@ -1,0 +1,1078 @@
+{
+  "schema_version": 1,
+  "model": {
+    "id": "qwen3-1.7b",
+    "repo": "unsloth/Qwen3-1.7B-GGUF",
+    "revision": "d7f544eead698dbd1f15126ef60b45a1e1933222",
+    "file": "Qwen3-1.7B-Q4_K_M.gguf",
+    "bytes": 1107409472,
+    "vision": false
+  },
+  "mode": "text",
+  "started_at": "2026-11-08T02:04:02.077462+00:00",
+  "notes": "Accuracy run overlapped Gemma emulator; use timing-only rerun for Mac latency.",
+  "artifacts": {
+    "model": {
+      "id": "qwen3-1.7b",
+      "repo": "unsloth/Qwen3-1.7B-GGUF",
+      "revision": "d7f544eead698dbd1f15126ef60b45a1e1933222",
+      "file": "Qwen3-1.7B-Q4_K_M.gguf",
+      "bytes": 1107409472,
+      "vision": false
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3-1.7B-Q4_K_M.gguf",
+        "bytes": 1107409472,
+        "sha256": "b139949c5bd74937ad8ed8c8cf3d9ffb1e99c866c823204dc42c0d91fa181897"
+      }
+    ]
+  },
+  "hardware": {
+    "machine": "arm64",
+    "system": "macOS-27.3-arm64-arm-64bit",
+    "ram_bytes": 19327352832,
+    "cpu_count": 11
+  },
+  "runtime": "version: 0.4.0 (build 10809, commit 5266f24da)\nbuilt with AppleClang 21.0.0.21000101 for Darwin arm64",
+  "settings": {
+    "temperature": 0,
+    "seed": 0,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "prompt_caching": false,
+    "quantization": "Q4_K_M"
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Caca0  \n- Beurre d'arachides  \n- Concentré de protéines de soja  \n- Huile végétale  \n- Sel  \n- Amidon de riz  \n- Lécithine de soja  \n- Huile de palmiste  \n- Farine de soja  \n- Farine de riz  \n- Fibre de racine de chicorée  \n- Arôme naturel  \n- Arachides*  \n- Beurre d'éditions  \n- Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")  \n- Isolat de protéines de soja  \n- Glycérine *Biologique  \n- Tocopherols  \n- Soy  \n- Peanut  \n- Soy  \n- May contain: Milk, Sesame, Tree nuts.  \n- Palm kernel oil  \n- Rice starch  \n- Soy lecithin  \n- Tocopherols.",
+      "reasoning": "",
+      "elapsed_seconds": 3.5176506669959053,
+      "first_token_seconds": 0.8287195000011707,
+      "usage": {
+        "completion_tokens": 203,
+        "prompt_tokens": 661,
+        "total_tokens": 864,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 661,
+        "prompt_ms": 816.345,
+        "prompt_per_token_ms": 1.2350151285930409,
+        "prompt_per_second": 809.7066803863562,
+        "predicted_n": 203,
+        "predicted_ms": 2688.748,
+        "predicted_per_token_ms": 13.310633663366337,
+        "predicted_per_second": 75.12790339593
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Caca0",
+        "Beurre d'arachides",
+        "Concentré de protéines de soja",
+        "Huile végétale",
+        "Sel",
+        "Amidon de riz",
+        "Lécithine de soja",
+        "Huile de palmiste",
+        "Farine de soja",
+        "Farine de riz",
+        "Fibre de racine de chicorée",
+        "Arôme naturel",
+        "Arachides",
+        "Beurre d'éditions",
+        "Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")",
+        "Isolat de protéines de soja",
+        "Glycérine *Biologique",
+        "Tocopherols",
+        "Soy",
+        "Peanut",
+        "Soy",
+        "May contain: Milk, Sesame, Tree nuts",
+        "Palm kernel oil",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 13,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 0.8125,
+        "precision": 0.6842105263157895,
+        "f1": 0.742857142857143,
+        "missing": [
+          "Vegetable glycerin",
+          "Cocoa butter",
+          "Cocoa"
+        ],
+        "unexpected": [
+          "Caca0",
+          "Beurre d'éditions",
+          "Glycérine *Biologique",
+          "Soy",
+          "Peanut",
+          "May contain: Milk, Sesame, Tree nuts"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 5,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok"
+    },
+    {
+      "id": "real_upright_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Sugar  \n- Cane sugar  \n- Brown rice syrup  \n- Soy protein isolate  \n- Vegetable glycerin  \n- Palm kernel oil  \n- Rice flour  \n- Rice starch  \n- Soy lecithin  \n- Tocopherols  \n- Peanut  \n- Soy  \n- Cocoa butter  \n- Cocoa  \n- Peanut butter  \n- Soy protein concentrate  \n- Table oil  \n- Salt  \n- Natural flavour  \n- Peanuts  \n- Cocoa  \n- Peanut butter  \n- Soy protein isolate  \n- Vegetable glycerin  \n- Palm kernel oil  \n- Arachides  \n- Soja  \n- Lait  \n- Sésame  \n- Noix  \n- Caca0  \n- Beurre d'arachides  \n- Concentré de protéines de soja  \n- Huile végétale  \n- Amidon de riz  \n- Lécithine de soja  \n- Tocopherols  \n- Organic",
+      "reasoning": "",
+      "elapsed_seconds": 3.0277467499981867,
+      "first_token_seconds": 0.6086429159986437,
+      "usage": {
+        "completion_tokens": 190,
+        "prompt_tokens": 647,
+        "total_tokens": 837,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 647,
+        "prompt_ms": 583.511,
+        "prompt_per_token_ms": 0.90187171561051,
+        "prompt_per_second": 1108.8051467752964,
+        "predicted_n": 190,
+        "predicted_ms": 2418.012,
+        "predicted_per_token_ms": 12.793714285714287,
+        "predicted_per_second": 78.16338380454687
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Sugar",
+        "Cane sugar",
+        "Brown rice syrup",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Rice flour",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols",
+        "Peanut",
+        "Soy",
+        "Cocoa butter",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein concentrate",
+        "Table oil",
+        "Salt",
+        "Natural flavour",
+        "Peanuts",
+        "Cocoa",
+        "Peanut butter",
+        "Soy protein isolate",
+        "Vegetable glycerin",
+        "Palm kernel oil",
+        "Arachides",
+        "Soja",
+        "Lait",
+        "Sésame",
+        "Noix",
+        "Caca0",
+        "Beurre d'arachides",
+        "Concentré de protéines de soja",
+        "Huile végétale",
+        "Amidon de riz",
+        "Lécithine de soja",
+        "Tocopherols",
+        "Organic"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 14,
+        "matched": [
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 0.875,
+        "precision": 0.5384615384615384,
+        "f1": 0.6666666666666667,
+        "missing": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Chicory root fibre"
+        ],
+        "unexpected": [
+          "Sugar",
+          "Cane sugar",
+          "Brown rice syrup",
+          "Peanut",
+          "Soy",
+          "Table oil",
+          "Soja",
+          "Lait",
+          "Sésame",
+          "Noix",
+          "Caca0",
+          "Organic"
+        ],
+        "optional_found": [
+          "Vegetable oil"
+        ],
+        "duplicate_count": 11,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": 0.0,
+        "missing_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "missing": [
+              "invert cane syrup",
+              "cane sugar",
+              "brown rice syrup"
+            ]
+          }
+        ],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok"
+    },
+    {
+      "id": "real_sideways_unmodified",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Chocolate (sugar, cocoa butter, soy lecithin)  \n- Oats  \n- sugar  \n- palm oil  \n- salt  \n- sodium bicarbonate  \n- soy protein isolate  \n- vegetable glycerin  \n- palm kernel oil  \n- rice flour  \n- chickory root fibre  \n- natural flavour  \n- peanut  \n- soy  \n- cocoa butter  \n- cocoa  \n- peanut butter  \n- rice flour  \n- soy protein concentrate  \n- chicory root fibre  \n- glycérine  \n- sucres (invert cane syrup, cane sugar*, brown rice syrup*)",
+      "reasoning": "",
+      "elapsed_seconds": 2.233897624995734,
+      "first_token_seconds": 0.6343737919960404,
+      "usage": {
+        "completion_tokens": 118,
+        "prompt_tokens": 690,
+        "total_tokens": 808,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 690,
+        "prompt_ms": 602.822,
+        "prompt_per_token_ms": 0.8736550724637682,
+        "prompt_per_second": 1144.616487122235,
+        "predicted_n": 118,
+        "predicted_ms": 1598.595,
+        "predicted_per_token_ms": 13.663205128205128,
+        "predicted_per_second": 73.18926932712789
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Chocolate (sugar, cocoa butter, soy lecithin)",
+        "Oats",
+        "sugar",
+        "palm oil",
+        "salt",
+        "sodium bicarbonate",
+        "soy protein isolate",
+        "vegetable glycerin",
+        "palm kernel oil",
+        "rice flour",
+        "chickory root fibre",
+        "natural flavour",
+        "peanut",
+        "soy",
+        "cocoa butter",
+        "cocoa",
+        "peanut butter",
+        "rice flour",
+        "soy protein concentrate",
+        "chicory root fibre",
+        "glycérine",
+        "sucres (invert cane syrup, cane sugar*, brown rice syrup*)"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 12,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt"
+        ],
+        "recall": 0.75,
+        "precision": 0.6,
+        "f1": 0.6666666666666665,
+        "missing": [
+          "Peanuts",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Chocolate (sugar, cocoa butter, soy lecithin)",
+          "Oats",
+          "sugar",
+          "palm oil",
+          "sodium bicarbonate",
+          "chickory root fibre",
+          "peanut",
+          "soy"
+        ],
+        "optional_found": [],
+        "duplicate_count": 2,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok"
+    },
+    {
+      "id": "clean_wheat_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "reply": "- Wheat flour  \n- sugar  \n- milk powder  \n- cocoa butter  \n- salt  \n- soy lecithin",
+      "reasoning": "",
+      "elapsed_seconds": 0.7537087089949637,
+      "first_token_seconds": 0.43024316700029885,
+      "usage": {
+        "completion_tokens": 25,
+        "prompt_tokens": 392,
+        "total_tokens": 417,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 392,
+        "prompt_ms": 386.306,
+        "prompt_per_token_ms": 0.9854744897959183,
+        "prompt_per_second": 1014.7396105677883,
+        "predicted_n": 25,
+        "predicted_ms": 323.096,
+        "predicted_per_token_ms": 13.462333333333333,
+        "predicted_per_second": 74.28132815014733
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "score": {
+        "required_total": 6,
+        "matched_required": 6,
+        "matched": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "clean_granola_fixture",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "reply": "- Whole grain oats  \n- honey  \n- almonds  \n- sunflower oil  \n- dried cranberries  \n- pumpkin seeds  \n- sea salt  \n- cinnamon",
+      "reasoning": "",
+      "elapsed_seconds": 0.843541375004861,
+      "first_token_seconds": 0.3982635830034269,
+      "usage": {
+        "completion_tokens": 32,
+        "prompt_tokens": 422,
+        "total_tokens": 454,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 422,
+        "prompt_ms": 386.279,
+        "prompt_per_token_ms": 0.9153530805687203,
+        "prompt_per_second": 1092.4746103205198,
+        "predicted_n": 32,
+        "predicted_ms": 445.064,
+        "predicted_per_token_ms": 14.356903225806452,
+        "predicted_per_second": 69.65290385203028
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Whole grain oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "score": {
+        "required_total": 8,
+        "matched_required": 8,
+        "matched": [
+          "Whole grain oats",
+          "honey",
+          "almonds",
+          "sunflower oil",
+          "dried cranberries",
+          "pumpkin seeds",
+          "sea salt",
+          "cinnamon"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "synthetic_ocr_typos",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_ocr_typos",
+      "reply": "- Wheal f1our  \n- sklm milk powder  \n- cano1a oil  \n- sea sa1t",
+      "reasoning": "",
+      "elapsed_seconds": 0.7312278329991386,
+      "first_token_seconds": 0.3928492080012802,
+      "usage": {
+        "completion_tokens": 26,
+        "prompt_tokens": 413,
+        "total_tokens": 439,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 413,
+        "prompt_ms": 380.731,
+        "prompt_per_token_ms": 0.921866828087167,
+        "prompt_per_second": 1084.755378469313,
+        "predicted_n": 26,
+        "predicted_ms": 337.675,
+        "predicted_per_token_ms": 13.507,
+        "predicted_per_second": 74.03568520026653
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Wheal f1our",
+        "sklm milk powder",
+        "cano1a oil",
+        "sea sa1t"
+      ],
+      "score": {
+        "required_total": 4,
+        "matched_required": 0,
+        "matched": [],
+        "recall": 0.0,
+        "precision": 0.0,
+        "f1": 0.0,
+        "missing": [
+          "Wheat flour",
+          "skim milk powder",
+          "canola oil",
+          "sea salt"
+        ],
+        "unexpected": [
+          "Wheal f1our",
+          "sklm milk powder",
+          "cano1a oil",
+          "sea sa1t"
+        ],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "synthetic_nested",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_nested",
+      "reply": "- Chocolate (sugar, cocoa butter, soy lecithin)  \n- wheat flour  \n- salt  \n- citric acid",
+      "reasoning": "",
+      "elapsed_seconds": 0.7828762089993688,
+      "first_token_seconds": 0.39095333400473464,
+      "usage": {
+        "completion_tokens": 28,
+        "prompt_tokens": 405,
+        "total_tokens": 433,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 405,
+        "prompt_ms": 373.51,
+        "prompt_per_token_ms": 0.9222469135802469,
+        "prompt_per_second": 1084.30831838505,
+        "predicted_n": 28,
+        "predicted_ms": 392.546,
+        "predicted_per_token_ms": 14.53874074074074,
+        "predicted_per_second": 68.78174787158702
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Chocolate (sugar, cocoa butter, soy lecithin)",
+        "wheat flour",
+        "salt",
+        "citric acid"
+      ],
+      "score": {
+        "required_total": 4,
+        "matched_required": 4,
+        "matched": [
+          "Chocolate (sugar, cocoa butter, soy lecithin)",
+          "wheat flour",
+          "salt",
+          "citric acid"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "synthetic_bilingual",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_bilingual",
+      "reply": "- sugar  \n- milk powder  \n- cocoa butter",
+      "reasoning": "",
+      "elapsed_seconds": 0.5144690829984029,
+      "first_token_seconds": 0.37541795799916144,
+      "usage": {
+        "completion_tokens": 11,
+        "prompt_tokens": 395,
+        "total_tokens": 406,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 395,
+        "prompt_ms": 359.16,
+        "prompt_per_token_ms": 0.9092658227848102,
+        "prompt_per_second": 1099.7883951442254,
+        "predicted_n": 11,
+        "predicted_ms": 138.453,
+        "predicted_per_token_ms": 13.8453,
+        "predicted_per_second": 72.22667620058792
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "sugar",
+        "milk powder",
+        "cocoa butter"
+      ],
+      "score": {
+        "required_total": 3,
+        "matched_required": 3,
+        "matched": [
+          "sugar",
+          "milk powder",
+          "cocoa butter"
+        ],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "negative_nutrition_only",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "negative_nutrition_only",
+      "reply": "NONE",
+      "reasoning": "",
+      "elapsed_seconds": 0.390679000003729,
+      "first_token_seconds": 0.3778867920045741,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 406,
+        "total_tokens": 408,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 406,
+        "prompt_ms": 368.415,
+        "prompt_per_token_ms": 0.9074261083743843,
+        "prompt_per_second": 1102.0181045831466,
+        "predicted_n": 2,
+        "predicted_ms": 12.46,
+        "predicted_per_token_ms": 12.46,
+        "predicted_per_second": 80.25682182985553
+      },
+      "finish_reason": "stop",
+      "ingredients": [],
+      "score": {
+        "required_total": 0,
+        "matched_required": 0,
+        "matched": [],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": true,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    },
+    {
+      "id": "negative_precaution_only",
+      "mode": "text",
+      "source_kind": "synthetic",
+      "source_group": "negative_precaution_only",
+      "reply": "NONE",
+      "reasoning": "",
+      "elapsed_seconds": 0.35918258399760816,
+      "first_token_seconds": 0.3417942500018398,
+      "usage": {
+        "completion_tokens": 2,
+        "prompt_tokens": 384,
+        "total_tokens": 386,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 384,
+        "prompt_ms": 333.303,
+        "prompt_per_token_ms": 0.8679765625,
+        "prompt_per_second": 1152.1048415405803,
+        "predicted_n": 2,
+        "predicted_ms": 17.179,
+        "predicted_per_token_ms": 17.179,
+        "predicted_per_second": 58.210605972408175
+      },
+      "finish_reason": "stop",
+      "ingredients": [],
+      "score": {
+        "required_total": 0,
+        "matched_required": 0,
+        "matched": [],
+        "recall": 1.0,
+        "precision": 1.0,
+        "f1": 1.0,
+        "missing": [],
+        "unexpected": [],
+        "optional_found": [],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": true,
+        "required_subingredient_total": 0,
+        "matched_required_subingredients": 0,
+        "subingredient_recall": null,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": true
+      },
+      "status": "ok"
+    }
+  ],
+  "performance_repeats": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Caca0  \n- Beurre d'arachides  \n- Concentré de protéines de soja  \n- Huile végétale  \n- Sel  \n- Amidon de riz  \n- Lécithine de soja  \n- Huile de palmiste  \n- Farine de soja  \n- Farine de riz  \n- Fibre de racine de chicorée  \n- Arôme naturel  \n- Arachides*  \n- Beurre d'éditions  \n- Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")  \n- Isolat de protéines de soja  \n- Glycérine *Biologique  \n- Tocopherols  \n- Soy  \n- Peanut  \n- Soy  \n- May contain: Milk, Sesame, Tree nuts.  \n- Palm kernel oil  \n- Rice starch  \n- Soy lecithin  \n- Tocopherols.",
+      "reasoning": "",
+      "elapsed_seconds": 3.201525834003405,
+      "first_token_seconds": 0.6100118340036715,
+      "usage": {
+        "completion_tokens": 203,
+        "prompt_tokens": 661,
+        "total_tokens": 864,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 661,
+        "prompt_ms": 590.294,
+        "prompt_per_token_ms": 0.8930317700453857,
+        "prompt_per_second": 1119.780990489485,
+        "predicted_n": 203,
+        "predicted_ms": 2590.098,
+        "predicted_per_token_ms": 12.822267326732673,
+        "predicted_per_second": 77.98932704476819
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Caca0",
+        "Beurre d'arachides",
+        "Concentré de protéines de soja",
+        "Huile végétale",
+        "Sel",
+        "Amidon de riz",
+        "Lécithine de soja",
+        "Huile de palmiste",
+        "Farine de soja",
+        "Farine de riz",
+        "Fibre de racine de chicorée",
+        "Arôme naturel",
+        "Arachides",
+        "Beurre d'éditions",
+        "Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")",
+        "Isolat de protéines de soja",
+        "Glycérine *Biologique",
+        "Tocopherols",
+        "Soy",
+        "Peanut",
+        "Soy",
+        "May contain: Milk, Sesame, Tree nuts",
+        "Palm kernel oil",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 13,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 0.8125,
+        "precision": 0.6842105263157895,
+        "f1": 0.742857142857143,
+        "missing": [
+          "Vegetable glycerin",
+          "Cocoa butter",
+          "Cocoa"
+        ],
+        "unexpected": [
+          "Caca0",
+          "Beurre d'éditions",
+          "Glycérine *Biologique",
+          "Soy",
+          "Peanut",
+          "May contain: Milk, Sesame, Tree nuts"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 5,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 1
+    },
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Caca0  \n- Beurre d'arachides  \n- Concentré de protéines de soja  \n- Huile végétale  \n- Sel  \n- Amidon de riz  \n- Lécithine de soja  \n- Huile de palmiste  \n- Farine de soja  \n- Farine de riz  \n- Fibre de racine de chicorée  \n- Arôme naturel  \n- Arachides*  \n- Beurre d'éditions  \n- Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")  \n- Isolat de protéines de soja  \n- Glycérine *Biologique  \n- Tocopherols  \n- Soy  \n- Peanut  \n- Soy  \n- May contain: Milk, Sesame, Tree nuts.  \n- Palm kernel oil  \n- Rice starch  \n- Soy lecithin  \n- Tocopherols.",
+      "reasoning": "",
+      "elapsed_seconds": 3.2060432500002207,
+      "first_token_seconds": 0.5942021250011749,
+      "usage": {
+        "completion_tokens": 203,
+        "prompt_tokens": 661,
+        "total_tokens": 864,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 661,
+        "prompt_ms": 582.354,
+        "prompt_per_token_ms": 0.8810196671709531,
+        "prompt_per_second": 1135.0484413260663,
+        "predicted_n": 203,
+        "predicted_ms": 2609.998,
+        "predicted_per_token_ms": 12.920782178217822,
+        "predicted_per_second": 77.39469532160561
+      },
+      "finish_reason": "stop",
+      "ingredients": [
+        "Caca0",
+        "Beurre d'arachides",
+        "Concentré de protéines de soja",
+        "Huile végétale",
+        "Sel",
+        "Amidon de riz",
+        "Lécithine de soja",
+        "Huile de palmiste",
+        "Farine de soja",
+        "Farine de riz",
+        "Fibre de racine de chicorée",
+        "Arôme naturel",
+        "Arachides",
+        "Beurre d'éditions",
+        "Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")",
+        "Isolat de protéines de soja",
+        "Glycérine *Biologique",
+        "Tocopherols",
+        "Soy",
+        "Peanut",
+        "Soy",
+        "May contain: Milk, Sesame, Tree nuts",
+        "Palm kernel oil",
+        "Rice starch",
+        "Soy lecithin",
+        "Tocopherols"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 13,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols"
+        ],
+        "recall": 0.8125,
+        "precision": 0.6842105263157895,
+        "f1": 0.742857142857143,
+        "missing": [
+          "Vegetable glycerin",
+          "Cocoa butter",
+          "Cocoa"
+        ],
+        "unexpected": [
+          "Caca0",
+          "Beurre d'éditions",
+          "Glycérine *Biologique",
+          "Soy",
+          "Peanut",
+          "May contain: Milk, Sesame, Tree nuts"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 5,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 2
+    }
+  ],
+  "server_metrics": {
+    "command": [
+      "llama-server",
+      "-m",
+      "/tmp/allergy-model-benchmark/models/qwen3-1.7b/Qwen3-1.7B-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18765",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "5",
+      "--threads-batch",
+      "5",
+      "--gpu-layers",
+      "99",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 2.8421927919989685,
+    "ready_rss_bytes": 1657602048,
+    "peak_sampled_rss_bytes": 1832681472,
+    "minimum_system_available_bytes": 2212593664,
+    "system_swap_delta_bytes": 1979973632,
+    "memory_caveat": "Mac process RSS sampled every100ms; excludes unaccounted GPU allocations; not phone RAM.",
+    "server_log_note": "Initial accuracy log was superseded by timing run; original accuracy replies, per-request timings and settings remain in this JSON. Final timing log is retained separately."
+  },
+  "complete": true,
+  "completed_at": "2026-11-08T02:04:25.191315+00:00"
+}

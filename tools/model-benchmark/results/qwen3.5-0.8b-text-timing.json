@@ -1,0 +1,717 @@
+{
+  "schema_version": 1,
+  "model": {
+    "id": "qwen3.5-0.8b",
+    "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+    "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+    "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+    "bytes": 532517120,
+    "projector": "mmproj-F16.gguf",
+    "projector_bytes": 204987232,
+    "vision": true
+  },
+  "mode": "text",
+  "started_at": "2026-11-08T02:12:20.076879+00:00",
+  "notes": "No concurrent model inference; Android emulator remains running but idle.",
+  "artifacts": {
+    "model": {
+      "id": "qwen3.5-0.8b",
+      "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+      "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+      "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+      "bytes": 532517120,
+      "projector": "mmproj-F16.gguf",
+      "projector_bytes": 204987232,
+      "vision": true
+    },
+    "artifacts": [
+      {
+        "file": "Qwen3.5-0.8B-Q4_K_M.gguf",
+        "bytes": 532517120,
+        "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517"
+      },
+      {
+        "file": "mmproj-F16.gguf",
+        "bytes": 204987232,
+        "sha256": "56e4c6cfe73b0c82e3e82bc518d7591997e61d81f723fc41a586f4fa69ea2453"
+      }
+    ]
+  },
+  "hardware": {
+    "machine": "arm64",
+    "system": "macOS-27.3-arm64-arm-64bit",
+    "ram_bytes": 19327352832,
+    "cpu_count": 11
+  },
+  "runtime": "version: 0.4.0 (build 10809, commit 5266f24da)\nbuilt with AppleClang 21.0.0.21000101 for Darwin arm64",
+  "settings": {
+    "temperature": 0,
+    "seed": 0,
+    "max_output_tokens": 512,
+    "thinking": false,
+    "prompt_caching": false,
+    "quantization": "Q4_K_M"
+  },
+  "cases": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Ber (sugar, cocoa butter, soy lecithin)\n- Phérols (sugar, cocoa butter, soy lecithin)\n- OD (sugar, cocoa butter, soy lecithin)\n- Caca0 (sugar, cocoa butter, soy lecithin)\n- Beurre d'arachides (sugar, cocoa butter, soy lecithin)\n- Concentré de protéines de soja* (sugar, cocoa butter, soy lecithin)\n- Huile végétale* (sugar, cocoa butter, soy lecithin)\n- Sel (sugar, cocoa butter, soy lecithin)\n- Amidon de riz (sugar, cocoa butter, soy lecithin)\n- Lécithine de soja (sugar, cocoa butter, soy lecithin)\n- Huile de palmiste (sugar, cocoa butter, soy lecithin)\n- Farine de soja* (sugar, cocoa butter, soy lecithin)\n- Farine de riz* (sugar, cocoa butter, soy lecithin)\n- Fibre de racine de chicorée (sugar, cocoa butter, soy lecithin)\n- Arôme naturel (sugar, cocoa butter, soy lecithin)\n- Arachides* (sugar, cocoa butter, soy lecithin)\n- Beurre d'édients (sugar, cocoa butter, soy lecithin)\n- Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\") (sugar, cocoa butter, soy lecithin)\n- Isolat de protéines de soja (sugar, cocoa butter, soy lecithin)\n- Glycérine (sugar, cocoa butter, soy lecithin)\n*Biologique (sugar, cocoa butter, soy lecithin)\nCient:Arachides, Soja. (sugar, cocoa butter, soy lecithin)\nPeut contenir: Lait, Sésame, Noix. (sugar, cocoa butter, soy lecithin)\nains: Peanut, Soy. (sugar, cocoa butter, soy lecithin)\ntable oil (sugar, cocoa butter, soy lecithin)\nSalt (sugar, cocoa butter, soy lecithin)\nRice starch (sugar, cocoa",
+      "reasoning": "",
+      "elapsed_seconds": 4.272097958004451,
+      "first_token_seconds": 0.30601012500119396,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 659,
+        "total_tokens": 1171,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 659,
+        "prompt_ms": 302.018,
+        "prompt_per_token_ms": 0.45829742033383913,
+        "prompt_per_second": 2181.9891529643933,
+        "predicted_n": 512,
+        "predicted_ms": 3965.994,
+        "predicted_per_token_ms": 7.761240704500978,
+        "predicted_per_second": 128.84537898947906
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Ber (sugar, cocoa butter, soy lecithin)",
+        "Phérols (sugar, cocoa butter, soy lecithin)",
+        "OD (sugar, cocoa butter, soy lecithin)",
+        "Caca0 (sugar, cocoa butter, soy lecithin)",
+        "Beurre d'arachides (sugar, cocoa butter, soy lecithin)",
+        "Concentré de protéines de soja* (sugar, cocoa butter, soy lecithin)",
+        "Huile végétale* (sugar, cocoa butter, soy lecithin)",
+        "Sel (sugar, cocoa butter, soy lecithin)",
+        "Amidon de riz (sugar, cocoa butter, soy lecithin)",
+        "Lécithine de soja (sugar, cocoa butter, soy lecithin)",
+        "Huile de palmiste (sugar, cocoa butter, soy lecithin)",
+        "Farine de soja* (sugar, cocoa butter, soy lecithin)",
+        "Farine de riz* (sugar, cocoa butter, soy lecithin)",
+        "Fibre de racine de chicorée (sugar, cocoa butter, soy lecithin)",
+        "Arôme naturel (sugar, cocoa butter, soy lecithin)",
+        "Arachides* (sugar, cocoa butter, soy lecithin)",
+        "Beurre d'édients (sugar, cocoa butter, soy lecithin)",
+        "Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\") (sugar, cocoa butter, soy lecithin)",
+        "Isolat de protéines de soja (sugar, cocoa butter, soy lecithin)",
+        "Glycérine (sugar, cocoa butter, soy lecithin)"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 13,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.8125,
+        "precision": 0.7222222222222222,
+        "f1": 0.7647058823529411,
+        "missing": [
+          "Cocoa butter",
+          "Cocoa",
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Ber (sugar, cocoa butter, soy lecithin)",
+          "Phérols (sugar, cocoa butter, soy lecithin)",
+          "OD (sugar, cocoa butter, soy lecithin)",
+          "Caca0 (sugar, cocoa butter, soy lecithin)",
+          "Beurre d'édients (sugar, cocoa butter, soy lecithin)"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy protein isolate",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Vegetable glycerin",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Palm kernel oil",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Rice flour",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Chicory root fibre",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Natural flavour",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Peanuts",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Peanut butter",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy protein concentrate",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Salt",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Rice starch",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy lecithin",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          }
+        ],
+        "relative_order_correct": false
+      },
+      "status": "ok"
+    }
+  ],
+  "performance_repeats": [
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Ber (sugar, cocoa butter, soy lecithin)\n- Phérols (sugar, cocoa butter, soy lecithin)\n- OD (sugar, cocoa butter, soy lecithin)\n- Caca0 (sugar, cocoa butter, soy lecithin)\n- Beurre d'arachides (sugar, cocoa butter, soy lecithin)\n- Concentré de protéines de soja* (sugar, cocoa butter, soy lecithin)\n- Huile végétale* (sugar, cocoa butter, soy lecithin)\n- Sel (sugar, cocoa butter, soy lecithin)\n- Amidon de riz (sugar, cocoa butter, soy lecithin)\n- Lécithine de soja (sugar, cocoa butter, soy lecithin)\n- Huile de palmiste (sugar, cocoa butter, soy lecithin)\n- Farine de soja* (sugar, cocoa butter, soy lecithin)\n- Farine de riz* (sugar, cocoa butter, soy lecithin)\n- Fibre de racine de chicorée (sugar, cocoa butter, soy lecithin)\n- Arôme naturel (sugar, cocoa butter, soy lecithin)\n- Arachides* (sugar, cocoa butter, soy lecithin)\n- Beurre d'édients (sugar, cocoa butter, soy lecithin)\n- Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\") (sugar, cocoa butter, soy lecithin)\n- Isolat de protéines de soja (sugar, cocoa butter, soy lecithin)\n- Glycérine (sugar, cocoa butter, soy lecithin)\n*Biologique (sugar, cocoa butter, soy lecithin)\nCient:Arachides, Soja. (sugar, cocoa butter, soy lecithin)\nPeut contenir: Lait, Sésame, Noix. (sugar, cocoa butter, soy lecithin)\nains: Peanut, Soy. (sugar, cocoa butter, soy lecithin)\ntable oil (sugar, cocoa butter, soy lecithin)\nSalt (sugar, cocoa butter, soy lecithin)\nRice starch (sugar, cocoa",
+      "reasoning": "",
+      "elapsed_seconds": 4.183178209001198,
+      "first_token_seconds": 0.3058840420053457,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 659,
+        "total_tokens": 1171,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 659,
+        "prompt_ms": 302.581,
+        "prompt_per_token_ms": 0.4591517450682853,
+        "prompt_per_second": 2177.9292156480415,
+        "predicted_n": 512,
+        "predicted_ms": 3876.898,
+        "predicted_per_token_ms": 7.586884540117417,
+        "predicted_per_second": 131.80640811287788
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Ber (sugar, cocoa butter, soy lecithin)",
+        "Phérols (sugar, cocoa butter, soy lecithin)",
+        "OD (sugar, cocoa butter, soy lecithin)",
+        "Caca0 (sugar, cocoa butter, soy lecithin)",
+        "Beurre d'arachides (sugar, cocoa butter, soy lecithin)",
+        "Concentré de protéines de soja* (sugar, cocoa butter, soy lecithin)",
+        "Huile végétale* (sugar, cocoa butter, soy lecithin)",
+        "Sel (sugar, cocoa butter, soy lecithin)",
+        "Amidon de riz (sugar, cocoa butter, soy lecithin)",
+        "Lécithine de soja (sugar, cocoa butter, soy lecithin)",
+        "Huile de palmiste (sugar, cocoa butter, soy lecithin)",
+        "Farine de soja* (sugar, cocoa butter, soy lecithin)",
+        "Farine de riz* (sugar, cocoa butter, soy lecithin)",
+        "Fibre de racine de chicorée (sugar, cocoa butter, soy lecithin)",
+        "Arôme naturel (sugar, cocoa butter, soy lecithin)",
+        "Arachides* (sugar, cocoa butter, soy lecithin)",
+        "Beurre d'édients (sugar, cocoa butter, soy lecithin)",
+        "Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\") (sugar, cocoa butter, soy lecithin)",
+        "Isolat de protéines de soja (sugar, cocoa butter, soy lecithin)",
+        "Glycérine (sugar, cocoa butter, soy lecithin)"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 13,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.8125,
+        "precision": 0.7222222222222222,
+        "f1": 0.7647058823529411,
+        "missing": [
+          "Cocoa butter",
+          "Cocoa",
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Ber (sugar, cocoa butter, soy lecithin)",
+          "Phérols (sugar, cocoa butter, soy lecithin)",
+          "OD (sugar, cocoa butter, soy lecithin)",
+          "Caca0 (sugar, cocoa butter, soy lecithin)",
+          "Beurre d'édients (sugar, cocoa butter, soy lecithin)"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy protein isolate",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Vegetable glycerin",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Palm kernel oil",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Rice flour",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Chicory root fibre",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Natural flavour",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Peanuts",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Peanut butter",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy protein concentrate",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Salt",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Rice starch",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy lecithin",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          }
+        ],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 1
+    },
+    {
+      "id": "real_sideways_enhanced",
+      "mode": "text",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "reply": "- Ber (sugar, cocoa butter, soy lecithin)\n- Phérols (sugar, cocoa butter, soy lecithin)\n- OD (sugar, cocoa butter, soy lecithin)\n- Caca0 (sugar, cocoa butter, soy lecithin)\n- Beurre d'arachides (sugar, cocoa butter, soy lecithin)\n- Concentré de protéines de soja* (sugar, cocoa butter, soy lecithin)\n- Huile végétale* (sugar, cocoa butter, soy lecithin)\n- Sel (sugar, cocoa butter, soy lecithin)\n- Amidon de riz (sugar, cocoa butter, soy lecithin)\n- Lécithine de soja (sugar, cocoa butter, soy lecithin)\n- Huile de palmiste (sugar, cocoa butter, soy lecithin)\n- Farine de soja* (sugar, cocoa butter, soy lecithin)\n- Farine de riz* (sugar, cocoa butter, soy lecithin)\n- Fibre de racine de chicorée (sugar, cocoa butter, soy lecithin)\n- Arôme naturel (sugar, cocoa butter, soy lecithin)\n- Arachides* (sugar, cocoa butter, soy lecithin)\n- Beurre d'édients (sugar, cocoa butter, soy lecithin)\n- Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\") (sugar, cocoa butter, soy lecithin)\n- Isolat de protéines de soja (sugar, cocoa butter, soy lecithin)\n- Glycérine (sugar, cocoa butter, soy lecithin)\n*Biologique (sugar, cocoa butter, soy lecithin)\nCient:Arachides, Soja. (sugar, cocoa butter, soy lecithin)\nPeut contenir: Lait, Sésame, Noix. (sugar, cocoa butter, soy lecithin)\nains: Peanut, Soy. (sugar, cocoa butter, soy lecithin)\ntable oil (sugar, cocoa butter, soy lecithin)\nSalt (sugar, cocoa butter, soy lecithin)\nRice starch (sugar, cocoa",
+      "reasoning": "",
+      "elapsed_seconds": 4.265323958999943,
+      "first_token_seconds": 0.30434166700433707,
+      "usage": {
+        "completion_tokens": 512,
+        "prompt_tokens": 659,
+        "total_tokens": 1171,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "timings": {
+        "cache_n": 0,
+        "prompt_n": 659,
+        "prompt_ms": 301.026,
+        "prompt_per_token_ms": 0.4567921092564492,
+        "prompt_per_second": 2189.179672187784,
+        "predicted_n": 512,
+        "predicted_ms": 3960.655,
+        "predicted_per_token_ms": 7.7507925636007835,
+        "predicted_per_second": 129.01906376596799
+      },
+      "finish_reason": "length",
+      "ingredients": [
+        "Ber (sugar, cocoa butter, soy lecithin)",
+        "Phérols (sugar, cocoa butter, soy lecithin)",
+        "OD (sugar, cocoa butter, soy lecithin)",
+        "Caca0 (sugar, cocoa butter, soy lecithin)",
+        "Beurre d'arachides (sugar, cocoa butter, soy lecithin)",
+        "Concentré de protéines de soja* (sugar, cocoa butter, soy lecithin)",
+        "Huile végétale* (sugar, cocoa butter, soy lecithin)",
+        "Sel (sugar, cocoa butter, soy lecithin)",
+        "Amidon de riz (sugar, cocoa butter, soy lecithin)",
+        "Lécithine de soja (sugar, cocoa butter, soy lecithin)",
+        "Huile de palmiste (sugar, cocoa butter, soy lecithin)",
+        "Farine de soja* (sugar, cocoa butter, soy lecithin)",
+        "Farine de riz* (sugar, cocoa butter, soy lecithin)",
+        "Fibre de racine de chicorée (sugar, cocoa butter, soy lecithin)",
+        "Arôme naturel (sugar, cocoa butter, soy lecithin)",
+        "Arachides* (sugar, cocoa butter, soy lecithin)",
+        "Beurre d'édients (sugar, cocoa butter, soy lecithin)",
+        "Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\") (sugar, cocoa butter, soy lecithin)",
+        "Isolat de protéines de soja (sugar, cocoa butter, soy lecithin)",
+        "Glycérine (sugar, cocoa butter, soy lecithin)"
+      ],
+      "score": {
+        "required_total": 16,
+        "matched_required": 13,
+        "matched": [
+          "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Peanut butter",
+          "Soy protein concentrate",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin"
+        ],
+        "recall": 0.8125,
+        "precision": 0.7222222222222222,
+        "f1": 0.7647058823529411,
+        "missing": [
+          "Cocoa butter",
+          "Cocoa",
+          "Tocopherols"
+        ],
+        "unexpected": [
+          "Ber (sugar, cocoa butter, soy lecithin)",
+          "Phérols (sugar, cocoa butter, soy lecithin)",
+          "OD (sugar, cocoa butter, soy lecithin)",
+          "Caca0 (sugar, cocoa butter, soy lecithin)",
+          "Beurre d'édients (sugar, cocoa butter, soy lecithin)"
+        ],
+        "optional_found": [
+          "Soy flour",
+          "Vegetable oil"
+        ],
+        "duplicate_count": 0,
+        "false_none": false,
+        "negative_correct": null,
+        "required_subingredient_total": 3,
+        "matched_required_subingredients": 3,
+        "subingredient_recall": 1.0,
+        "missing_subingredients": [],
+        "unexpected_subingredients": [
+          {
+            "parent": "Sugars (invert cane syrup, cane sugar, brown rice syrup)",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy protein isolate",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Vegetable glycerin",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Palm kernel oil",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Rice flour",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Chicory root fibre",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Natural flavour",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Peanuts",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Peanut butter",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy protein concentrate",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Salt",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Rice starch",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          },
+          {
+            "parent": "Soy lecithin",
+            "unexpected": [
+              "sugar",
+              "cocoa butter",
+              "soy lecithin"
+            ]
+          }
+        ],
+        "relative_order_correct": false
+      },
+      "status": "ok",
+      "repeat": 2
+    }
+  ],
+  "server_metrics": {
+    "command": [
+      "llama-server",
+      "-m",
+      "/tmp/allergy-model-benchmark/models/qwen3.5-0.8b/Qwen3.5-0.8B-Q4_K_M.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18765",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--batch-size",
+      "512",
+      "--ubatch-size",
+      "128",
+      "--threads",
+      "5",
+      "--threads-batch",
+      "5",
+      "--gpu-layers",
+      "99",
+      "--flash-attn",
+      "on",
+      "--no-cache-prompt",
+      "--reasoning",
+      "off",
+      "--chat-template-kwargs",
+      "{\"enable_thinking\":false}"
+    ],
+    "load_seconds": 1.2867198329986422,
+    "ready_rss_bytes": 749453312,
+    "peak_sampled_rss_bytes": 796344320,
+    "minimum_system_available_bytes": 4391550976,
+    "system_swap_delta_bytes": -33554432,
+    "memory_caveat": "Mac process RSS sampled every100ms; excludes unaccounted GPU allocations; not phone RAM.",
+    "server_log": "/Users/lcwhhh/Program/nathacks2026/tools/model-benchmark/results/qwen3.5-0.8b-text-timing-server.log"
+  },
+  "complete": true,
+  "completed_at": "2026-11-08T02:12:34.347161+00:00"
+}

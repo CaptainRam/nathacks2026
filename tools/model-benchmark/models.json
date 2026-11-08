@@ -1,0 +1,10 @@
+{
+  "quantization": "Q4_K_M",
+  "models": [
+    {"id":"qwen3.5-0.8b","repo":"unsloth/Qwen3.5-0.8B-GGUF","revision":"6ab461498e2023f6e3c1baea90a8f0fe38ab64d0","file":"Qwen3.5-0.8B-Q4_K_M.gguf","bytes":532517120,"projector":"mmproj-F16.gguf","projector_bytes":204987232,"vision":true},
+    {"id":"qwen3-1.7b","repo":"unsloth/Qwen3-1.7B-GGUF","revision":"d7f544eead698dbd1f15126ef60b45a1e1933222","file":"Qwen3-1.7B-Q4_K_M.gguf","bytes":1107409472,"vision":false},
+    {"id":"qwen3.5-2b","repo":"unsloth/Qwen3.5-2B-GGUF","revision":"f6d5376be1edb4d416d56da11e5397a961aca8ae","file":"Qwen3.5-2B-Q4_K_M.gguf","bytes":1280835840,"projector":"mmproj-F16.gguf","projector_bytes":668227264,"vision":true},
+    {"id":"qwen3-4b-instruct-2507","repo":"unsloth/Qwen3-4B-Instruct-2507-GGUF","revision":"a06e946bb6b655725eafa393f4a9745d460374c9","file":"Qwen3-4B-Instruct-2507-Q4_K_M.gguf","bytes":2497281120,"vision":false},
+    {"id":"qwen3-vl-2b-instruct","repo":"Qwen/Qwen3-VL-2B-Instruct-GGUF","revision":"52d6c8ffea26cc873ac5ad116f8631268d7eb503","file":"Qwen3VL-2B-Instruct-Q4_K_M.gguf","bytes":1107409952,"projector":"mmproj-Qwen3VL-2B-Instruct-F16.gguf","projector_bytes":819394848,"vision":true}
+  ]
+}

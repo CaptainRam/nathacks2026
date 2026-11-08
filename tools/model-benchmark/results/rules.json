@@ -1,0 +1,1680 @@
+{
+  "schema_version": 1,
+  "model": "deterministic IngredientExtractor + Analyzer",
+  "platform": "android",
+  "started_at": "2026-11-08T02:04:44.680748Z",
+  "environment": {
+    "is_emulator": true,
+    "model": "sdk_gphone64_arm64",
+    "manufacturer": "Google",
+    "hardware": "ranchu",
+    "fingerprint": "google\/sdk_gphone64_arm64\/emu64a:17\/CE2A.260420.051.A2\/16418371:user\/release-keys",
+    "android_release": "17",
+    "sdk_int": 37,
+    "abis": [
+      "arm64-v8a"
+    ],
+    "total_memory_bytes": 4105711616,
+    "available_memory_bytes": 2274594816,
+    "available_processors": 1,
+    "java_max_heap_bytes": 201326592,
+    "target_package": "com.example.allergycheck",
+    "target_version_name": "1.0",
+    "target_version_code": 1
+  },
+  "cases": [
+    {
+      "id": "clean_wheat_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_wheat_fixture",
+      "status": "ok",
+      "ingredients": [
+        "Wheat flour",
+        "sugar",
+        "milk powder",
+        "cocoa butter",
+        "salt",
+        "soy lecithin"
+      ],
+      "elapsed_ms": 72,
+      "analysis": {
+        "overall": "CONTAINS",
+        "low_confidence": false,
+        "ingredient_heading_found": true,
+        "top_level_ingredients": [
+          "Wheat flour",
+          "sugar",
+          "milk powder",
+          "cocoa butter",
+          "salt",
+          "soy lecithin"
+        ],
+        "parsed_items": [
+          {
+            "text": "Wheat flour",
+            "depth": 0
+          },
+          {
+            "text": "sugar",
+            "depth": 0
+          },
+          {
+            "text": "milk powder",
+            "depth": 0
+          },
+          {
+            "text": "cocoa butter",
+            "depth": 0
+          },
+          {
+            "text": "salt",
+            "depth": 0
+          },
+          {
+            "text": "soy lecithin",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain peanuts"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "milk powder"
+              }
+            ]
+          },
+          {
+            "allergen": "SOY",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "soy lecithin"
+              }
+            ]
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "wheat",
+                "evidence": "Wheat flour"
+              }
+            ]
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "peanut",
+                "evidence": "May contain peanuts"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "POSSIBLE",
+            "findings": [
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "lecithin",
+                "evidence": "soy lecithin"
+              }
+            ]
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SESAME",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "clean_granola_fixture",
+      "source_kind": "synthetic",
+      "source_group": "clean_granola_fixture",
+      "status": "ok",
+      "ingredients": [
+        "Whole grain oats",
+        "honey",
+        "almonds",
+        "sunflower oil",
+        "dried cranberries",
+        "pumpkin seeds",
+        "sea salt",
+        "cinnamon"
+      ],
+      "elapsed_ms": 63,
+      "analysis": {
+        "overall": "CONTAINS",
+        "low_confidence": false,
+        "ingredient_heading_found": true,
+        "top_level_ingredients": [
+          "Whole grain oats",
+          "honey",
+          "almonds",
+          "sunflower oil",
+          "dried cranberries",
+          "pumpkin seeds",
+          "sea salt",
+          "cinnamon"
+        ],
+        "parsed_items": [
+          {
+            "text": "Whole grain oats",
+            "depth": 0
+          },
+          {
+            "text": "honey",
+            "depth": 0
+          },
+          {
+            "text": "almonds",
+            "depth": 0
+          },
+          {
+            "text": "sunflower oil",
+            "depth": 0
+          },
+          {
+            "text": "dried cranberries",
+            "depth": 0
+          },
+          {
+            "text": "pumpkin seeds",
+            "depth": 0
+          },
+          {
+            "text": "sea salt",
+            "depth": 0
+          },
+          {
+            "text": "cinnamon",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "CONTAINS",
+            "text": "Contains: almonds (tree nuts)"
+          },
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain: milk, soy, wheat"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "TREE_NUTS",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "almond",
+                "evidence": "almonds"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "CONTAINS_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "almond",
+                "evidence": "Contains: almonds (tree nuts)"
+              }
+            ]
+          },
+          {
+            "allergen": "MILK",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "May contain: milk, soy, wheat"
+              }
+            ]
+          },
+          {
+            "allergen": "SOY",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "May contain: milk, soy, wheat"
+              }
+            ]
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "wheat",
+                "evidence": "May contain: milk, soy, wheat"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SESAME",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "synthetic_ocr_typos",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_ocr_typos",
+      "status": "ok",
+      "ingredients": [],
+      "elapsed_ms": 59,
+      "analysis": {
+        "overall": "CONTAINS",
+        "low_confidence": false,
+        "ingredient_heading_found": false,
+        "top_level_ingredients": [
+          "CRUNCHY BISCUITS lngredients: Wheal f1our",
+          "sklm milk powder",
+          "cano1a oil",
+          "sea sa1t"
+        ],
+        "parsed_items": [
+          {
+            "text": "CRUNCHY BISCUITS lngredients: Wheal f1our",
+            "depth": 0
+          },
+          {
+            "text": "sklm milk powder",
+            "depth": 0
+          },
+          {
+            "text": "cano1a oil",
+            "depth": 0
+          },
+          {
+            "text": "sea sa1t",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "CONTAINS",
+            "text": "Contains: wheat, milk"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "sklm milk powder"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "CONTAINS_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "Contains: wheat, milk"
+              }
+            ]
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "CONTAINS_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "wheat",
+                "evidence": "Contains: wheat, milk"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SOY",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SESAME",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "synthetic_nested",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_nested",
+      "status": "ok",
+      "ingredients": [
+        "Chocolate (sugar, cocoa butter, soy lecithin)",
+        "wheat flour",
+        "salt",
+        "citric acid"
+      ],
+      "elapsed_ms": 34,
+      "analysis": {
+        "overall": "CONTAINS",
+        "low_confidence": false,
+        "ingredient_heading_found": true,
+        "top_level_ingredients": [
+          "Chocolate (sugar, cocoa butter, soy lecithin)",
+          "wheat flour",
+          "salt",
+          "citric acid"
+        ],
+        "parsed_items": [
+          {
+            "text": "Chocolate (sugar, cocoa butter, soy lecithin)",
+            "depth": 0
+          },
+          {
+            "text": "sugar",
+            "depth": 1
+          },
+          {
+            "text": "cocoa butter",
+            "depth": 1
+          },
+          {
+            "text": "soy lecithin",
+            "depth": 1
+          },
+          {
+            "text": "wheat flour",
+            "depth": 0
+          },
+          {
+            "text": "salt",
+            "depth": 0
+          },
+          {
+            "text": "citric acid",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain peanuts"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "SOY",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "soy lecithin"
+              }
+            ]
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "wheat",
+                "evidence": "wheat flour"
+              }
+            ]
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "peanut",
+                "evidence": "May contain peanuts"
+              }
+            ]
+          },
+          {
+            "allergen": "MILK",
+            "status": "POSSIBLE",
+            "findings": [
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "chocolate",
+                "evidence": "Chocolate (sugar, cocoa butter, soy lecithin)"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "POSSIBLE",
+            "findings": [
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "lecithin",
+                "evidence": "soy lecithin"
+              }
+            ]
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SESAME",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "synthetic_bilingual",
+      "source_kind": "synthetic",
+      "source_group": "synthetic_bilingual",
+      "status": "ok",
+      "ingredients": [
+        "sugar",
+        "milk powder",
+        "cocoa butter"
+      ],
+      "elapsed_ms": 21,
+      "analysis": {
+        "overall": "CONTAINS",
+        "low_confidence": false,
+        "ingredient_heading_found": true,
+        "top_level_ingredients": [
+          "sugar",
+          "milk powder",
+          "cocoa butter"
+        ],
+        "parsed_items": [
+          {
+            "text": "sugar",
+            "depth": 0
+          },
+          {
+            "text": "milk powder",
+            "depth": 0
+          },
+          {
+            "text": "cocoa butter",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain peanuts"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "milk powder"
+              }
+            ]
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "peanut",
+                "evidence": "May contain peanuts"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SOY",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SESAME",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "negative_nutrition_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_nutrition_only",
+      "status": "ok",
+      "ingredients": [],
+      "elapsed_ms": 1,
+      "analysis": {
+        "overall": "UNREADABLE",
+        "low_confidence": true,
+        "ingredient_heading_found": false,
+        "top_level_ingredients": [],
+        "parsed_items": [],
+        "statements": [],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "EGGS",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "SOY",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "SESAME",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "UNREADABLE",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "UNREADABLE",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": true
+    },
+    {
+      "id": "negative_precaution_only",
+      "source_kind": "synthetic",
+      "source_group": "negative_precaution_only",
+      "status": "ok",
+      "ingredients": [],
+      "elapsed_ms": 40,
+      "analysis": {
+        "overall": "MAY_CONTAIN",
+        "low_confidence": true,
+        "ingredient_heading_found": false,
+        "top_level_ingredients": [],
+        "parsed_items": [],
+        "statements": [
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain: milk, peanuts, soy"
+          },
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "Produced in a facility that also processes sesame"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "May contain: milk, peanuts, soy"
+              }
+            ]
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "peanut",
+                "evidence": "May contain: milk, peanuts, soy"
+              }
+            ]
+          },
+          {
+            "allergen": "SOY",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "May contain: milk, peanuts, soy"
+              }
+            ]
+          },
+          {
+            "allergen": "SESAME",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "sesame",
+                "evidence": "Produced in a facility that also processes sesame"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "real_upright_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "ok",
+      "ingredients": [],
+      "elapsed_ms": 354,
+      "analysis": {
+        "overall": "CONTAINS",
+        "low_confidence": false,
+        "ingredient_heading_found": false,
+        "top_level_ingredients": [
+          "edients: Sugars (nvert càne syrup, cane Sugar*, brown rice syrup*)",
+          "Soy protein isolate",
+          "Vegetable glycerin",
+          "Palm kernel oil",
+          "flour* Rice flour",
+          "Chicory root fibre",
+          "Natural flavour",
+          "Peanuts",
+          "Cocoa butter",
+          "Cocoa",
+          "Peanut butter* Soy protein concentrate",
+          "table oil",
+          "Salt",
+          "Rice starch",
+          "Soy lecithin",
+          "Tocopherols",
+          "ains: Peanut",
+          "Soy",
+          "ARTIFIGTELS Cient: Arachides",
+          "Soja",
+          "édients Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")",
+          "Isolat de protéines de soja",
+          "Glycérine tale",
+          "Huile de palmiste",
+          "Farine de soja\"",
+          "Farine de riz",
+          "Fibre de racine de chicorée",
+          "Arôme naturel",
+          "Arachides",
+          "Beurre de oD",
+          "Caca0",
+          "Beurre d'arachides",
+          "Concentré de protéines de soja",
+          "Huile végétale",
+          "Sel",
+          "Amidon de riz",
+          "Lécithine de soja",
+          "phérols",
+          "Biologique BER HARE\/"
+        ],
+        "parsed_items": [
+          {
+            "text": "edients: Sugars (nvert càne syrup, cane Sugar*, brown rice syrup*)",
+            "depth": 0
+          },
+          {
+            "text": "nvert càne syrup",
+            "depth": 1
+          },
+          {
+            "text": "cane Sugar",
+            "depth": 1
+          },
+          {
+            "text": "brown rice syrup",
+            "depth": 1
+          },
+          {
+            "text": "Soy protein isolate",
+            "depth": 0
+          },
+          {
+            "text": "Vegetable glycerin",
+            "depth": 0
+          },
+          {
+            "text": "Palm kernel oil",
+            "depth": 0
+          },
+          {
+            "text": "flour* Rice flour",
+            "depth": 0
+          },
+          {
+            "text": "Chicory root fibre",
+            "depth": 0
+          },
+          {
+            "text": "Natural flavour",
+            "depth": 0
+          },
+          {
+            "text": "Peanuts",
+            "depth": 0
+          },
+          {
+            "text": "Cocoa butter",
+            "depth": 0
+          },
+          {
+            "text": "Cocoa",
+            "depth": 0
+          },
+          {
+            "text": "Peanut butter* Soy protein concentrate",
+            "depth": 0
+          },
+          {
+            "text": "table oil",
+            "depth": 0
+          },
+          {
+            "text": "Salt",
+            "depth": 0
+          },
+          {
+            "text": "Rice starch",
+            "depth": 0
+          },
+          {
+            "text": "Soy lecithin",
+            "depth": 0
+          },
+          {
+            "text": "Tocopherols",
+            "depth": 0
+          },
+          {
+            "text": "ains: Peanut",
+            "depth": 0
+          },
+          {
+            "text": "Soy",
+            "depth": 0
+          },
+          {
+            "text": "ARTIFIGTELS Cient: Arachides",
+            "depth": 0
+          },
+          {
+            "text": "Soja",
+            "depth": 0
+          },
+          {
+            "text": "édients Sucres (sirop de canne inverti\", sucre de canne, sirop de riz brun\")",
+            "depth": 0
+          },
+          {
+            "text": "sirop de canne inverti\"",
+            "depth": 1
+          },
+          {
+            "text": "sucre de canne",
+            "depth": 1
+          },
+          {
+            "text": "sirop de riz brun\"",
+            "depth": 1
+          },
+          {
+            "text": "Isolat de protéines de soja",
+            "depth": 0
+          },
+          {
+            "text": "Glycérine tale",
+            "depth": 0
+          },
+          {
+            "text": "Huile de palmiste",
+            "depth": 0
+          },
+          {
+            "text": "Farine de soja\"",
+            "depth": 0
+          },
+          {
+            "text": "Farine de riz",
+            "depth": 0
+          },
+          {
+            "text": "Fibre de racine de chicorée",
+            "depth": 0
+          },
+          {
+            "text": "Arôme naturel",
+            "depth": 0
+          },
+          {
+            "text": "Arachides",
+            "depth": 0
+          },
+          {
+            "text": "Beurre de oD",
+            "depth": 0
+          },
+          {
+            "text": "Caca0",
+            "depth": 0
+          },
+          {
+            "text": "Beurre d'arachides",
+            "depth": 0
+          },
+          {
+            "text": "Concentré de protéines de soja",
+            "depth": 0
+          },
+          {
+            "text": "Huile végétale",
+            "depth": 0
+          },
+          {
+            "text": "Sel",
+            "depth": 0
+          },
+          {
+            "text": "Amidon de riz",
+            "depth": 0
+          },
+          {
+            "text": "Lécithine de soja",
+            "depth": 0
+          },
+          {
+            "text": "phérols",
+            "depth": 0
+          },
+          {
+            "text": "Biologique BER HARE\/",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain: Milk, Sesame, Tree nuts"
+          },
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "Peut contenir : Lait, Sésame, Noix"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "beurre",
+                "evidence": "Beurre de oD"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "lait",
+                "evidence": "Peut contenir : Lait, Sésame, Noix"
+              },
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "natural flavour",
+                "evidence": "Natural flavour"
+              }
+            ]
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "peanut",
+                "evidence": "Peanuts"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "peanut",
+                "evidence": "Peanut butter* Soy protein concentrate"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "peanut",
+                "evidence": "ains: Peanut"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "arachide",
+                "evidence": "ARTIFIGTELS Cient: Arachides"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "arachide",
+                "evidence": "Arachides"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "arachide",
+                "evidence": "Beurre d'arachides"
+              }
+            ]
+          },
+          {
+            "allergen": "SOY",
+            "status": "CONTAINS",
+            "findings": [
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "Soy protein isolate"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "Peanut butter* Soy protein concentrate"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "Soy lecithin"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soy",
+                "evidence": "Soy"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soja",
+                "evidence": "Soja"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soja",
+                "evidence": "Isolat de protéines de soja"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soja",
+                "evidence": "Farine de soja\""
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soja",
+                "evidence": "Concentré de protéines de soja"
+              },
+              {
+                "level": "CONTAINS",
+                "source": "INGREDIENT",
+                "reason": "NONE",
+                "matched_term": "soja",
+                "evidence": "Lécithine de soja"
+              },
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "natural flavour",
+                "evidence": "Natural flavour"
+              }
+            ]
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "tree nut",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "noix",
+                "evidence": "Peut contenir : Lait, Sésame, Noix"
+              }
+            ]
+          },
+          {
+            "allergen": "SESAME",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "sesame",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "sesame",
+                "evidence": "Peut contenir : Lait, Sésame, Noix"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "POSSIBLE",
+            "findings": [
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "natural flavour",
+                "evidence": "Natural flavour"
+              },
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "lecithin",
+                "evidence": "Soy lecithin"
+              }
+            ]
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "POSSIBLE",
+            "findings": [
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "flour",
+                "evidence": "flour* Rice flour"
+              },
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "farine",
+                "evidence": "Farine de soja\""
+              },
+              {
+                "level": "POSSIBLE",
+                "source": "INGREDIENT",
+                "reason": "AMBIGUOUS_INGREDIENT",
+                "matched_term": "amidon",
+                "evidence": "Amidon de riz"
+              }
+            ]
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "real_sideways_enhanced",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "ok",
+      "ingredients": [],
+      "elapsed_ms": 25,
+      "analysis": {
+        "overall": "MAY_CONTAIN",
+        "low_confidence": true,
+        "ingredient_heading_found": false,
+        "top_level_ingredients": [
+          "BER HRE\/"
+        ],
+        "parsed_items": [
+          {
+            "text": "BER HRE\/",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "Peut contenir: Lait, Sésame, Noix"
+          },
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain: Milk, Sesame, Tree nuts"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "lait",
+                "evidence": "Peut contenir: Lait, Sésame, Noix"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              }
+            ]
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "noix",
+                "evidence": "Peut contenir: Lait, Sésame, Noix"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "tree nut",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              }
+            ]
+          },
+          {
+            "allergen": "SESAME",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "sesame",
+                "evidence": "Peut contenir: Lait, Sésame, Noix"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "sesame",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SOY",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    },
+    {
+      "id": "real_sideways_unmodified",
+      "source_kind": "real",
+      "source_group": "current_packaging_photo",
+      "status": "ok",
+      "ingredients": [],
+      "elapsed_ms": 29,
+      "analysis": {
+        "overall": "MAY_CONTAIN",
+        "low_confidence": true,
+        "ingredient_heading_found": false,
+        "top_level_ingredients": [
+          "19AU2? ND 3 63 EE BEO HARE\/"
+        ],
+        "parsed_items": [
+          {
+            "text": "19AU2? ND 3 63 EE BEO HARE\/",
+            "depth": 0
+          }
+        ],
+        "statements": [
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "Peut contenir: Lait, Sésame, Noix"
+          },
+          {
+            "kind": "MAY_CONTAIN",
+            "text": "May contain: Milk, Sesame, Tree nuts"
+          }
+        ],
+        "allergens": [
+          {
+            "allergen": "MILK",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "lait",
+                "evidence": "Peut contenir: Lait, Sésame, Noix"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "milk",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              }
+            ]
+          },
+          {
+            "allergen": "TREE_NUTS",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "noix",
+                "evidence": "Peut contenir: Lait, Sésame, Noix"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "tree nut",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              }
+            ]
+          },
+          {
+            "allergen": "SESAME",
+            "status": "MAY_CONTAIN",
+            "findings": [
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "sesame",
+                "evidence": "Peut contenir: Lait, Sésame, Noix"
+              },
+              {
+                "level": "MAY_CONTAIN",
+                "source": "MAY_CONTAIN_STATEMENT",
+                "reason": "NONE",
+                "matched_term": "sesame",
+                "evidence": "May contain: Milk, Sesame, Tree nuts"
+              }
+            ]
+          },
+          {
+            "allergen": "EGGS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "PEANUTS",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SOY",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "WHEAT",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "FISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "SHELLFISH",
+            "status": "NOT_DETECTED",
+            "findings": []
+          },
+          {
+            "allergen": "MUSTARD",
+            "status": "NOT_DETECTED",
+            "findings": []
+          }
+        ]
+      },
+      "home_shows_no_ingredients_message": false
+    }
+  ],
+  "completed_at": "2026-11-08T02:04:45.380234Z"
+}

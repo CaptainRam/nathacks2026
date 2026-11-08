@@ -1,0 +1,35 @@
+0.00.120.149 W Setting 'enable_thinking' via --chat-template-kwargs is deprecated. Use --reasoning on / --reasoning off instead.
+0.00.120.197 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.120.399 W srv  llama_server: -----------------
+0.00.120.399 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.120.400 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.120.400 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.120.400 W srv  llama_server: -----------------
+0.00.127.937 I srv    load_model: loading model '/tmp/allergy-model-benchmark/models/qwen3-1.7b/Qwen3-1.7B-Q4_K_M.gguf'
+0.00.392.146 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.01.279.486 I cmn          init: llama threadpool init, n_threads = 5
+0.01.327.494 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 4096, kv_unified = 'false'
+0.01.335.765 I srv  llama_server: model loaded
+0.01.335.771 I srv  llama_server: listening on http://127.0.0.1:18765
+0.01.528.695 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.01.528.738 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.04.402.703 I slot print_timing: id  0 | task 0 | prompt eval time =     573.95 ms /   661 tokens (    0.87 ms per token,  1151.67 tokens per second)
+0.04.402.706 I slot print_timing: id  0 | task 0 |        eval time =    2300.01 ms /   203 tokens (   11.39 ms per token,    87.83 tokens per second)
+0.04.402.706 I slot print_timing: id  0 | task 0 |       total time =    2873.95 ms /   864 tokens
+0.04.402.706 I slot print_timing: id  0 | task 0 |    graphs reused =        203
+0.04.402.982 I slot      release: id  0 | task 0 | stop processing: n_tokens = 863, truncated = 0
+0.04.412.135 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 1.000 (> 0.100 thold), f_keep = 0.766
+0.04.412.158 I slot launch_slot_: id  0 | task 205 | processing task, is_child = 0
+0.07.272.759 I slot print_timing: id  0 | task 205 | prompt eval time =     569.84 ms /   661 tokens (    0.86 ms per token,  1159.98 tokens per second)
+0.07.272.761 I slot print_timing: id  0 | task 205 |        eval time =    2290.75 ms /   203 tokens (   11.34 ms per token,    88.18 tokens per second)
+0.07.272.762 I slot print_timing: id  0 | task 205 |       total time =    2860.59 ms /   864 tokens
+0.07.272.762 I slot print_timing: id  0 | task 205 |    graphs reused =        405
+0.07.272.906 I slot      release: id  0 | task 205 | stop processing: n_tokens = 863, truncated = 0
+0.07.282.731 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 1.000 (> 0.100 thold), f_keep = 0.766
+0.07.282.765 I slot launch_slot_: id  0 | task 410 | processing task, is_child = 0
+0.10.111.281 I slot print_timing: id  0 | task 410 | prompt eval time =     570.64 ms /   661 tokens (    0.86 ms per token,  1158.35 tokens per second)
+0.10.111.283 I slot print_timing: id  0 | task 410 |        eval time =    2257.86 ms /   203 tokens (   11.18 ms per token,    89.47 tokens per second)
+0.10.111.284 I slot print_timing: id  0 | task 410 |       total time =    2828.50 ms /   864 tokens
+0.10.111.284 I slot print_timing: id  0 | task 410 |    graphs reused =        607
+0.10.111.317 I slot      release: id  0 | task 410 | stop processing: n_tokens = 863, truncated = 0
+0.10.112.616 I srv    operator(): operator(): cleaning up before exit...

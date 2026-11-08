@@ -1,0 +1,16 @@
+{
+  "same_texts_as": "../cases.json",
+  "case_ids": [
+    "clean_wheat_fixture",
+    "clean_granola_fixture",
+    "synthetic_ocr_typos",
+    "synthetic_nested",
+    "synthetic_bilingual",
+    "negative_nutrition_only",
+    "negative_precaution_only",
+    "real_upright_enhanced",
+    "real_sideways_enhanced",
+    "real_sideways_unmodified"
+  ],
+  "reason": "Short clean case first provides a bounded cold-start measurement; longest real OCR cases last avoid suppressing all evidence if they exceed timeout."
+}
