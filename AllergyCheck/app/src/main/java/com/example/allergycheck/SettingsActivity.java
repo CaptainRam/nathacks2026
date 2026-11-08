@@ -438,10 +438,10 @@ public class SettingsActivity extends AppCompatActivity {
                 || !validModelId(savedModel));
         if (unusable) {
             showStatus(status, R.string.detection_cloud_needs_key, R.drawable.ic_info_small,
-                    com.google.android.material.R.attr.colorError);
+                    androidx.appcompat.R.attr.colorError);
         } else if (cloudJustSaved) {
             showStatus(status, R.string.detection_cloud_saved, R.drawable.ic_check,
-                    com.google.android.material.R.attr.colorPrimary);
+                    androidx.appcompat.R.attr.colorPrimary);
         } else {
             status.setVisibility(View.GONE);
         }

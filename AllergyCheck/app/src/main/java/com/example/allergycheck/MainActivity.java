@@ -49,6 +49,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout photoStrip;
     private ViewGroup analysisGroup;
     private View analysisLoading;
+    private ScanProgress scanProgress;
     private ViewGroup analysisResult;
     private View restartButton;
     private AnalysisResultView resultView;
@@ -196,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
         photoStrip = findViewById(R.id.photo_strip);
         analysisGroup = findViewById(R.id.analysis_group);
         analysisLoading = findViewById(R.id.analysis_loading);
+        scanProgress = new ScanProgress(findViewById(R.id.analysis_progress));
         analysisResult = findViewById(R.id.analysis_result);
         restartButton = findViewById(R.id.restart_button);
         resultView = new AnalysisResultView(analysisResult);
@@ -303,6 +306,7 @@ public class MainActivity extends AppCompatActivity {
         if (analysisMode) {
             // Replacing the photo during a check: show that the new one is being read.
             showAnalysisLoading();
+            restartScanProgress();
         }
         // A camera image can be very large. Decode a bounded preview off the UI thread.
         imageExecutor.execute(() -> {
@@ -397,12 +401,27 @@ public class MainActivity extends AppCompatActivity {
         }
         aiRunner.cancel();
         showAnalysisLoading();
+        // Continues from the decode the ring may already be showing; never moves it backwards.
+        // A mode switched in settings since the ring started shares it out differently, so restart.
+        if (scanProgress.isAi() != usesAi()) {
+            restartScanProgress();
+        }
+        scanProgress.step(ScanProgress.Step.DECODING);
         ocrPipeline.recognize(this, photo, new OcrPipeline.Callback() {
+            @Override
+            public void onStage(@NonNull OcrPipeline.Stage stage) {
+                if (isCurrentImageRequest(request)) {
+                    scanProgress.step(stage == OcrPipeline.Stage.PREPARING
+                            ? ScanProgress.Step.PREPARING : ScanProgress.Step.RECOGNIZING);
+                }
+            }
+
             @Override
             public void onSuccess(@NonNull OcrResult result) {
                 if (!isCurrentImageRequest(request)) {
                     return;
                 }
+                scanProgress.step(ScanProgress.Step.MATCHING);
                 String text = result.fullText();
                 if (text.trim().isEmpty()) {
                     showMessageResult(getString(R.string.ingredient_result_title),
@@ -429,13 +448,14 @@ public class MainActivity extends AppCompatActivity {
                 } else if (!hasAiConfiguration(mode)) {
                     showAnalysisReport(AiAnalyzer.incompleteReport(report), ResultAction.CONFIGURE_AI);
                 } else {
+                    scanProgress.step(ScanProgress.Step.AI_CHECKS);
                     aiRunner.check(report, new AiAnalysisRunner.Callback() {
                         @Override
                         public void onProgress(int completed, int total) {
                             if (isCurrentImageRequest(request)) {
-                                int percentage = total > 0 ? (int) (completed * 100L / total) : 0;
+                                scanProgress.aiChecks(completed, total);
                                 ((TextView) findViewById(R.id.analysis_loading_title)).setText(
-                                        getString(R.string.ai_check_progress, percentage));
+                                        R.string.ai_check_progress);
                             }
                         }
 
@@ -484,6 +504,7 @@ public class MainActivity extends AppCompatActivity {
         if (selectedPhoto == null || bitmap == null || pendingPhoto != null) {
             return;
         }
+        restartScanProgress();
         recognizeIngredients(selectedPhoto, ++imageRequest);
     }
 
@@ -558,6 +579,9 @@ public class MainActivity extends AppCompatActivity {
         aiRunner.cancel();
         endPhotoFlight();
         stopScanning();
+        // Hidden so the next check comes into view, and starts its ring, from empty.
+        scanProgress.cancel();
+        analysisLoading.setVisibility(View.GONE);
         // A replacement photo may still be decoding; its result is now dropped, so undo its
         // loading state and remove its file if it was a fresh camera capture.
         if (pendingPhoto != null) {
@@ -682,11 +706,28 @@ public class MainActivity extends AppCompatActivity {
         if (analysisLoading.getVisibility() != View.VISIBLE) {
             TransitionManager.beginDelayedTransition(contentColumn,
                     HomeMotion.pageTransition(photoCard, photoStripScroll));
+            // A scan coming into view starts from an empty ring; one already showing carries on.
+            restartScanProgress();
         }
         analysisResult.setVisibility(View.GONE);
         restartButton.setVisibility(View.GONE);
         analysisLoading.setVisibility(View.VISIBLE);
         startScanning();
+    }
+
+    /**
+     * Empties the ring for a new scan, shared out for the detection mode it will run in: the AI
+     * modes save most of the ring for their checks, matching spends it all on reading the label.
+     */
+    private void restartScanProgress() {
+        scanProgress.reset(usesAi());
+        scanProgress.step(ScanProgress.Step.DECODING);
+    }
+
+    /** Whether this scan will run AI checks; a mode that is not set up only reads and matches. */
+    private boolean usesAi() {
+        AnalysisPreferences.Mode mode = AnalysisPreferences.mode(this);
+        return mode != AnalysisPreferences.Mode.MATCHING && hasAiConfiguration(mode);
     }
 
     private void showMessageResult(String title, String message) {
@@ -696,6 +737,15 @@ public class MainActivity extends AppCompatActivity {
 
     /** Replaces the progress with the result that {@link #resultView} was just filled with. */
     private void showResult(ResultAction action) {
+        if (analysisLoading.getVisibility() == View.VISIBLE) {
+            // Let the ring close first: a result over a part-filled ring reads as cut short.
+            scanProgress.finish(() -> revealResult(action));
+        } else {
+            revealResult(action);
+        }
+    }
+
+    private void revealResult(ResultAction action) {
         // A fade still running from the last page change would otherwise hide the result again.
         TransitionManager.endTransitions(contentColumn);
         stopScanning();
@@ -864,6 +914,8 @@ public class MainActivity extends AppCompatActivity {
         if (analysisMode && analysisLoading.getVisibility() == View.VISIBLE) {
             settingsInterruptedScan = true;
             aiRunner.cancel();
+            // A ring closing on a finished scan must not reveal its result behind settings.
+            scanProgress.cancel();
         }
         settingsLauncher.launch(new Intent(this, SettingsActivity.class)
                 .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, showModel));
@@ -977,6 +1029,7 @@ public class MainActivity extends AppCompatActivity {
             animator.cancel();
         }
         scanAnimators.clear();
+        scanProgress.cancel();
         ocrPipeline.close();
         aiRunner.close();
         imageExecutor.shutdownNow();

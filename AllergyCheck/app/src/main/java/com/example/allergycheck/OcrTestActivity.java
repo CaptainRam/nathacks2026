@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -30,6 +29,7 @@ import com.example.allergycheck.ocr.OcrResult;
 import com.example.allergycheck.ocr.PassThroughFilter;
 import com.example.allergycheck.ocr.PassThroughPreparer;
 import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -62,7 +62,7 @@ public class OcrTestActivity extends AppCompatActivity {
     private final ExecutorService previewExecutor = Executors.newSingleThreadExecutor();
 
     private ImageView imagePreview;
-    private ProgressBar progress;
+    private CircularProgressIndicator progress;
     private TextView ocrStats;
     private TextView ocrOutput;
     private MaterialSwitch enhanceSwitch;
@@ -238,7 +238,7 @@ public class OcrTestActivity extends AppCompatActivity {
     }
 
     /**
-     * Shows the spinner and locks the switch while a run is in flight — recognition and the model
+     * Shows the progress indicator and locks the switch while a run is in flight — recognition and the model
      * stage that follows it. Rebuilding the pipeline mid-recognition would close the one we are
      * waiting on, and the callback would never arrive.
      */
