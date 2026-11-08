@@ -6,9 +6,11 @@ import com.example.allergycheck.analysis.ai.OpenRouterAiModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -302,15 +304,30 @@ public final class AiAnalyzer {
     private static Map<String, Check> checksFor(AnalysisReport matching) {
         Map<String, Check> checks = new LinkedHashMap<>();
         for (AllergenResult result : matching.results()) {
+            Set<String> matched = matchedIngredients(result);
             for (IngredientItem item : matching.label().ingredients()) {
                 String ingredient = item.matchText().trim();
-                if (!ingredient.isEmpty()) {
+                if (!ingredient.isEmpty() && !matched.contains(item.original())) {
                     checks.putIfAbsent(key(result.allergen(), ingredient),
                             new Check(ingredient, result.allergen()));
                 }
             }
         }
         return checks;
+    }
+
+    /**
+     * Ingredients the dictionary already flagged for this allergen. An AI verdict there can only
+     * repeat existing evidence (inference never removes a match), so it is not worth a request.
+     */
+    private static Set<String> matchedIngredients(AllergenResult result) {
+        Set<String> matched = new HashSet<>();
+        for (Finding finding : result.findings()) {
+            if (finding.source() == Finding.Source.INGREDIENT) {
+                matched.add(finding.evidence());
+            }
+        }
+        return matched;
     }
 
     private static String key(Allergen allergen, String ingredient) {
@@ -321,12 +338,17 @@ public final class AiAnalyzer {
         if (matching.results().isEmpty()) {
             return matching;
         }
-        boolean incomplete = matching.label().ingredients().isEmpty();
+        boolean noIngredients = matching.label().ingredients().isEmpty();
+        boolean incomplete = noIngredients;
         List<AllergenResult> results = new ArrayList<>();
         for (AllergenResult base : matching.results()) {
             List<Finding> findings = new ArrayList<>(base.findings());
-            boolean allergenIncomplete = matching.label().ingredients().isEmpty();
+            Set<String> matched = matchedIngredients(base);
+            boolean allergenIncomplete = noIngredients;
             for (IngredientItem item : matching.label().ingredients()) {
+                if (matched.contains(item.original())) {
+                    continue;
+                }
                 Check check = checks.get(key(base.allergen(), item.matchText().trim()));
                 AiDecision decision = check == null ? null : check.decision;
                 Finding.Reason reason;

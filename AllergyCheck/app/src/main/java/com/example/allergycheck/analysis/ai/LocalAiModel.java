@@ -17,6 +17,7 @@ public final class LocalAiModel implements AiModel {
     private static final int REPLY_TOKENS = 128;
     private final Context context;
     private LlmInference engine;
+    private LlmInferenceSession.LlmInferenceSessionOptions sessionOptions;
     private boolean closed;
 
     public LocalAiModel(Context context) {
@@ -33,18 +34,7 @@ public final class LocalAiModel implements AiModel {
             if (llm.sizeInTokens(prompt) > MAX_TOKENS - REPLY_TOKENS) {
                 throw new IOException("This ingredient is too long for the local model");
             }
-            LlmInferenceSession.LlmInferenceSessionOptions options =
-                    LlmInferenceSession.LlmInferenceSessionOptions.builder()
-                            .setTopK(1)
-                            .setRandomSeed(0)
-                            .setPromptTemplates(PromptTemplates.builder()
-                                    .setUserPrefix("<start_of_turn>user\n")
-                                    .setUserSuffix("<end_of_turn>\n")
-                                    .setModelPrefix("<start_of_turn>model\n")
-                                    .setModelSuffix("<end_of_turn>\n")
-                                    .build())
-                            .build();
-            LlmInferenceSession session = LlmInferenceSession.createFromOptions(llm, options);
+            LlmInferenceSession session = LlmInferenceSession.createFromOptions(llm, sessionOptions());
             try {
                 session.addQueryChunk(prompt);
                 String reply = session.generateResponse();
@@ -58,6 +48,23 @@ public final class LocalAiModel implements AiModel {
         } catch (OutOfMemoryError error) {
             throw new IOException("Not enough memory to run the local model", error);
         }
+    }
+
+    /** Immutable and identical for every pair, so it is built once per model rather than per call. */
+    private LlmInferenceSession.LlmInferenceSessionOptions sessionOptions() {
+        if (sessionOptions == null) {
+            sessionOptions = LlmInferenceSession.LlmInferenceSessionOptions.builder()
+                    .setTopK(1)
+                    .setRandomSeed(0)
+                    .setPromptTemplates(PromptTemplates.builder()
+                            .setUserPrefix("<start_of_turn>user\n")
+                            .setUserSuffix("<end_of_turn>\n")
+                            .setModelPrefix("<start_of_turn>model\n")
+                            .setModelSuffix("<end_of_turn>\n")
+                            .build())
+                    .build();
+        }
+        return sessionOptions;
     }
 
     private LlmInference engine() throws IOException {

@@ -53,7 +53,12 @@ public final class AllergenPrompt {
         if (object.length() != 1 || !(object.opt("verdict") instanceof String)) {
             throw new IllegalArgumentException("The model returned an invalid verdict");
         }
-        switch (object.getString("verdict")) {
+        return verdict(object.getString("verdict"));
+    }
+
+    /** Maps a verdict label shared by the local and cloud reply formats. */
+    static AiDecision verdict(String label) {
+        switch (label) {
             case "risk": return AiDecision.of(AiDecision.Verdict.RISK);
             case "uncertain": return AiDecision.of(AiDecision.Verdict.UNCERTAIN);
             case "no_evidence": return AiDecision.of(AiDecision.Verdict.NO_EVIDENCE);

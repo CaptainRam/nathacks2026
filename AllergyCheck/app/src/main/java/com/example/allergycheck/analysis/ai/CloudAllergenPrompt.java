@@ -84,8 +84,7 @@ public final class CloudAllergenPrompt {
             if (id < 0 || id >= ingredientCount || decisions.get((int) id) != null) {
                 throw new IllegalArgumentException("The model returned an unknown or duplicate ingredient ID");
             }
-            decisions.set((int) id, AllergenPrompt.parse(
-                    new JSONObject().put("verdict", result.getString("verdict")).toString()));
+            decisions.set((int) id, AllergenPrompt.verdict(result.getString("verdict")));
         }
         // Missing IDs stay null: preserve valid risks while making the incomplete check visible.
         return Collections.unmodifiableList(decisions);
