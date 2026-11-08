@@ -322,10 +322,6 @@ public class SettingsActivity extends AppCompatActivity {
         decisionsThresholdInput.setText(formatThreshold(AnalysisPreferences.decisionsThreshold(this),
                 getResources().getConfiguration().getLocales().get(0)));
         cloudConcurrencyInput.setText(formatConcurrency(AnalysisPreferences.cloudConcurrency(this)));
-        // Set here so the shown range always matches the limits the preference enforces.
-        ((TextInputLayout) findViewById(R.id.detection_concurrency_layout)).setHelperText(getString(
-                R.string.detection_concurrency_hint, AnalysisPreferences.DEFAULT_CLOUD_CONCURRENCY,
-                AnalysisPreferences.MAX_CLOUD_CONCURRENCY));
         TextWatcher watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence text, int start, int count, int after) { }
             @Override public void onTextChanged(CharSequence text, int start, int before, int count) { }
@@ -484,9 +480,7 @@ public class SettingsActivity extends AppCompatActivity {
         try {
             concurrency = parseConcurrency(input(cloudConcurrencyInput));
         } catch (NumberFormatException exception) {
-            concurrencyLayout.setError(getString(R.string.detection_concurrency_invalid,
-                    AnalysisPreferences.MIN_CLOUD_CONCURRENCY,
-                    AnalysisPreferences.MAX_CLOUD_CONCURRENCY));
+            concurrencyLayout.setError(getString(R.string.detection_concurrency_invalid));
             cloudConcurrencyInput.requestFocus();
             return false;
         }
@@ -545,9 +539,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     static int parseConcurrency(String text) {
         int concurrency = Integer.parseInt(text);
-        if (concurrency < AnalysisPreferences.MIN_CLOUD_CONCURRENCY
-                || concurrency > AnalysisPreferences.MAX_CLOUD_CONCURRENCY) {
-            throw new NumberFormatException("Cloud concurrency out of range");
+        if (concurrency < AnalysisPreferences.MIN_CLOUD_CONCURRENCY) {
+            throw new NumberFormatException("Cloud concurrency must be positive");
         }
         return concurrency;
     }

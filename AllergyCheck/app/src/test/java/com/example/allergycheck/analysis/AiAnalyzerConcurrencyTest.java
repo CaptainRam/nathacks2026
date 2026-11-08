@@ -31,7 +31,8 @@ public class AiAnalyzerConcurrencyTest {
     public void configuredParallelismBoundsActualRequestsIncludingSerialMode() throws Exception {
         assertBoundedRequests(1);
         assertBoundedRequests(3);
-        assertBoundedRequests(AiAnalyzer.MAX_CLOUD_CONCURRENCY);
+        assertBoundedRequests(9);
+        assertBoundedRequests(Integer.MAX_VALUE);
     }
 
     private void assertBoundedRequests(int limit) throws Exception {
@@ -287,8 +288,7 @@ public class AiAnalyzerConcurrencyTest {
 
     @Test
     public void invalidConcurrencyIsRejectedBeforeCreatingAClient() {
-        for (int concurrency : new int[]{Integer.MIN_VALUE, -1, 0,
-                AiAnalyzer.MAX_CLOUD_CONCURRENCY + 1, Integer.MAX_VALUE}) {
+        for (int concurrency : new int[]{Integer.MIN_VALUE, -1, 0}) {
             assertThrows(IllegalArgumentException.class, () -> AiAnalyzer.analyseConcurrent(
                     matching("Ingredients: alpha, beta.", "MILK"), false, concurrency,
                     () -> { throw new AssertionError("Invalid concurrency must not start a request"); },

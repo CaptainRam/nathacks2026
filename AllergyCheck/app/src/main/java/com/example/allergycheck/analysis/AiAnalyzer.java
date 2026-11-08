@@ -27,9 +27,6 @@ import java.util.function.BooleanSupplier;
 
 /** Adds per-allergen AI checks without letting a model erase matching evidence. */
 public final class AiAnalyzer {
-    /** Each slot is a thread and an open OpenRouter request; more mostly earns rate-limit errors. */
-    public static final int MAX_CLOUD_CONCURRENCY = 8;
-
     /** Each cloud request owns a separate client so connections are never shared concurrently. */
     public interface ModelFactory {
         AiModel create() throws Exception;
@@ -106,11 +103,8 @@ public final class AiAnalyzer {
                                                    int concurrency, ModelFactory factory,
                                                    BooleanSupplier cancelled, ProgressListener progress,
                                                    long requestTimeoutMs) throws InterruptedException {
-        // Enforced here too, so a caller that skips the clamped preference cannot open one
-        // thread and request per ingredient.
-        if (concurrency < 1 || concurrency > MAX_CLOUD_CONCURRENCY || requestTimeoutMs <= 0) {
-            throw new IllegalArgumentException("Cloud concurrency must be 1–" + MAX_CLOUD_CONCURRENCY
-                    + " and timeout positive");
+        if (concurrency < 1 || requestTimeoutMs <= 0) {
+            throw new IllegalArgumentException("Cloud concurrency and timeout must be positive");
         }
         Map<String, Check> checks = checksFor(matching);
         List<List<Check>> requests = requestsFor(checks, batch);

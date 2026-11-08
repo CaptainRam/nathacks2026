@@ -3,16 +3,12 @@ package com.example.allergycheck;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.example.allergycheck.analysis.AiAnalyzer;
-
 /** Persistent detection configuration. Credentials are kept out of Android backups. */
 public final class AnalysisPreferences {
     public enum Mode { MATCHING, LOCAL_AI, OPENROUTER, DECISIONS }
 
     public static final int DEFAULT_CLOUD_CONCURRENCY = 1;
     public static final int MIN_CLOUD_CONCURRENCY = 1;
-    /** The analyzer rejects anything higher, so the setting shares its cap. */
-    public static final int MAX_CLOUD_CONCURRENCY = AiAnalyzer.MAX_CLOUD_CONCURRENCY;
 
     private static final String CONFIGURATION = "analysis_preferences";
     private static final String CREDENTIALS = "analysis_credentials";
@@ -84,18 +80,16 @@ public final class AnalysisPreferences {
         try {
             int concurrency = Integer.parseInt(configuration(context)
                     .getString("cloud_concurrency", "1"));
-            if (concurrency < MIN_CLOUD_CONCURRENCY) return DEFAULT_CLOUD_CONCURRENCY;
-            // Values saved while the setting was uncapped keep the user's intent: as fast as allowed.
-            return Math.min(concurrency, MAX_CLOUD_CONCURRENCY);
+            return concurrency >= MIN_CLOUD_CONCURRENCY
+                    ? concurrency : DEFAULT_CLOUD_CONCURRENCY;
         } catch (NumberFormatException | ClassCastException exception) {
             return DEFAULT_CLOUD_CONCURRENCY;
         }
     }
 
     public static void saveCloudConcurrency(Context context, int concurrency) {
-        if (concurrency < MIN_CLOUD_CONCURRENCY || concurrency > MAX_CLOUD_CONCURRENCY) {
-            throw new IllegalArgumentException("Cloud concurrency must be between "
-                    + MIN_CLOUD_CONCURRENCY + " and " + MAX_CLOUD_CONCURRENCY);
+        if (concurrency < MIN_CLOUD_CONCURRENCY) {
+            throw new IllegalArgumentException("Cloud concurrency must be positive");
         }
         configuration(context).edit().putString("cloud_concurrency", Integer.toString(concurrency)).apply();
     }

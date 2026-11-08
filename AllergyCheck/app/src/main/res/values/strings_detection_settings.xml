@@ -23,8 +23,8 @@
     <string name="detection_threshold">Flag threshold (0–1)</string>
     <string name="detection_threshold_hint">Lower values flag more ingredients for review. Default: 0.5.</string>
     <string name="detection_concurrency">Parallel requests</string>
-    <string name="detection_concurrency_hint">Higher is faster but may hit rate limits. Default: %1$d. Maximum: %2$d.</string>
-    <string name="detection_concurrency_invalid">Enter a whole number from %1$d to %2$d.</string>
+    <string name="detection_concurrency_hint">Higher is faster but may hit rate limits. Default: 1.</string>
+    <string name="detection_concurrency_invalid">Enter a positive whole number.</string>
     <string name="detection_save_cloud">Save cloud settings</string>
     <string name="detection_cloud_saved">Cloud settings saved.</string>
     <string name="detection_cloud_needs_key">Add your API key and save to start using cloud detection.</string>
