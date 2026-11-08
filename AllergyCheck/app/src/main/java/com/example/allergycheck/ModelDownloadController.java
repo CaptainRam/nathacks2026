@@ -36,7 +36,8 @@ final class ModelDownloadController {
         progress = activity.findViewById(R.id.model_status_progress);
         action.setOnClickListener(view -> {
             if (manager.getStatus().isBusy()) {
-                activity.startActivity(new Intent(activity, SettingsActivity.class));
+                activity.startActivity(new Intent(activity, SettingsActivity.class)
+                        .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, true));
             } else {
                 showDownloadPrompt();
             }
