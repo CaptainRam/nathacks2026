@@ -85,6 +85,16 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
     @Override
     public void onStart() {
         super.onStart();
+        refresh();
+    }
+
+    /**
+     * Reloads the list on demand. The fragment is only created once and then just shown/hidden by
+     * {@code MainActivity} on tab switches, so {@link #onStart()} alone would miss a scan finished
+     * while the tab was already visited earlier in the session; the host calls this on every
+     * switch into the tab to cover that case.
+     */
+    void refresh() {
         reload();
     }
 

@@ -500,6 +500,11 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         historyVisible = show;
         if (show) {
             ensureHistoryFragment();
+            HistoryFragment fragment = (HistoryFragment) getSupportFragmentManager()
+                    .findFragmentByTag(HISTORY_FRAGMENT);
+            if (fragment != null) {
+                fragment.refresh();
+            }
         } else {
             // Drop any open detail, so returning to history lands on the list.
             getSupportFragmentManager().popBackStackImmediate(
