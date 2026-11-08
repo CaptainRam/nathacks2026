@@ -35,14 +35,17 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.fragment.app.FragmentManager;
 
 import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
+import com.example.allergycheck.history.ScanHistory;
 import com.example.allergycheck.ingredients.IngredientExtractor;
 import com.example.allergycheck.ocr.OcrPipeline;
 import com.example.allergycheck.ocr.OcrResult;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -58,11 +61,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements HistoryHost {
     private static final String PHOTO_STATE = "selected_photo";
     private static final String PENDING_PHOTO_STATE = "pending_photo";
     private static final String CAMERA_STATE = "pending_camera_photo";
     private static final String ANALYSIS_STATE = "analysis_mode";
+    private static final String HISTORY_STATE = "history_visible";
+    private static final String HISTORY_FRAGMENT = "history";
     private static final int MAX_PREVIEW_SIZE = 1600;
 
     private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
@@ -96,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
     private OcrPipeline ocrPipeline;
     /** True while the page shows a check (in progress or finished) instead of the home. */
     private boolean analysisMode;
+    private boolean historyVisible;
+    private BottomNavigationView bottomNav;
+    private View historyContainer;
     private ResultAction resultAction = ResultAction.NONE;
     private final List<ValueAnimator> scanAnimators = new ArrayList<>();
     private PopupMenu changePhotoMenu;
@@ -110,6 +118,23 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleOnBackPressed() {
             cancelAnalysis();
+        }
+    };
+
+    /**
+     * Back on the history tab closes an open scan detail first, then returns to the scan page
+     * rather than leaving the app. The back stack is popped here explicitly rather than left to
+     * the FragmentManager's own callback: this one is registered later, so it would otherwise win
+     * and swallow the detail's back.
+     */
+    private final OnBackPressedCallback historyBackCallback = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStack();
+                return;
+            }
+            showScanTab();
         }
     };
 
@@ -186,7 +211,22 @@ public class MainActivity extends AppCompatActivity {
         resultView = new AnalysisResultView(analysisResult);
         ocrPipeline = new OcrPipeline();
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
+        // After the analysis callback, so it wins while history is showing.
+        getOnBackPressedDispatcher().addCallback(this, historyBackCallback);
         modelDownloadController = new ModelDownloadController(this, () -> openSettings(true));
+        // Prune anything past the retention window and sweep images with no row. Cheap from here:
+        // it only hands the work to the history worker.
+        ScanHistory.get(this).maintain(null);
+        bottomNav = findViewById(R.id.bottom_nav);
+        historyContainer = findViewById(R.id.history_container);
+        bottomNav.setOnItemSelectedListener(item -> {
+            showHistory(item.getItemId() == R.id.tab_history);
+            return true;
+        });
+        // Set explicitly rather than relying on the menu order, so the default is unambiguous.
+        boolean restoreHistory = savedInstanceState != null
+                && savedInstanceState.getBoolean(HISTORY_STATE);
+        bottomNav.setSelectedItemId(restoreHistory ? R.id.tab_history : R.id.tab_scan);
 
         getSupportFragmentManager().setFragmentResultListener(
                 AllergenPreferencesDialogFragment.RESULT_KEY, this, (key, result) ->
@@ -382,8 +422,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 String text = result.fullText();
                 if (text.trim().isEmpty()) {
-                    showMessageResult(getString(R.string.ingredient_result_title),
-                            getString(R.string.ocr_empty_result));
+                    showAndSaveMessage(photo, text, getString(R.string.ocr_empty_result));
                     return;
                 }
                 List<String> ingredients = IngredientExtractor.extract(text);
@@ -394,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
                         AllergenPreferences.selectedAllergenSet(MainActivity.this, dictionary));
                 if (ingredients.isEmpty() && report.label().statements().isEmpty()) {
                     // Nothing to analyse at all: show the raw text so the user can see what was read.
-                    showMessageResult(getString(R.string.ingredient_result_title),
+                    showAndSaveMessage(photo, text,
                             getString(R.string.no_ingredients_found, text));
                     return;
                 }
@@ -404,16 +443,29 @@ public class MainActivity extends AppCompatActivity {
                         ? ResultAction.CHOOSE_ALLERGENS
                         : report.overall() == AnalysisReport.Status.UNREADABLE
                         ? ResultAction.RETRY : ResultAction.NONE);
+                // Recorded after the verdict is on screen, so nothing here can delay it. The
+                // staleness guard above is what keeps a cancelled or superseded scan out.
+                ScanHistory.get(MainActivity.this).save(report, photo);
             }
 
             @Override
             public void onFailure(@NonNull Exception error) {
                 if (isCurrentImageRequest(request)) {
-                    showMessageResult(getString(R.string.ingredient_result_title),
-                            getString(R.string.ingredient_read_error));
+                    showAndSaveMessage(photo, "", getString(R.string.ingredient_read_error));
                 }
             }
         });
+    }
+
+    /**
+     * Shows a scan that produced no report, and records it anyway. A failed read is still a scan
+     * the user took, and storing the title and body lets the history page reproduce this very
+     * screen through the same {@link AnalysisResultView#showMessage} call.
+     */
+    private void showAndSaveMessage(Uri photo, String rawText, String message) {
+        String title = getString(R.string.ingredient_result_title);
+        showMessageResult(title, message);
+        ScanHistory.get(this).saveFailure(rawText, title, message, photo);
     }
 
     /** Re-reads the photo already on screen, if any; a no-op when nothing is loaded. */
@@ -434,6 +486,66 @@ public class MainActivity extends AppCompatActivity {
     private Bitmap currentBitmap() {
         return photoPreview.getDrawable() instanceof BitmapDrawable
                 ? ((BitmapDrawable) photoPreview.getDrawable()).getBitmap() : null;
+    }
+
+    // ----- Tabs -----
+
+    /**
+     * Shows one page or the other. The scan page keeps its own state and its own mode machine
+     * untouched while it is hidden, so coming back to it resumes exactly where it was.
+     */
+    private void showHistory(boolean show) {
+        if (historyVisible == show) {
+            return;
+        }
+        historyVisible = show;
+        if (show) {
+            ensureHistoryFragment();
+            HistoryFragment fragment = (HistoryFragment) getSupportFragmentManager()
+                    .findFragmentByTag(HISTORY_FRAGMENT);
+            if (fragment != null) {
+                fragment.refresh();
+            }
+        } else {
+            // Drop any open detail, so returning to history lands on the list.
+            getSupportFragmentManager().popBackStackImmediate(
+                    null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
+        contentScroll.setVisibility(show ? View.GONE : View.VISIBLE);
+        historyContainer.setVisibility(show ? View.VISIBLE : View.GONE);
+        // Pinned outside content_scroll now, so it no longer leaves with it on its own.
+        restartButton.setVisibility(
+                show || analysisResult.getVisibility() != View.VISIBLE ? View.GONE : View.VISIBLE);
+        historyBackCallback.setEnabled(show);
+        if (show) {
+            HomeMotion.riseIn(historyContainer, dp(24), 200);
+        }
+    }
+
+    /**
+     * Adds the history fragment the first time it is needed. Doing this lazily is not only about
+     * startup cost: the history pages include the same result layout as the scan page, so its ids
+     * exist twice once they are attached, and keeping them out of the hierarchy until the user
+     * opens history keeps {@code Activity#findViewById} unambiguous before then.
+     */
+    private void ensureHistoryFragment() {
+        FragmentManager manager = getSupportFragmentManager();
+        if (manager.findFragmentByTag(HISTORY_FRAGMENT) != null) {
+            return;
+        }
+        if (manager.isStateSaved()) {
+            // The tab was switched after state was saved, so a committed transaction would throw.
+            // Which tab is showing is already in HISTORY_STATE, so onCreate puts this back.
+            return;
+        }
+        manager.beginTransaction()
+                .replace(R.id.history_container, new HistoryFragment(), HISTORY_FRAGMENT)
+                .commitNow();
+    }
+
+    @Override
+    public void showScanTab() {
+        bottomNav.setSelectedItemId(R.id.tab_scan);
     }
 
     // ----- The check: start, progress, result, leave -----
@@ -538,8 +650,12 @@ public class MainActivity extends AppCompatActivity {
         tipsGroup.setVisibility(enabled ? View.GONE : View.VISIBLE);
         photoStripScroll.setVisibility(enabled ? View.VISIBLE : View.GONE);
         analysisGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        // Pinned outside the analysis group, so it has to leave with it.
         if (!enabled) {
+            // analysisResult's own flag would otherwise stay stale at VISIBLE even though its
+            // ancestor analysisGroup is now gone, which fools the history-tab restore in
+            // showHistory() into bringing restartButton back on the home screen.
+            analysisResult.setVisibility(View.GONE);
+            // Pinned outside the analysis group now, so it needs its own visibility toggle too.
             restartButton.setVisibility(View.GONE);
         }
     }
@@ -874,7 +990,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (!analysisMode && !isAllergenDialogOpen()) {
+        if (!analysisMode && !historyVisible && !isAllergenDialogOpen()) {
             modelDownloadController.offerIntroduction();
         }
     }
@@ -891,6 +1007,7 @@ public class MainActivity extends AppCompatActivity {
             outState.putString(CAMERA_STATE, pendingCameraPhoto.toString());
         }
         outState.putBoolean(ANALYSIS_STATE, analysisMode);
+        outState.putBoolean(HISTORY_STATE, historyVisible);
         super.onSaveInstanceState(outState);
     }
 

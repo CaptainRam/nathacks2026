@@ -8,6 +8,11 @@
         <exclude domain="external" path="llm/" />
         <exclude domain="file" path="llm/" />
         <exclude domain="sharedpref" path="local_model.xml" />
+        <!-- Scan history is health-adjacent and stays on the device. -->
+        <exclude domain="file" path="history/" />
+        <exclude domain="database" path="scan_history.db" />
+        <exclude domain="database" path="scan_history.db-wal" />
+        <exclude domain="database" path="scan_history.db-shm" />
         <!-- TODO: Use <include> and <exclude> to control what is backed up.
         <include .../>
         <exclude .../>
@@ -17,6 +22,11 @@
         <exclude domain="external" path="llm/" />
         <exclude domain="file" path="llm/" />
         <exclude domain="sharedpref" path="local_model.xml" />
+        <!-- Scan history is health-adjacent and stays on the device. -->
+        <exclude domain="file" path="history/" />
+        <exclude domain="database" path="scan_history.db" />
+        <exclude domain="database" path="scan_history.db-wal" />
+        <exclude domain="database" path="scan_history.db-shm" />
     </device-transfer>
     <!--
     <device-transfer>
