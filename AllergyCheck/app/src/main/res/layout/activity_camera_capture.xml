@@ -47,6 +47,21 @@
             android:textColor="?attr/colorOnSurface"
             android:textStyle="bold" />
 
+        <!-- Hidden in code on a device with no flash unit, so it is never a dead control. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/capture_torch_button"
+            style="@style/Widget.AllergyCheck.TonalIconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="12dp"
+            android:contentDescription="@string/camera_flashlight"
+            android:tooltipText="@string/camera_flashlight_hint"
+            android:visibility="gone"
+            app:backgroundTint="@color/camera_toggle_background"
+            app:icon="@drawable/ic_flashlight"
+            app:iconTint="@color/camera_toggle_icon"
+            tools:visibility="visible" />
+
         <!-- Checkable, so its fill reports whether auto-capture is armed. Checkable is set in code
              rather than XML because the attribute differs between MaterialButton and the platform
              button it extends. -->
@@ -58,9 +73,9 @@
             android:layout_marginStart="12dp"
             android:contentDescription="@string/camera_auto_capture"
             android:tooltipText="@string/camera_auto_capture_hint"
-            app:backgroundTint="@color/camera_auto_background"
+            app:backgroundTint="@color/camera_toggle_background"
             app:icon="@drawable/ic_auto_capture"
-            app:iconTint="@color/camera_auto_icon" />
+            app:iconTint="@color/camera_toggle_icon" />
     </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Filled when auto-capture is on, tonal when off. A change of fill rather than of icon is the
-     unambiguous on/off read, and both tones are theme attributes so the control stays inside the
-     app's Material palette. -->
+<!-- Shared by the capture screen's top-bar toggles (auto-capture, torch): filled when on, tonal
+     when off. A change of fill rather than of icon is the unambiguous on/off read, and both tones
+     are theme attributes so the controls stay inside the app's Material palette. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="?attr/colorPrimary" android:state_checked="true" />
     <item android:color="?attr/colorSecondaryContainer" />

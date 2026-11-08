@@ -28,6 +28,14 @@
          disabled rather than just finding a dead button. -->
     <string name="take_photo_not_ready">Take a photo, not ready yet</string>
 
+    <!-- Torch toggle in the capture screen's top bar. Always starts off: a light that came on by
+         itself in a shop or a restaurant is startling, and the user is the one who knows whether
+         they need it. -->
+    <string name="camera_flashlight">Flashlight</string>
+    <string name="camera_flashlight_hint">Light up the label</string>
+    <string name="camera_flashlight_on">Flashlight on</string>
+    <string name="camera_flashlight_off">Flashlight off</string>
+
     <!-- Auto-capture toggle in the capture screen's top bar. -->
     <string name="camera_auto_capture">Auto-capture</string>
     <string name="camera_auto_capture_hint">Take the photo automatically once the list reads</string>

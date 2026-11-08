@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
 import android.view.Display;
+import android.view.View;
 import android.view.Surface;
 import android.widget.ImageView;
 
@@ -17,12 +18,14 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
+import androidx.camera.core.TorchState;
 import androidx.camera.core.resolutionselector.AspectRatioStrategy;
 import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.core.resolutionselector.ResolutionStrategy;
@@ -80,6 +83,7 @@ public class CameraCaptureActivity extends AppCompatActivity {
     private CaptureFeedback feedback;
     private ProcessCameraProvider cameraProvider;
     private ExecutorService analysisExecutor;
+    private MaterialButton torchButton;
 
     private boolean capturing;
 
@@ -105,6 +109,8 @@ public class CameraCaptureActivity extends AppCompatActivity {
         captureButton = findViewById(R.id.capture_button);
         MaterialButton closeButton = findViewById(R.id.capture_close_button);
         MaterialButton autoButton = findViewById(R.id.capture_auto_button);
+        torchButton = findViewById(R.id.capture_torch_button);
+        torchButton.setCheckable(true);
 
         analysisExecutor = Executors.newSingleThreadExecutor();
         feedback = new CaptureFeedback(guideOverlay, findViewById(R.id.capture_status),
@@ -205,8 +211,9 @@ public class CameraCaptureActivity extends AppCompatActivity {
                 imageAnalysis = buildImageAnalysis();
                 imageAnalysis.setAnalyzer(analysisExecutor, labelReader);
                 cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA,
-                        preview, imageCapture, imageAnalysis);
+                Camera camera = cameraProvider.bindToLifecycle(this,
+                        CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture, imageAnalysis);
+                bindTorch(camera);
                 feedback.start();
             } catch (Exception exception) {
                 // Logged, not just swallowed. A silent finish() here is indistinguishable from the
@@ -217,6 +224,38 @@ public class CameraCaptureActivity extends AppCompatActivity {
                 finish();
             }
         }, ContextCompat.getMainExecutor(this));
+    }
+
+    /**
+     * Wires the torch toggle to the camera that was just bound.
+     *
+     * <p>The torch is never restored from anywhere — a fresh binding starts dark and the toggle
+     * starts unchecked. That is deliberate rather than an omission: a light that switches itself on
+     * in a shop or a restaurant is startling, and only the user knows whether they need it.
+     *
+     * <p>The button follows {@code getTorchState} rather than its own click, so it stays truthful if
+     * the torch is turned off by anything other than a tap — the camera being released and rebound
+     * across a stop/start, or the system shutting it down when the device overheats.
+     */
+    private void bindTorch(@NonNull Camera camera) {
+        if (!camera.getCameraInfo().hasFlashUnit()) {
+            // No flash on this camera, so the control would do nothing. Gone rather than disabled:
+            // a permanently dead button is worse than no button.
+            torchButton.setVisibility(View.GONE);
+            return;
+        }
+        torchButton.setVisibility(View.VISIBLE);
+        camera.getCameraControl().enableTorch(false);
+        camera.getCameraInfo().getTorchState().observe(this, state -> {
+            boolean on = state != null && state == TorchState.ON;
+            if (torchButton.isChecked() != on) {
+                torchButton.setChecked(on);
+            }
+            torchButton.setContentDescription(getString(
+                    on ? R.string.camera_flashlight_on : R.string.camera_flashlight_off));
+        });
+        torchButton.setOnClickListener(view ->
+                camera.getCameraControl().enableTorch(torchButton.isChecked()));
     }
 
     private ImageAnalysis buildImageAnalysis() {
