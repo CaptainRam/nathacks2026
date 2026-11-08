@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the scan-history tab: the list, its quick results, and managing entries. The
+     verdict wording for an unreadable label or no selected allergens is deliberately NOT repeated
+     here - those reuse strings_analysis.xml so a history row and a live result cannot drift. -->
+<resources>
+    <string name="tab_scan">Scan</string>
+    <string name="tab_history">History</string>
+    <string name="history_title">History</string>
+
+    <!-- Quick result on a list row. Longer than a status word, shorter than the full verdict
+         sentence on the result page. -->
+    <string name="history_summary_none_detected">No allergens detected</string>
+    <string name="history_summary_detected">%1$s detected</string>
+    <string name="history_summary_may_contain">May contain %1$s</string>
+    <string name="history_summary_possible">%1$s possibly detected — check the label</string>
+    <!-- Joins the allergen names: "Milk", "Milk and Soy", "Milk, Soy, and Wheat". -->
+    <string name="history_name_list_and">and</string>
+
+    <string name="history_timestamp_today">Today, %1$s</string>
+    <string name="history_timestamp_yesterday">Yesterday, %1$s</string>
+    <string name="history_timestamp_other">%1$s, %2$s</string>
+
+    <string name="history_empty_title">No scans yet</string>
+    <string name="history_empty_message">Labels you check will show up here, with the result.</string>
+    <string name="history_empty_action">Scan a label</string>
+    <string name="history_retention_note">Scans are kept for 7 days.</string>
+
+    <string name="history_clear_all">Clear all</string>
+    <string name="history_clear_confirm_title">Clear history?</string>
+    <plurals name="history_clear_confirm_message">
+        <item quantity="one">Delete this scan? This can\'t be undone.</item>
+        <item quantity="other">Delete all %d scans? This can\'t be undone.</item>
+    </plurals>
+    <string name="history_clear_confirm_action">Delete all</string>
+
+    <string name="history_delete_one_title">Delete this scan?</string>
+    <string name="history_delete_one_message">It will be removed from your history along with its photo.</string>
+    <string name="history_delete">Delete</string>
+    <string name="history_deleted">Scan deleted</string>
+    <string name="history_undo">Undo</string>
+
+    <string name="history_thumbnail_description">Photo of the label that was checked</string>
+    <string name="history_no_image">No photo was saved for this scan</string>
+    <!-- Row announcement: the time, then the result, then the caveat when there is one. -->
+    <string name="history_row_description">%1$s. %2$s</string>
+    <string name="history_row_description_low_confidence">%1$s. %2$s. Based on thin evidence.</string>
+
+    <string name="history_detail_title">Saved scan</string>
+    <string name="history_raw_text_title">Text that was read</string>
+    <string name="history_report_unavailable_title">Result unavailable</string>
+    <string name="history_report_unavailable_message">The full result for this scan could not be opened. The text that was read is shown below.</string>
+    <string name="history_back">Back to history</string>
+</resources>
