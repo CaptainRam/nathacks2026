@@ -104,3 +104,18 @@ INFO         | Created extended window in 77.197ms
 USER_INFO    | Emulator is performing a full startup. This may take upto two minutes, or more.
 INFO         | Boot completed in 18852 ms
 INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+2026-11-07 22:07:00.526 qemu-system-aarch64[28184:2282241] error messaging the mach port for IMKCFRunLoopWakeUpReliable
+INFO         | Warning: skipping QEventPoint(id=1 ts=0 pos=0,0 scn=483.005,234.004 gbl=483.005,234.004 Released ellipse=(1x1 ∡ 0) vel=0,0 press=-483.005,-234.004 last=-483.005,-234.004 Δ 483.005,234.004) : no target window (:0, )
+INFO         | Warning: skipping QEventPoint(id=1 ts=0 pos=0,0 scn=338.958,510.459 gbl=338.958,510.459 Released ellipse=(1x1 ∡ 0) vel=0,0 press=-338.958,-510.459 last=-338.958,-510.459 Δ 338.958,510.459) : no target window (:0, )
+INFO         | Warning: skipping QEventPoint(id=4 ts=0 pos=0,0 scn=429.414,398.868 gbl=429.414,398.868 Released ellipse=(1x1 ∡ 0) vel=0,0 press=-429.414,-398.868 last=-429.414,-398.868 Δ 429.414,398.868) : no target window (:0, )
+INFO         | Warning: skipping QEventPoint(id=5 ts=0 pos=0,0 scn=540.838,348.639 gbl=540.838,348.639 Released ellipse=(1x1 ∡ 0) vel=0,0 press=-540.838,-348.639 last=-540.838,-348.639 Δ 540.838,348.639) : no target window (:0, )
+INFO         | Wait for emulator (pid 28184) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+
+USER_INFO    | Snapshots have been disabled by the user, save request is ignored.
+INFO         | Saving snapshot 'default_boot' took 1 ms
+WARNING      | Emulator client has not yet been configured.. Call configure me first!
+INFO         | removeScene: scene=0x74dda0fc00
+INFO         | removeAll
+ERROR        | Failed to restore previous context: 12297
+WARNING      | Netsim Wifi dns:///localhost:61180 is gone due to Stream removed (CANCELLED)
+INFO         | ipv6:%5B::1%5D:61180: Got goaway [2] err=UNAVAILABLE:GOAWAY received; Error code: 2; Debug Text: Cancelling all calls {http2_error:2}
