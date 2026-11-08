@@ -18,6 +18,16 @@
         android:layout_height="wrap_content"
         android:text="@string/pick_image" />
 
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/enhance_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:checked="true"
+        android:text="@string/enhance_image" />
+
+    <include layout="@layout/view_model_download" />
+
     <ImageView
         android:id="@+id/image_preview"
         android:layout_width="match_parent"
@@ -40,10 +50,20 @@
         android:visibility="gone"
         tools:visibility="visible" />
 
+    <TextView
+        android:id="@+id/ocr_stats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:text="lines: 42 · chars: 913 · 680 ms"
+        tools:visibility="visible" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_weight="1">
 
         <TextView

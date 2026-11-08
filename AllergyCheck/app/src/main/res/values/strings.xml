@@ -4,8 +4,61 @@
     <!-- OCR test harness. Remove alongside OcrTestActivity. -->
     <string name="ocr_test_title">OCR Test</string>
     <string name="pick_image">Select label photo</string>
+    <string name="enhance_image">Enhance image before OCR</string>
     <string name="image_preview_description">The selected label photo</string>
     <string name="ocr_placeholder">Pick a photo of a food label to extract its text.</string>
     <string name="ocr_empty_result">No text found in this image. Try a closer, better-lit photo of the label.</string>
     <string name="ocr_error">Couldn\'t read this image: %1$s</string>
+    <!-- Lines, characters and elapsed milliseconds: the numbers to compare when the switch is flipped. -->
+    <string name="ocr_stats">lines: %1$d · chars: %2$d · %3$d ms</string>
+    <string name="brand_name">AllergyCheck</string>
+    <string name="new_scan">NEW SCAN</string>
+    <string name="home_title">Know what’s in your food</string>
+    <string name="home_subtitle">Snap the ingredient label and we’ll flag anything you need to avoid.</string>
+    <string name="add_label_title">Add an ingredient label</string>
+    <string name="add_label_description">Take a photo or choose one from your library</string>
+    <string name="take_photo">Take a photo</string>
+    <string name="camera_error">Couldn’t capture a photo. Please try again or import an image.</string>
+    <string name="import_photo">Import a photo</string>
+    <string name="replace_photo">Change photo</string>
+    <string name="remove_photo">Remove photo</string>
+    <string name="photo_tip_title">Tips for a clear photo</string>
+    <string name="preview_eyebrow">YOUR INGREDIENT LABEL</string>
+    <string name="preview_title">Looking good?</string>
+    <string name="preview_subtitle">Make sure every ingredient is clear and easy to read, then start the check.</string>
+    <string name="photo_added">Ingredient photo added</string>
+    <string name="photo_preview_description">Preview of your selected ingredient label</string>
+    <string name="loading_photo">Loading your photo</string>
+    <string name="photo_error">This photo couldn’t be opened. Please choose another image.</string>
+    <string name="picker_error">No photo picker is available. Please try again.</string>
+    <string name="try_again">Try again</string>
+    <string name="settings">Settings</string>
+    <string name="navigate_back">Go back</string>
+    <string name="no_allergens_selected">No allergens selected</string>
+    <string name="allergens_title">Your allergens</string>
+    <string name="allergens_hint">Choose what to flag on ingredient labels. Select all that apply.</string>
+    <string name="settings_sections">Settings section</string>
+    <string name="settings_section_allergens">Allergens</string>
+    <string name="settings_section_model">AI model</string>
+    <string name="save">Save</string>
+    <string name="discard_changes_title">Discard unsaved changes?</string>
+    <string name="discard_changes_message">Your changes haven’t been saved yet.</string>
+    <string name="results_settings_title">Results</string>
+    <string name="show_not_detected">Show allergens not detected</string>
+    <string name="show_not_detected_hint">Also list your allergens that weren’t found on the label.</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep editing</string>
+    <string name="tip_frame">Fit the whole ingredient list in the frame</string>
+    <string name="tip_light">Use even lighting and avoid glare</string>
+    <string name="tip_focus">Hold steady so the text stays sharp</string>
+    <string name="set_allergens">Set your allergens</string>
+    <string name="save_preferences">Save preferences</string>
+    <string name="cancel">Cancel</string>
+    <string name="preferences_saved">Settings saved</string>
+    <plurals name="allergens_selected">
+        <item quantity="one">%d allergen selected</item>
+        <item quantity="other">%d allergens selected</item>
+    </plurals>
+    <!-- The allergen names shown in the pickers come from res/raw/allergen_dictionary.json, so
+         the engine's vocabulary and the UI cannot drift apart. -->
 </resources>
