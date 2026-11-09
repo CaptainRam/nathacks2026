@@ -301,9 +301,9 @@ Without a front photo, the ingredient scan proceeds normally. An unreadable food
 
 ## Workflow
 
-![Broader planned architecture: shared OCR, local analysis, cloud analysis extensions, an optional front-of-package cross-check, and a consolidated report.](docs/workflow.drawio.svg)
+![Planned architecture with ingredient-allergen Decisions scores and an independent optional cloud photo check after the label report.](docs/workflow-updated.drawio.svg)
 
-[Open the English diagram](docs/workflow.drawio.svg). This SVG contains editable diagrams.net / draw.io data. The diagram includes Should-have and Could-have analysis paths; the [MoSCoW Scope](#moscow-scope) defines MVP commitments.
+[Open the updated diagram](docs/workflow-updated.drawio.svg) · [PNG preview](docs/workflow-updated.png) · [Original diagram](docs/workflow.drawio.svg). Both SVGs contain editable diagrams.net / draw.io data. The updated version revises Decisions scoring and the optional photo-check branch; the remaining diagram retains the planned architecture. The [MoSCoW Scope](#moscow-scope) defines MVP commitments.
 
 ### MVP path (Must Have)
 
