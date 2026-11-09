@@ -5,131 +5,190 @@
     {
       "id": "MILK",
       "label": "Milk",
+      "notes": "Specific phrases come before the bare word they contain, because the first match wins and is the term shown as evidence: \"ice cream\" must precede \"cream\", and the qualified milks precede \"milk\". Cheeses are named individually: matching is by word token, so \"cheese\" cannot catch \"mozzarella\". The exclusions carry the plant-based analogues, which is what keeps bare \"milk\", \"cream\", \"butter\", \"curd\" and \"dairy\" safe to list as definite terms. \"mustard\" is excluded for the same reason as under EGGS: it is one edit away from \"custard\".",
       "terms": [
-        "milk", "skim milk", "whole milk", "milk powder", "milk solids", "milk protein", "milk fat",
-        "cream", "butter", "buttermilk", "butterfat", "cheese", "yogurt", "yoghurt", "yogourt",
-        "whey", "casein", "caseinate", "lactose", "lactalbumin", "lactoglobulin", "ghee", "curd",
-        "custard", "kefir", "ice cream", "dairy", "creme", "paneer", "ricotta", "mozzarella",
-        "cheddar"
+        "skim milk", "whole milk", "milk powder", "milk solid", "milk protein", "milk fat",
+        "milkfat", "milk", "buttermilk", "butterfat", "butter", "ice cream", "cream", "creme",
+        "crema", "half and half", "cheese", "cheddar", "mozzarella", "ricotta", "parmesan",
+        "parmigiano", "feta", "brie", "camembert", "gouda", "gruyere", "havarti", "provolone",
+        "asiago", "colby", "halloumi", "mascarpone", "burrata", "edam", "quark", "paneer",
+        "queso", "yogurt", "yoghurt", "yogourt", "tzatziki", "kefir", "gelato", "sherbet",
+        "whey", "casein", "caseinate", "lactose", "lactalbumin", "lactoglobulin", "lactoferrin",
+        "ghee", "curd", "custard", "bechamel", "alfredo", "dairy"
       ],
       "ambiguous": [
         "natural flavour", "natural flavor", "margarine", "nougat", "caramel", "chocolate"
       ],
       "exclusions": [
-        "cocoa butter", "shea butter", "peanut butter", "almond butter", "nut butter",
-        "cashew butter", "sunflower butter", "seed butter", "coconut milk", "coconut cream",
-        "almond milk", "soy milk", "soya milk", "oat milk", "rice milk", "cashew milk",
-        "hazelnut milk", "pea milk", "cream of tartar", "milk thistle"
+        "cocoa butter", "shea butter", "peanut butter", "almond butter", "cashew butter",
+        "sunflower butter", "seed butter", "coconut butter", "soy butter", "sesame butter",
+        "hazelnut butter", "pecan butter", "walnut butter", "pistachio butter",
+        "macadamia butter", "nut butter", "apple butter", "butter bean", "butter lettuce",
+        "coconut milk", "coconut cream", "almond milk", "soy milk", "soya milk", "oat milk",
+        "rice milk", "cashew milk", "hazelnut milk", "pea milk", "coconut yogurt", "soy yogurt",
+        "almond yogurt", "oat cream", "soy cream", "cashew cheese", "vegan cheese", "bean curd",
+        "soy curd", "non dairy", "cream of tartar", "milk thistle", "mustard"
       ]
     },
     {
       "id": "EGGS",
       "label": "Eggs",
+      "notes": "\"custard\" is listed here as well as under MILK: it is both. The egg-prefixed phrases precede bare \"egg\" so the evidence quoted is the specific one. \"mustard\" is excluded because it is one edit away from \"custard\", which the fuzzy near-miss pass would otherwise read as a possible egg on every mustard label.",
       "terms": [
-        "egg", "egg white", "egg yolk", "dried egg", "albumin", "albumen", "ovalbumin", "ovomucoid",
-        "ovomucin", "ovovitellin", "livetin", "lysozyme", "mayonnaise", "meringue", "eggnog"
+        "egg white", "egg yolk", "egg albumin", "egg lecithin", "dried egg", "egg", "albumin",
+        "albumen", "ovalbumin", "ovomucoid", "ovomucin", "ovovitellin", "ovotransferrin",
+        "conalbumin", "avidin", "vitellin", "livetin", "lysozyme", "mayonnaise", "aioli",
+        "hollandaise", "meringue", "custard", "frittata", "quiche", "eggnog"
       ],
-      "ambiguous": ["natural flavour", "natural flavor", "lecithin", "pasta", "marshmallow"],
-      "exclusions": ["egg free", "eggplant"]
+      "ambiguous": [
+        "natural flavour", "natural flavor", "lecithin", "pasta", "marshmallow", "nougat",
+        "caesar", "surimi", "batter", "breading", "royal icing", "mousse", "macaron", "tempura"
+      ],
+      "exclusions": ["egg free", "eggplant", "mustard"]
     },
     {
       "id": "PEANUTS",
       "label": "Peanuts",
+      "notes": "\"vegetable oil\" is deliberately absent: Canadian labelling requires peanut oil to be declared as peanut, so a generic \"vegetable oil\" is canola, soy or corn and would warn on almost every packaged food. The unqualified nut words stay ambiguous rather than definite, since mixed nuts and nut butters often but not always include peanuts.",
       "terms": [
-        "peanut", "peanut butter", "peanut oil", "peanut flour", "groundnut", "ground nut",
-        "arachis", "monkey nut", "beer nut", "goober"
+        "peanut butter", "peanut oil", "peanut flour", "peanut", "groundnut", "ground nut",
+        "earth nut", "arachis", "monkey nut", "beer nut", "mandelona", "goober"
       ],
-      "ambiguous": ["nuts", "mixed nuts", "satay", "vegetable oil"],
+      "ambiguous": [
+        "mixed nut", "nut butter", "nut oil", "nut paste", "trail mix", "satay", "nut"
+      ],
       "exclusions": ["peanut free"]
     },
     {
       "id": "TREE_NUTS",
       "label": "Tree nuts",
+      "notes": "\"hickory nut\", not bare \"hickory\": on a label \"hickory\" is almost always smoke flavouring from the wood. \"coconut\" stays ambiguous because Canada does not treat it as a tree nut while the United States does. \"butternut\" is left out on purpose - butternut squash is far commoner than the nut.",
       "terms": [
-        "almond", "brazil nut", "cashew", "chestnut", "filbert", "hazelnut", "hickory", "macadamia",
-        "pecan", "pine nut", "pistachio", "walnut", "marzipan", "praline", "gianduja", "tree nut"
+        "brazil nut", "pine nut", "hickory nut", "queensland nut", "cob nut", "cobnut",
+        "tree nut", "almond paste", "almond extract", "bitter almond", "almond", "cashew",
+        "chestnut", "filbert", "hazelnut", "macadamia", "pecan", "pistachio", "walnut",
+        "beechnut", "pignoli", "pignolia", "pinon", "marzipan", "frangipane", "praline",
+        "gianduja", "gianduia", "nutella", "nut meal"
       ],
-      "ambiguous": ["nuts", "mixed nuts", "nougat", "coconut", "nut butter", "nut oil"],
-      "exclusions": ["water chestnut", "nut free", "tree nut free"]
+      "ambiguous": [
+        "mixed nut", "nut butter", "nut oil", "nut meat", "pesto", "granola", "muesli",
+        "coconut", "nougat", "nut"
+      ],
+      "exclusions": [
+        "water chestnut", "chestnut mushroom", "horse chestnut", "nut free", "tree nut free"
+      ]
     },
     {
       "id": "SOY",
       "label": "Soy",
+      "notes": "\"textured vegetable protein\" is a definite term, not an ambiguous one: TVP is soy protein by definition. \"vegetable oil\" does belong here as ambiguous, unlike under PEANUTS, because soybean oil is the commonest generic vegetable oil.",
       "terms": [
-        "soy", "soya", "soybean", "soy sauce", "soy protein", "soy flour", "soy lecithin",
-        "soy milk", "soy oil", "edamame", "tofu", "tempeh", "miso", "tamari", "shoyu", "natto",
-        "textured soy"
+        "soy sauce", "soy protein", "soy flour", "soy lecithin", "soy milk", "soy oil",
+        "textured soy", "soybean curd", "soybean", "soya", "soy",
+        "textured vegetable protein", "tvp", "bean curd", "edamame", "tofu", "tempeh", "miso",
+        "tamari", "shoyu", "natto", "okara", "yuba", "kinako", "hoisin", "teriyaki", "doenjang",
+        "gochujang", "ponzu"
       ],
       "ambiguous": [
-        "lecithin", "vegetable protein", "hydrolyzed vegetable protein",
-        "hydrolysed vegetable protein", "textured vegetable protein", "natural flavour",
-        "natural flavor", "vegetable oil", "vegetable broth"
+        "hydrolyzed vegetable protein", "hydrolysed vegetable protein", "vegetable protein",
+        "vegetable oil", "vegetable broth", "lecithin", "worcestershire", "tocopherol",
+        "vitamin e", "bouillon", "margarine", "natural flavour", "natural flavor"
       ],
-      "exclusions": ["sunflower lecithin", "soy free", "soya free"]
+      "exclusions": [
+        "sunflower lecithin", "egg lecithin", "canola lecithin", "rapeseed lecithin", "soy free",
+        "soya free"
+      ]
     },
     {
       "id": "WHEAT",
       "label": "Wheat",
-      "notes": "The exclusions list every qualified non-wheat flour and starch, so bare \"flour\" and \"starch\" in the ambiguous list stay the only trigger. \"sans gluten\" is kept as a false-positive guard: \"gluten\" is an English term, and French negates before the noun so the trailing-\"free\" rule cannot catch it.",
+      "notes": "Bare \"flour\", \"starch\", \"bran\" and \"noodle\" are ambiguous, so every common non-wheat flour, starch, bran and noodle is listed as an exclusion to stop them firing; the list is maintained, not exhaustive, so add to it when a new one shows up. \"sans gluten\" is kept as a false-positive guard: \"gluten\" is an English term, and French negates before the noun so the trailing-\"free\" rule cannot catch it. Barley, rye and oats are absent by design - Canada declares them as gluten sources separately from wheat, and they would need an allergen of their own.",
       "terms": [
-        "wheat", "wheat flour", "wheat starch", "wheat germ", "wheat bran", "wheat protein",
-        "semolina", "spelt", "durum", "kamut", "farina", "couscous", "bulgur", "seitan",
-        "triticale", "gluten", "einkorn", "emmer", "graham", "orzo", "freekeh"
+        "wheat flour", "wheat starch", "wheat germ", "wheat bran", "wheat protein", "wheat",
+        "semolina", "spelt", "durum", "kamut", "khorasan", "farina", "couscous", "bulgur",
+        "seitan", "triticale", "gluten", "einkorn", "emmer", "farro", "graham", "orzo",
+        "macaroni", "spaghetti", "freekeh", "matzo", "matzah", "panko", "udon", "atta", "maida",
+        "phyllo", "filo", "wonton", "crouton", "cracker meal"
       ],
       "ambiguous": [
-        "flour", "starch", "modified starch", "modified food starch", "malt", "bran",
-        "breadcrumbs", "bread crumbs", "rusk", "pasta"
+        "modified food starch", "modified starch", "starch", "flour", "malt extract", "malted",
+        "malt", "bran", "breadcrumb", "bread crumb", "bread", "rusk", "pasta", "noodle",
+        "vermicelli", "soba", "dextrin"
       ],
       "exclusions": [
-        "gluten free", "wheat free", "sans gluten", "buckwheat", "buckwheat flour",
-        "rice flour", "corn flour", "maize flour", "potato flour", "tapioca flour", "almond flour",
-        "coconut flour", "chickpea flour", "oat flour", "corn starch", "maize starch",
-        "potato starch", "tapioca starch", "rice starch", "modified corn starch",
-        "modified tapioca starch", "modified potato starch", "modified maize starch"
+        "gluten free", "wheat free", "sans gluten", "corn gluten", "buckwheat",
+        "buckwheat flour", "rice flour", "corn flour", "maize flour", "potato flour",
+        "tapioca flour", "almond flour", "coconut flour", "chickpea flour", "oat flour",
+        "cassava flour", "sorghum flour", "quinoa flour", "millet flour", "teff flour",
+        "amaranth flour", "arrowroot flour", "pea flour", "soy flour", "banana flour",
+        "plantain flour", "corn starch", "maize starch", "potato starch", "tapioca starch",
+        "rice starch", "arrowroot starch", "cassava starch", "pea starch",
+        "modified corn starch", "modified tapioca starch", "modified potato starch",
+        "modified maize starch", "modified rice starch", "oat bran", "rice bran", "corn bran",
+        "rice noodle", "glass noodle"
       ]
     },
     {
       "id": "SESAME",
       "label": "Sesame",
       "terms": [
-        "sesame", "sesame seed", "sesame oil", "tahini", "tahina", "halvah", "halva", "gomasio",
-        "benne", "gingelly"
+        "sesame seed", "sesame oil", "sesame", "sesamum", "sesamol", "sesamin", "tahini",
+        "tahina", "halvah", "halva", "gomasio", "gomashio", "benne", "gingelly", "zaatar",
+        "za atar", "simsim"
       ],
-      "ambiguous": ["hummus", "falafel", "spices"],
+      "ambiguous": [
+        "spice blend", "spice", "seasoning", "hummus", "falafel", "baba ganoush", "dukkah",
+        "furikake", "bagel", "bun"
+      ],
       "exclusions": ["sesame free"]
     },
     {
       "id": "FISH",
       "label": "Fish",
+      "notes": "Species whose name ends in \"fish\" are each listed: matching is by word token, so the term \"fish\" does not catch \"monkfish\". \"swedish fish\" is excluded because the candy contains none.",
       "terms": [
-        "fish", "anchovy", "anchovies", "bass", "catfish", "cod", "flounder", "haddock", "hake",
-        "halibut", "herring", "mackerel", "perch", "pike", "pollock", "salmon", "sardine",
-        "snapper", "sole", "swordfish", "tilapia", "trout", "tuna", "fish sauce", "fish oil",
-        "fish gelatin", "surimi", "isinglass"
+        "fish sauce", "fish oil", "fish gelatin", "fish broth", "fish stock", "fish extract",
+        "fish protein", "fish paste", "fish meal", "fish", "anchovy", "bass", "catfish", "cod",
+        "flounder", "haddock", "hake", "halibut", "herring", "mackerel", "perch", "pike",
+        "pollock", "pollack", "salmon", "sardine", "snapper", "sole", "swordfish", "tilapia",
+        "trout", "tuna", "monkfish", "whitefish", "rockfish", "whiting", "grouper", "eel",
+        "unagi", "basa", "pangasius", "mahi mahi", "arctic char", "turbot", "plaice", "kipper",
+        "smelt", "caviar", "roe", "bonito", "katsuobushi", "dashi", "lox", "gravlax", "nam pla",
+        "nuoc mam", "surimi", "isinglass"
       ],
-      "ambiguous": ["worcestershire", "omega 3", "caesar"],
-      "exclusions": ["fish free", "fish and chips"]
+      "ambiguous": [
+        "worcestershire", "omega 3", "caesar", "seafood", "gelatin", "kimchi", "bouillabaisse",
+        "natural flavour", "natural flavor"
+      ],
+      "exclusions": ["fish free", "swedish fish"]
     },
     {
       "id": "SHELLFISH",
       "label": "Shellfish",
+      "notes": "Covers both of Canada's shellfish groups, crustaceans and molluscs. \"oyster mushroom\" is a fungus and \"crab apple\" a fruit, hence the exclusions.",
       "terms": [
-        "shellfish", "crustacean", "mollusc", "mollusk", "shrimp", "prawn", "crab", "lobster",
-        "crayfish", "crawfish", "langoustine", "krill", "clam", "mussel", "oyster", "scallop",
-        "squid", "calamari", "octopus", "snail", "escargot", "abalone", "cuttlefish", "whelk",
-        "cockle"
+        "shellfish", "crustacean", "mollusc", "mollusk", "shrimp", "prawn", "crab meat",
+        "crabmeat", "crab", "lobster", "crayfish", "crawfish", "crawdad", "langoustine",
+        "langostino", "scampi", "krill", "clam", "mussel", "oyster", "scallop", "squid",
+        "calamari", "octopus", "snail", "escargot", "abalone", "cuttlefish", "whelk", "cockle",
+        "conch", "periwinkle", "limpet", "geoduck", "quahog"
       ],
-      "ambiguous": ["seafood", "glucosamine"],
-      "exclusions": ["shellfish free"]
+      "ambiguous": [
+        "seafood", "glucosamine", "surimi", "bisque", "paella", "kimchi", "chitosan", "xo sauce"
+      ],
+      "exclusions": ["shellfish free", "oyster mushroom", "crab apple", "clam shell"]
     },
     {
       "id": "MUSTARD",
       "label": "Mustard",
       "terms": [
-        "mustard", "mustard seed", "mustard flour", "mustard oil", "mustard powder",
-        "prepared mustard"
+        "mustard seed", "mustard flour", "mustard oil", "mustard powder", "prepared mustard",
+        "mustard", "dijon", "sinapis"
       ],
-      "ambiguous": ["spices", "spice", "seasoning", "curry", "curry powder", "vinaigrette"],
+      "ambiguous": [
+        "curry powder", "curry", "spice", "seasoning", "vinaigrette", "relish", "pickle",
+        "chutney", "remoulade", "barbecue sauce", "bbq sauce", "salad dressing", "marinade"
+      ],
       "exclusions": ["mustard free"]
     }
   ]
