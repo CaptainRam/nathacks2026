@@ -254,6 +254,19 @@ public class AnalysisPresentationCoverageTest {
     @Test
     public void nestedIngredientsAreIndentedAndCountOnlyTheirParents() {
         AnalysisReport report = analyse("Ingredients: chocolate (sugar, milk fat), salt.", "MILK");
+        boolean debugLabel = AllergenPreferences.debugLabelText(context);
+        AllergenPreferences.saveDebugLabelText(context, false);
+        render(report, root -> assertEquals(View.GONE,
+                root.findViewById(R.id.ingredients_card).getVisibility()));
+        AllergenPreferences.saveDebugLabelText(context, true);
+        try {
+            renderNested(report);
+        } finally {
+            AllergenPreferences.saveDebugLabelText(context, debugLabel);
+        }
+    }
+
+    private void renderNested(AnalysisReport report) {
         render(report, root -> {
             assertEquals(context.getString(R.string.section_ingredients, 2),
                     text(root, R.id.ingredients_section_title));

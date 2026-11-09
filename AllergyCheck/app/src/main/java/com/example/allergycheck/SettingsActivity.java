@@ -70,6 +70,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String MODEL_SECTION_SHOWN = "model_section_shown";
     private static final String DRAFT_SHOW_NOT_DETECTED = "draft_show_not_detected";
     private static final String DRAFT_MAY_CONTAIN_RED_WARNING = "draft_may_contain_red_warning";
+    private static final String DRAFT_DEBUG_LABEL_TEXT = "draft_debug_label_text";
     private static final String ANALYSIS_CONFIGURATION_CHANGED = "analysis_configuration_changed";
     static final String EXTRA_ANALYSIS_CONFIGURATION_CHANGED = ANALYSIS_CONFIGURATION_CHANGED;
     static final String EXTRA_AI_PROVIDER_CHANGED = "ai_provider_changed";
@@ -90,6 +91,8 @@ public class SettingsActivity extends AppCompatActivity {
     private boolean savedShowNotDetected;
     private boolean mayContainRedWarning;
     private boolean savedMayContainRedWarning;
+    private boolean debugLabelText;
+    private boolean savedDebugLabelText;
     private TextView selectionSummary;
     private TextView modelSaveNote;
     private NestedScrollView scroll;
@@ -361,6 +364,18 @@ public class SettingsActivity extends AppCompatActivity {
             updateSaveBar();
         });
         ((View) redWarningSwitch.getParent()).setOnClickListener(view -> redWarningSwitch.toggle());
+
+        savedDebugLabelText = AllergenPreferences.debugLabelText(this);
+        debugLabelText = savedInstanceState == null ? savedDebugLabelText
+                : savedInstanceState.getBoolean(DRAFT_DEBUG_LABEL_TEXT, savedDebugLabelText);
+        MaterialSwitch debugSwitch = findViewById(R.id.debug_label_text_switch);
+        debugSwitch.setSaveEnabled(false);
+        debugSwitch.setChecked(debugLabelText);
+        debugSwitch.setOnCheckedChangeListener((button, checked) -> {
+            debugLabelText = checked;
+            updateSaveBar();
+        });
+        ((View) debugSwitch.getParent()).setOnClickListener(view -> debugSwitch.toggle());
         // Refresh the save note after both preference drafts have been restored.
         updateSaveBar();
 
@@ -425,7 +440,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     private boolean allergenDraftChanged() {
         return !selectedAllergens.equals(savedAllergens) || showNotDetected != savedShowNotDetected
-                || mayContainRedWarning != savedMayContainRedWarning;
+                || mayContainRedWarning != savedMayContainRedWarning
+                || debugLabelText != savedDebugLabelText;
     }
 
     private void updateHeaderDivider() {
@@ -458,6 +474,7 @@ public class SettingsActivity extends AppCompatActivity {
             AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
             AllergenPreferences.saveShowNotDetected(this, showNotDetected);
             AllergenPreferences.saveMayContainRedWarning(this, mayContainRedWarning);
+            AllergenPreferences.saveDebugLabelText(this, debugLabelText);
             setSavedResult();
         }
         // Catch a model installed or removed outside the manager's latest status notification.
@@ -1014,6 +1031,7 @@ public class SettingsActivity extends AppCompatActivity {
         outState.putStringArrayList(DRAFT_ALLERGENS, new ArrayList<>(selectedAllergens));
         outState.putBoolean(DRAFT_SHOW_NOT_DETECTED, showNotDetected);
         outState.putBoolean(DRAFT_MAY_CONTAIN_RED_WARNING, mayContainRedWarning);
+        outState.putBoolean(DRAFT_DEBUG_LABEL_TEXT, debugLabelText);
         outState.putBoolean(MODEL_DETAILS_EXPANDED, modelDetails.getVisibility() == View.VISIBLE);
         outState.putBoolean(MODEL_SECTION_SHOWN, modelSectionShown());
         super.onSaveInstanceState(outState);

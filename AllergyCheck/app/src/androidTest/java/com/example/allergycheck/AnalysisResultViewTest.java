@@ -109,7 +109,14 @@ public class AnalysisResultViewTest {
             throw new IOException("Offline");
         });
 
-        ViewGroup root = render(report, false);
+        boolean debugLabel = AllergenPreferences.debugLabelText(context);
+        AllergenPreferences.saveDebugLabelText(context, true);
+        ViewGroup root;
+        try {
+            root = render(report, false);
+        } finally {
+            AllergenPreferences.saveDebugLabelText(context, debugLabel);
+        }
 
         assertEquals(Arrays.asList(milk.label()), rowNames(root));
         assertEquals(context.getString(R.string.status_ai_incomplete_title),

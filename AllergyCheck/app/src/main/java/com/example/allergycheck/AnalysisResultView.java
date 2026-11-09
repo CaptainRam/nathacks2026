@@ -142,7 +142,9 @@ final class AnalysisResultView {
         allergenTitle.setVisibility(hasAllergens ? View.VISIBLE : View.GONE);
         allergenRows.setVisibility(hasAllergens ? View.VISIBLE : View.GONE);
 
-        boolean hasIngredients = AnalysisMessage.showIngredients(report);
+        // The label recognition text is a debug aid, hidden unless enabled in Settings.
+        boolean hasIngredients = AnalysisMessage.showIngredients(report)
+                && AllergenPreferences.debugLabelText(root.getContext());
         setTextIfChanged(ingredientsTitle, message.ingredientsTitle(report));
         setTextIfChanged(ingredientsText, message.ingredients(report));
         ingredientsTitle.setVisibility(hasIngredients ? View.VISIBLE : View.GONE);

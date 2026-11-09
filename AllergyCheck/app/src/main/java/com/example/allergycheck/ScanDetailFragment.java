@@ -41,6 +41,7 @@ public class ScanDetailFragment extends Fragment {
     @Nullable private ScanHistoryDetail boundDetail;
     private boolean boundShowNotDetected;
     private boolean boundRedWarning;
+    private boolean boundDebugLabel;
 
     static ScanDetailFragment of(long id) {
         ScanDetailFragment fragment = new ScanDetailFragment();
@@ -83,8 +84,10 @@ public class ScanDetailFragment extends Fragment {
             }
             boolean showNotDetected = AllergenPreferences.showNotDetected(requireContext());
             boolean redWarning = AllergenPreferences.mayContainRedWarning(requireContext());
+            boolean debugLabel = AllergenPreferences.debugLabelText(requireContext());
             if (hasBoundDetail && sameSavedDetail(boundDetail, detail)
-                    && boundShowNotDetected == showNotDetected && boundRedWarning == redWarning) {
+                    && boundShowNotDetected == showNotDetected && boundRedWarning == redWarning
+                    && boundDebugLabel == debugLabel) {
                 return;
             }
             bind(view, detail);
@@ -92,6 +95,7 @@ public class ScanDetailFragment extends Fragment {
             hasBoundDetail = true;
             boundShowNotDetected = showNotDetected;
             boundRedWarning = redWarning;
+            boundDebugLabel = debugLabel;
         });
     }
 

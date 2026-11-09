@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="a11y_debug_label_text">Debug: show label recognition. Shows the ingredient text read from the label on results.</string>
     <string name="a11y_may_contain_red_warning">Show May contain warnings in red. Turn off to show these precautionary warnings in yellow.</string>
 </resources>

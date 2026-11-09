@@ -28,6 +28,7 @@ final class AllergenPreferences {
     private static final String ALLERGENS = "selected_allergens";
     private static final String SHOW_NOT_DETECTED = "show_not_detected";
     private static final String MAY_CONTAIN_RED_WARNING = "may_contain_red_warning";
+    private static final String DEBUG_LABEL_TEXT = "debug_label_text";
 
     private AllergenPreferences() {
     }
@@ -101,6 +102,15 @@ final class AllergenPreferences {
 
     static void saveMayContainRedWarning(Context context, boolean enabled) {
         preferences(context).edit().putBoolean(MAY_CONTAIN_RED_WARNING, enabled).apply();
+    }
+
+    /** Debug: show the ingredients read from the label on the result. Off by default. */
+    static boolean debugLabelText(Context context) {
+        return preferences(context).getBoolean(DEBUG_LABEL_TEXT, false);
+    }
+
+    static void saveDebugLabelText(Context context, boolean enabled) {
+        preferences(context).edit().putBoolean(DEBUG_LABEL_TEXT, enabled).apply();
     }
 
     private static Set<String> idsOf(Set<Allergen> allergens) {
