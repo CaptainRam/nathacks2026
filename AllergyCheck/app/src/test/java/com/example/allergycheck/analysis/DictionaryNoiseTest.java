@@ -177,8 +177,7 @@ public class DictionaryNoiseTest {
         // naming a real gluten source came back NOT_DETECTED for a coeliac user.
         String[] sources = {
             "barley", "pearl barley", "barley malt", "rye", "rye flour", "pumpernickel",
-            "oats", "oat flour", "oat bran", "oat fibre", "rolled oats", "oat groats",
-            "oatmeal", "avena sativa",
+            // Oats are the exception and have their own test; see oatsArePossibleNotDefinite.
             "triticale", "spelt", "kamut", "khorasan", "semolina", "durum", "farina", "farro",
             "einkorn", "emmer", "freekeh", "couscous", "bulgur", "graham flour", "atta", "maida",
             "malt", "malted barley", "malted milk", "malt extract", "malt syrup", "malt vinegar",
@@ -254,31 +253,87 @@ public class DictionaryNoiseTest {
     }
 
     /**
-     * Characterises a known gap rather than endorsing it. If the matcher learns to read a
-     * label-wide free-from claim, this test should be the one that changes.
+     * Oats are a gluten source in Canada but the only one routinely sold certified gluten-free, so
+     * they are the one grain here that is ambiguous rather than definite.
      *
-     * <p>Exclusions are adjacent-phrase only, so "gluten free oats" as an ingredient name is caught
-     * while the same claim in its own sentence is not. For wheat and barley a contradiction between
-     * the claim and the ingredient is better reported than believed, so CONTAINS is the right
-     * answer there. Oats are the problem: they are the one gluten source routinely sold in a
-     * certified gluten-free form, so "Ingredients: oats. Gluten free." is an ordinary product that
-     * this reports as a firm CONTAINS.
+     * <p>They were definite for one commit, and the symptom was a firm CONTAINS on ordinary
+     * gluten-free oat products: exclusions match adjacent phrases only, so "gluten free oats" as an
+     * ingredient name is caught while the same claim in its own sentence is not, and that sentence
+     * is how most such packets are printed. POSSIBLE is the honest answer for a grain whose
+     * gluten-free form is this common — and for the avenin-sensitive, who must avoid oats however
+     * they are certified, a warning still appears.
      */
     @Test
-    public void aFreeFromClaimInASeparateSentenceDoesNotReachTheIngredient() {
-        // Caught: the claim qualifies the ingredient name.
+    public void oatsArePossibleNotDefinite() {
+        String[] forms = {
+            "oats", "oat bran", "oat fibre", "rolled oats", "oat groats", "oatmeal",
+            "avena sativa", "whole grain oats",
+        };
+        for (String form : forms) {
+            assertStatus("Ingredients: " + form + ", sugar, salt.", "WHEAT",
+                    AnalysisReport.Status.POSSIBLE);
+        }
+        // The product that prompted the demotion: a soft warning now, not a firm false claim.
+        assertStatus("Ingredients: oats, sugar. Gluten free.", "WHEAT",
+                AnalysisReport.Status.POSSIBLE);
+        // Still fully cleared when the claim qualifies the ingredient itself.
         assertStatus("Ingredients: gluten free oats, sugar.", "WHEAT",
                 AnalysisReport.Status.NOT_DETECTED);
         assertStatus("Ingredients: certified gluten free oats, sugar.", "WHEAT",
                 AnalysisReport.Status.NOT_DETECTED);
+    }
 
-        // Not caught: the claim is its own sentence. The first of these is the false positive.
-        assertStatus("Ingredients: oats, sugar. Gluten free.", "WHEAT",
+    @Test
+    public void adeclaredOatIsNeverInvisible() {
+        // The demotion's sharp edge, and why AllergenMatcher now runs the ambiguous pass over
+        // statements too. Ambiguous terms used to be checked in the ingredient list only, on the
+        // reasoning that a statement names an allergen rather than a compound ingredient — so
+        // "Contains oats" matched nothing at all while "Contains barley" reported firmly. A
+        // declaration the label went out of its way to print is the last thing that should be
+        // ignored.
+        assertStatus("Ingredients: rice, sugar. Contains oats.", "WHEAT",
+                AnalysisReport.Status.POSSIBLE);
+        assertStatus("Ingredients: rice, sugar. Contains: oats.", "WHEAT",
+                AnalysisReport.Status.POSSIBLE);
+        assertStatus("Ingredients: rice, sugar. May contain oats.", "WHEAT",
+                AnalysisReport.Status.POSSIBLE);
+        // Unchanged for the grains that are still definite.
+        assertStatus("Ingredients: rice, sugar. Contains barley.", "WHEAT",
                 AnalysisReport.Status.CONTAINS);
-        // These two are contradictions, where reporting the ingredient is the safe answer.
+        assertStatus("Ingredients: rice, sugar. Contains rye.", "WHEAT",
+                AnalysisReport.Status.CONTAINS);
+    }
+
+    /**
+     * Characterises a known gap rather than endorsing it. If the matcher learns to read a
+     * label-wide free-from claim, this test should be the one that changes.
+     *
+     * <p>Exclusions match adjacent phrases only, so a free-from claim in its own sentence never
+     * reaches the ingredient it was meant to qualify. Demoting oats removed the case where that
+     * mattered; what is left is contradictions, where reporting the ingredient rather than
+     * believing the claim is the safe answer.
+     */
+    @Test
+    public void aFreeFromClaimInASeparateSentenceDoesNotReachTheIngredient() {
         assertStatus("Ingredients: wheat flour, water. Gluten free.", "WHEAT",
                 AnalysisReport.Status.CONTAINS);
         assertStatus("Ingredients: barley malt, sugar. Gluten free.", "WHEAT",
+                AnalysisReport.Status.CONTAINS);
+    }
+
+    /**
+     * "oat flour" reports CONTAINS, not POSSIBLE, which does not follow from oats being ambiguous.
+     *
+     * <p>Pinned because it is a real inconsistency and the format cannot express the alternative:
+     * bare "flour" is a definite term, and an exclusion marks <em>all</em> of a phrase's tokens, so
+     * excluding "oat flour" to stop "flour" firing would also hide the "oat" that should still
+     * produce POSSIBLE — turning an over-warning into silence. CONTAINS is the safe side of that
+     * choice, and B.13.001 only standardises <em>unqualified</em> "flour", so this is the one place
+     * the definite term reaches further than the regulation does.
+     */
+    @Test
+    public void oatFlourOverWarnsBecauseFlourIsDefinite() {
+        assertStatus("Ingredients: oat flour, sugar, salt.", "WHEAT",
                 AnalysisReport.Status.CONTAINS);
     }
 

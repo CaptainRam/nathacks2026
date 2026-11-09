@@ -14,7 +14,7 @@ import java.util.Set;
  * "eggplant" is not "egg". Three outcomes per piece of text, strongest first:
  * <ol>
  *   <li><b>exact term</b> — a firm finding (CONTAINS or MAY_CONTAIN depending on where it sits);</li>
- *   <li><b>ambiguous term</b> (ingredients only) — POSSIBLE;</li>
+ *   <li><b>ambiguous term</b> — POSSIBLE, wherever it appears;</li>
  *   <li><b>near miss</b> (one typo away from a term) — POSSIBLE, to absorb OCR misreads.</li>
  * </ol>
  * At most one finding is produced per ingredient/statement per allergen.
@@ -74,14 +74,25 @@ final class AllergenMatcher {
             }
         }
 
-        // 2. Ambiguous terms — meaningful only in an ingredient list, where they are an ingredient.
-        if (source == Finding.Source.INGREDIENT) {
-            for (String[] term : dictionary.ambiguousTerms(allergen)) {
-                int at = indexOfPhrase(tokens, term, excluded);
-                if (at >= 0) {
-                    return new Finding(allergen, Finding.Level.POSSIBLE, source,
-                            Finding.Reason.AMBIGUOUS_INGREDIENT, join(term), evidence);
-                }
+        // 2. Ambiguous terms.
+        //
+        // Checked in precautionary and "contains" statements as well as in the ingredient list.
+        // That used to be restricted to ingredients, on the reasoning that a statement names an
+        // allergen rather than a compound ingredient, so an ambiguous term could not appear in one.
+        // Mostly true — nobody writes "Contains: lecithin" — but it fails on exactly the case where
+        // a grain is both a declarable source and a term too uncertain to assert: "Contains oats"
+        // was matching nothing at all while "Contains barley" and "Contains wheat" both reported
+        // firmly, so an explicit declaration was silently invisible. A missed declaration is the
+        // worst outcome this class has, and a term the label went out of its way to name is the
+        // last thing that should be ignored.
+        //
+        // Still POSSIBLE, and still AMBIGUOUS_INGREDIENT: the declaration tells us the ingredient
+        // is present, which was never in doubt, and not whether this allergen is in it.
+        for (String[] term : dictionary.ambiguousTerms(allergen)) {
+            int at = indexOfPhrase(tokens, term, excluded);
+            if (at >= 0) {
+                return new Finding(allergen, Finding.Level.POSSIBLE, source,
+                        Finding.Reason.AMBIGUOUS_INGREDIENT, join(term), evidence);
             }
         }
 
