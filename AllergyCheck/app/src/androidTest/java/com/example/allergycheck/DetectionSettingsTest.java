@@ -155,6 +155,51 @@ public class DetectionSettingsTest {
             assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
             assertEquals("test-draft-key", AnalysisPreferences.openRouterApiKey(context));
         }
+        // The stored key, not a leftover draft, is what a fresh screen shows.
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                assertEquals("test-draft-key", input(activity, R.id.detection_api_key).getText().toString());
+                assertEquals("example/model", input(activity, R.id.detection_model_id).getText().toString());
+            });
+        }
+    }
+
+    @Test
+    public void hiddenInvalidConcurrencyDoesNotBlockSave() {
+        // A non-default value, so keeping it is distinguishable from resetting it.
+        AnalysisPreferences.saveCloudConcurrency(context, 8);
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                // Typed while in cloud mode, then hidden by switching back to on-device.
+                activity.findViewById(R.id.detection_location_cloud).performClick();
+                input(activity, R.id.detection_concurrency).setText("0");
+                activity.findViewById(R.id.detection_location_local).performClick();
+                assertEquals(View.GONE, activity.findViewById(R.id.detection_cloud_configuration).getVisibility());
+                save(activity);
+                assertTrue(activity.isFinishing());
+                assertNull(((TextInputLayout) activity.findViewById(
+                        R.id.detection_concurrency_layout)).getError());
+            });
+        }
+        assertEquals(8, AnalysisPreferences.cloudConcurrency(context));
+    }
+
+    @Test
+    public void invalidCloudFieldSavedFromAllergensOpensTheModelSection() {
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.OPENROUTER);
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                input(activity, R.id.detection_api_key).setText("test-redirect-key");
+                input(activity, R.id.detection_model_id).setText("not-a-model-id");
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.allergen_section).getVisibility());
+                save(activity);
+                assertFalse(activity.isFinishing());
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.model_section).getVisibility());
+                assertNotNull(((TextInputLayout) activity.findViewById(R.id.detection_model_layout)).getError());
+                assertEquals("", AnalysisPreferences.openRouterApiKey(context));
+            });
+        }
     }
 
     @Test

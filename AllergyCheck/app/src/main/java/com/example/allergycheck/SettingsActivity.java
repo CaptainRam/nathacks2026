@@ -66,7 +66,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     /**
      * Allergen ids. Only ids the dictionary defines ever enter this set, so its size is the
-     * number actually checked — which is what {@link #updateSelectionSummary} reports.
+     * number actually checked — which is what {@link #updateSaveBar} reports.
      */
     private final Set<String> selectedAllergens = new HashSet<>();
     /** What is stored now; the draft differs from it until Save is pressed. */
@@ -75,10 +75,12 @@ public class SettingsActivity extends AppCompatActivity {
     private boolean showNotDetected;
     private boolean savedShowNotDetected;
     private TextView selectionSummary;
+    private TextView modelSaveNote;
     private NestedScrollView scroll;
     private View headerDivider;
     private View allergenSection;
     private View modelSection;
+    private View saveBar;
     private LocalModelManager modelManager;
     private TextView modelAvailability;
     private TextView modelStatus;
@@ -156,8 +158,14 @@ public class SettingsActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings), (view, insets) -> {
             Insets systemBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars()
                     | WindowInsetsCompat.Type.displayCutout());
-            view.setPadding(systemBarInsets.left, systemBarInsets.top,
-                    systemBarInsets.right, systemBarInsets.bottom);
+            // Edge-to-edge windows are not resized for the keyboard, so make room for it here.
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+            view.setPadding(systemBarInsets.left, systemBarInsets.top, systemBarInsets.right,
+                    Math.max(systemBarInsets.bottom, imeInsets.bottom));
+            // While a docked keyboard takes the bottom, the fields need the room more than Save;
+            // it returns with the keyboard gone. A floating keyboard leaves the bottom free.
+            saveBar.setVisibility(imeInsets.bottom > systemBarInsets.bottom
+                    ? View.GONE : View.VISIBLE);
             return insets;
         });
 
@@ -171,7 +179,9 @@ public class SettingsActivity extends AppCompatActivity {
                 (view, x, y, oldX, oldY) -> updateHeaderDivider());
         allergenSection = findViewById(R.id.allergen_section);
         modelSection = findViewById(R.id.model_section);
+        saveBar = findViewById(R.id.settings_save_bar);
         selectionSummary = findViewById(R.id.selection_summary);
+        modelSaveNote = findViewById(R.id.model_save_note);
 
         modelManager = LocalModelManager.get(this);
         modelAvailability = findViewById(R.id.model_availability);
@@ -231,11 +241,11 @@ public class SettingsActivity extends AppCompatActivity {
                 } else {
                     selectedAllergens.remove(id);
                 }
-                updateSelectionSummary();
+                updateSaveBar();
             });
             options.addView(chip);
         }
-        updateSelectionSummary();
+        updateSaveBar();
 
         savedShowNotDetected = AllergenPreferences.showNotDetected(this);
         showNotDetected = savedInstanceState == null ? savedShowNotDetected
@@ -243,11 +253,11 @@ public class SettingsActivity extends AppCompatActivity {
         MaterialSwitch notDetectedSwitch = findViewById(R.id.show_not_detected_switch);
         notDetectedSwitch.setSaveEnabled(false);
         notDetectedSwitch.setChecked(showNotDetected);
-        // updateSelectionSummary ran before this draft was restored, so re-check it now.
+        // updateSaveBar ran before this draft was restored, so re-check it now.
         updateUnsavedChanges();
         notDetectedSwitch.setOnCheckedChangeListener((button, checked) -> {
             showNotDetected = checked;
-            updateSelectionSummary();
+            updateSaveBar();
         });
         // The whole row toggles, not only the small switch.
         ((View) notDetectedSwitch.getParent()).setOnClickListener(view -> notDetectedSwitch.toggle());
@@ -287,7 +297,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void showSection(boolean model) {
         allergenSection.setVisibility(model ? View.GONE : View.VISIBLE);
         modelSection.setVisibility(model ? View.VISIBLE : View.GONE);
-        updateSelectionSummary();
+        updateSaveBar();
         scroll.post(this::updateHeaderDivider);
     }
 
@@ -303,15 +313,22 @@ public class SettingsActivity extends AppCompatActivity {
         headerDivider.setVisibility(scroll.canScrollVertically(-1) ? View.VISIBLE : View.INVISIBLE);
     }
 
+    /**
+     * Stores every pending edit and leaves. RESULT_OK is reported only when something was stored
+     * (here, by a cloud save or by an earlier mode change), because the caller re-checks the label
+     * on screen, which in cloud mode means new requests.
+     */
     private void savePreferences() {
         if (cloudSettingsChanged() && !saveCloudConfiguration()) {
             ((MaterialButtonToggleGroup) findViewById(R.id.settings_section_toggle))
                     .check(R.id.section_model_button);
             return;
         }
-        AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
-        AllergenPreferences.saveShowNotDetected(this, showNotDetected);
-        setResult(RESULT_OK);
+        if (allergenDraftChanged()) {
+            AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
+            AllergenPreferences.saveShowNotDetected(this, showNotDetected);
+            setResult(RESULT_OK);
+        }
         finish();
     }
 
@@ -477,13 +494,17 @@ public class SettingsActivity extends AppCompatActivity {
         decisionsLayout.setError(null);
         thresholdLayout.setError(null);
         concurrencyLayout.setError(null);
-        int concurrency;
+        int concurrency = AnalysisPreferences.cloudConcurrency(this);
         try {
             concurrency = parseConcurrency(input(cloudConcurrencyInput));
         } catch (NumberFormatException exception) {
-            concurrencyLayout.setError(getString(R.string.detection_concurrency_invalid));
-            cloudConcurrencyInput.requestFocus();
-            return false;
+            // Outside cloud mode the field is hidden, so keep the stored value instead of
+            // blocking Save on an error nobody can see — as the threshold does below.
+            if (cloud) {
+                concurrencyLayout.setError(getString(R.string.detection_concurrency_invalid));
+                cloudConcurrencyInput.requestFocus();
+                return false;
+            }
         }
         if (cloud && (key.isEmpty() || key.matches(".*\\s+.*"))) {
             keyLayout.setError(getString(R.string.detection_key_required));
@@ -676,16 +697,21 @@ public class SettingsActivity extends AppCompatActivity {
                 Formatter.formatFileSize(this, status.totalBytes));
     }
 
-    /** The allergen count on its own section; on the model section, a note about a pending draft. */
-    private void updateSelectionSummary() {
-        if (modelSection != null && modelSectionShown()) {
-            selectionSummary.setText(allergenDraftChanged()
-                    ? getString(R.string.detection_saves_allergen_draft) : "");
-        } else {
-            int count = selectedAllergens.size();
-            selectionSummary.setText(count == 0 ? getString(R.string.no_allergens_selected)
-                    : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
-        }
+    /**
+     * Refreshes the page-wide save bar: the allergen count on its own section, a note about a
+     * pending allergen draft on the model section, and the back guard for any unsaved edit.
+     * Switching tabs only swaps which text shows, so the count's live region announces edits,
+     * never tab changes.
+     */
+    private void updateSaveBar() {
+        int count = selectedAllergens.size();
+        selectionSummary.setText(count == 0 ? getString(R.string.no_allergens_selected)
+                : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
+        boolean model = modelSectionShown();
+        selectionSummary.setVisibility(model ? View.GONE : View.VISIBLE);
+        // INVISIBLE, not GONE, on the model section keeps Save at the end of the bar.
+        modelSaveNote.setVisibility(!model ? View.GONE
+                : allergenDraftChanged() ? View.VISIBLE : View.INVISIBLE);
         updateUnsavedChanges();
     }
 

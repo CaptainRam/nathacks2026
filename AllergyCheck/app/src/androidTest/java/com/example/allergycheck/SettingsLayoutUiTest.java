@@ -203,8 +203,8 @@ public class SettingsLayoutUiTest {
                 chips.getChildAt(0).performClick();
                 activity.findViewById(R.id.section_model_button).performClick();
                 assertSection(activity, true);
-                assertEquals(activity.getString(R.string.detection_saves_allergen_draft),
-                        ((TextView) activity.findViewById(R.id.selection_summary)).getText().toString());
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.model_save_note).getVisibility());
+                assertEquals(View.GONE, activity.findViewById(R.id.selection_summary).getVisibility());
                 activity.findViewById(R.id.save_preferences_button).performClick();
             });
             assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
@@ -212,6 +212,41 @@ public class SettingsLayoutUiTest {
         String firstId = AllergenDictionaryProvider.get(context).allergens().iterator().next().id();
         assertEquals(Collections.singleton(firstId), AllergenPreferences.selectedAllergenIds(
                 context, AllergenDictionaryProvider.get(context)));
+    }
+
+    @Test
+    public void saveWithoutChangesLeavesWithoutAResult() {
+        Intent intent = new Intent(context, SettingsActivity.class)
+                .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, true);
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(intent)) {
+            scenario.onActivity(activity ->
+                    activity.findViewById(R.id.save_preferences_button).performClick());
+            // RESULT_OK would make the caller re-check the label, for nothing.
+            assertEquals(Activity.RESULT_CANCELED, scenario.getResult().getResultCode());
+        }
+    }
+
+    @Test
+    public void switchingSectionsLeavesTheLiveCountTextAlone() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                TextView summary = activity.findViewById(R.id.selection_summary);
+                View note = activity.findViewById(R.id.model_save_note);
+                // Only the count announces itself; the tab-dependent note never does.
+                assertEquals(View.ACCESSIBILITY_LIVE_REGION_POLITE, summary.getAccessibilityLiveRegion());
+                assertEquals(View.ACCESSIBILITY_LIVE_REGION_NONE, note.getAccessibilityLiveRegion());
+                CharSequence before = summary.getText().toString();
+                activity.findViewById(R.id.section_model_button).performClick();
+                assertEquals(before, summary.getText().toString());
+                // No pending allergen draft, so the note stays out of sight too.
+                assertEquals(View.INVISIBLE, note.getVisibility());
+                activity.findViewById(R.id.section_allergens_button).performClick();
+                assertEquals(before, summary.getText().toString());
+                assertEquals(View.VISIBLE, summary.getVisibility());
+            });
+        }
     }
 
     @Test
