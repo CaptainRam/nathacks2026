@@ -176,7 +176,8 @@ public class MainActivityOcrIntegrationTest {
                 assertEquals(View.VISIBLE,
                         activity.findViewById(R.id.photo_strip_scroll).getVisibility());
                 ViewGroup strip = activity.findViewById(R.id.photo_strip);
-                assertEquals(1, strip.getChildCount());
+                assertEquals(2, strip.getChildCount());
+                assertNotNull(strip.getChildAt(1).findViewById(R.id.front_thumbnail_add_card));
                 assertTrue(activity.findViewById(R.id.restart_button).isShown());
             });
         }
@@ -500,7 +501,7 @@ public class MainActivityOcrIntegrationTest {
         assertEquals(View.VISIBLE, activity.findViewById(R.id.analysis_loading).getVisibility());
         assertEquals(View.GONE, activity.findViewById(R.id.analysis_result).getVisibility());
         assertEquals(View.GONE, activity.findViewById(R.id.restart_button).getVisibility());
-        assertEquals(1, ((ViewGroup) activity.findViewById(R.id.photo_strip)).getChildCount());
+        assertEquals(2, ((ViewGroup) activity.findViewById(R.id.photo_strip)).getChildCount());
     }
 
     private static void assertResultPage(MainActivity activity) {
@@ -514,7 +515,8 @@ public class MainActivityOcrIntegrationTest {
         assertEquals(View.GONE, activity.findViewById(R.id.tips_group).getVisibility());
         ViewGroup strip = activity.findViewById(R.id.photo_strip);
         assertTrue(strip.isShown());
-        assertEquals(1, strip.getChildCount());
+        assertEquals(2, strip.getChildCount());
+        assertNotNull(strip.getChildAt(1).findViewById(R.id.front_thumbnail_add_card));
         assertEquals(1f, strip.getChildAt(0).getAlpha(), 0.01f);
         ViewGroup result = activity.findViewById(R.id.analysis_result);
         assertTrue(result.isShown());

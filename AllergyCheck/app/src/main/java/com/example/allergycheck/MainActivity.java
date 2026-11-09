@@ -94,6 +94,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private View contentScroll;
     private View introGroup;
     private View photoCard;
+    private View photoInputRow;
+    private View frontPhotoCard;
+    private View frontPhotoHint;
     private View previewActions;
     private View tipsGroup;
     private View photoStripScroll;
@@ -106,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private AnalysisResultView resultView;
     private OcrPipeline ocrPipeline;
     private AiAnalysisRunner aiRunner;
+    private FoodCrossCheckController foodCrossCheck;
     private boolean settingsOpen;
     private boolean settingsInterruptedScan;
     /** True while the page shows a check (in progress or finished) instead of the home. */
@@ -157,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                 } else if (resume && analysisMode) {
                     rescanCurrentPhoto();
                 }
+                foodCrossCheck.refreshConfiguration();
             });
 
     private final ActivityResultLauncher<PickVisualMediaRequest> photoPicker =
@@ -221,6 +226,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         contentScroll = findViewById(R.id.content_scroll);
         introGroup = findViewById(R.id.intro_group);
         photoCard = findViewById(R.id.photo_card);
+        photoInputRow = findViewById(R.id.photo_input_row);
+        frontPhotoCard = findViewById(R.id.front_photo_card);
+        frontPhotoHint = findViewById(R.id.front_photo_hint);
         previewActions = findViewById(R.id.preview_actions);
         tipsGroup = findViewById(R.id.tips_group);
         photoStripScroll = findViewById(R.id.photo_strip_scroll);
@@ -233,6 +241,10 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         resultView = new AnalysisResultView(analysisResult);
         ocrPipeline = new OcrPipeline();
         aiRunner = new AiAnalysisRunner(this);
+        foodCrossCheck = new FoodCrossCheckController(this, savedInstanceState,
+                () -> openSettings(true));
+        foodCrossCheck.setOnPhotoChangedListener(this::onFrontPhotoChanged);
+        updatePhotoLayout();
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
         // After the analysis callback, so it wins while history is showing.
         getOnBackPressedDispatcher().addCallback(this, historyBackCallback);
@@ -266,6 +278,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         importButton.setOnClickListener(view -> openPhotoPicker());
         cameraButton.setOnClickListener(view -> takePhoto());
         replaceButton.setOnClickListener(view -> openPhotoPicker());
+        photoPreview.setOnClickListener(view -> showChangePhotoMenu(view, 0));
         startAnalysisButton.setOnClickListener(view -> startAnalysis());
         findViewById(R.id.cancel_analysis_button).setOnClickListener(view -> cancelAnalysis());
         restartButton.setOnClickListener(view -> restart());
@@ -347,6 +360,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     private void loadPhoto(Uri uri) {
         aiRunner.cancel();
+        foodCrossCheck.onLabelAnalysisStarted();
         final int request = ++imageRequest;
         pendingPhoto = uri;
         setLoading(true);
@@ -378,6 +392,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                     }
                     String previousPhoto = preferences().getString(PHOTO_STATE, null);
                     selectedPhoto = uri;
+                    foodCrossCheck.onLabelPhoto(uri);
                     pendingPhoto = null;
                     persistPhotoAccess(uri);
                     preferences().edit().putString(PHOTO_STATE, uri.toString()).apply();
@@ -447,6 +462,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             return;
         }
         aiRunner.cancel();
+        foodCrossCheck.onLabelAnalysisStarted();
         showAnalysisLoading();
         // Continues from the decode the ring may already be showing; never moves it backwards.
         // A mode switched in settings since the ring started shares it out differently, so restart.
@@ -541,7 +557,10 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                 ? ResultAction.CHOOSE_ALLERGENS
                 : report.aiIncomplete() || report.overall() == AnalysisReport.Status.UNREADABLE
                 ? ResultAction.RETRY : ResultAction.NONE,
-                () -> ScanHistory.get(this).save(report, photo));
+                () -> {
+                    ScanHistory.get(this).save(report, photo);
+                    foodCrossCheck.onReport(report);
+                });
     }
 
     /**
@@ -653,12 +672,12 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         setAnalysisMode(true);
         contentScroll.scrollTo(0, 0);
         View firstItem = photoStrip.getChildAt(0);
-        View firstThumbnail = firstItem.findViewById(R.id.thumbnail_card);
+        View firstThumbnail = firstItem.findViewById(R.id.thumbnail_image);
         endPhotoFlight();
         // The whole item (with its edit badge) stays hidden until the photo lands on its card.
         photoFlight = HomeMotion.fly(root, bitmap, from, HomeMotion.boundsIn(root, contentScroll),
                 0f, dp(16), firstThumbnail, firstItem,
-                () -> HomeMotion.boundsIn(root, firstThumbnail));
+                () -> HomeMotion.fitCenterBoundsIn(root, firstThumbnail, bitmap));
         HomeMotion.riseIn(analysisGroup, dp(24), 200);
         showAnalysisLoading();
         // Start reading once the photo has landed so the flight gets every frame.
@@ -677,8 +696,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         }
         Bitmap bitmap = currentBitmap();
         View firstThumbnail = photoStrip.getChildCount() == 0 ? null
-                : photoStrip.getChildAt(0).findViewById(R.id.thumbnail_card);
-        RectF from = firstThumbnail == null ? null : HomeMotion.boundsIn(root, firstThumbnail);
+                : photoStrip.getChildAt(0).findViewById(R.id.thumbnail_image);
+        RectF from = firstThumbnail == null || bitmap == null ? null
+                : HomeMotion.fitCenterBoundsIn(root, firstThumbnail, bitmap);
         leaveAnalysisMode(true);
         if (bitmap != null && from != null && photoPreview.getDrawable() != null) {
             photoFlight = HomeMotion.fly(root, bitmap, from,
@@ -696,6 +716,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void leaveAnalysisMode(boolean animate) {
         ++imageRequest;
         aiRunner.cancel();
+        foodCrossCheck.onLabelAnalysisStarted();
         endPhotoFlight();
         stopScanning();
         // Hidden so the next check comes into view, and starts its ring, from empty.
@@ -743,6 +764,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         tipsGroup.setVisibility(enabled ? View.GONE : View.VISIBLE);
         photoStripScroll.setVisibility(enabled ? View.VISIBLE : View.GONE);
         analysisGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        updatePhotoLayout();
         if (!enabled) {
             // analysisResult's own flag would otherwise stay stale at VISIBLE even though its
             // ancestor analysisGroup is now gone, which fools the history-tab restore in
@@ -751,34 +773,45 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             // Pinned outside the analysis group now, so it needs its own visibility toggle too.
             restartButton.setVisibility(View.GONE);
         }
+        updateCrossCheckVisibility();
     }
 
     /**
-     * Shows the given photos in the strip at the top of a check. Built for a list so several label
-     * photos can be checked together later; each one opens the change-photo menu when tapped.
+     * Keeps the label and optional front photo together above the result. Both use the same
+     * thumbnail card; an empty second slot offers to add the optional photo.
      */
     private void bindThumbnails(List<Bitmap> bitmaps, boolean animate) {
         dismissChangePhotoMenu();
+        foodCrossCheck.dismissPhotoMenu();
         stopScanning();
         photoStrip.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
         int height = getResources().getDimensionPixelSize(R.dimen.photo_thumbnail_height);
         int maxWidth = getResources().getDimensionPixelSize(R.dimen.photo_thumbnail_max_width);
-        for (int i = 0; i < bitmaps.size(); i++) {
-            Bitmap bitmap = bitmaps.get(i);
+        int availableWidth = contentColumn.getWidth() > 0 ? contentColumn.getWidth()
+                : getResources().getDisplayMetrics().widthPixels - Math.round(dp(40));
+        maxWidth = Math.min(maxWidth, Math.max(1, availableWidth / 2 - Math.round(dp(12))));
+        List<Bitmap> photos = new ArrayList<>(bitmaps);
+        Bitmap front = foodCrossCheck.currentBitmap();
+        if (!photos.isEmpty() && front != null) photos.add(front);
+        for (int i = 0; i < photos.size(); i++) {
+            Bitmap bitmap = photos.get(i);
             View item = inflater.inflate(R.layout.item_photo_thumbnail, photoStrip, false);
             ImageView image = item.findViewById(R.id.thumbnail_image);
             image.setImageBitmap(bitmap);
-            // Keep the photo's own shape so it lands exactly where the big preview was drawn.
-            int width = Math.round(height * (float) bitmap.getWidth() / bitmap.getHeight());
-            image.getLayoutParams().width = Math.max(height / 2, Math.min(maxWidth, width));
+            // Equal cards keep the pair balanced; fitCenter preserves the complete label/photo.
+            image.getLayoutParams().width = Math.min(maxWidth, height);
             View card = item.findViewById(R.id.thumbnail_card);
             final int index = i;
-            card.setContentDescription(getString(R.string.thumbnail_description, i + 1));
+            card.setContentDescription(getString(i == 0
+                    ? R.string.crosscheck_label_photo_label : R.string.crosscheck_front_photo_label));
             ViewCompat.replaceAccessibilityAction(card,
                     AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
                     getString(R.string.replace_photo), null);
-            card.setOnClickListener(view -> showChangePhotoMenu(view, index));
+            card.setOnClickListener(view -> {
+                if (index == 0) showChangePhotoMenu(view, 0);
+                else foodCrossCheck.showPhotoMenu(view);
+            });
             photoStrip.addView(item);
             if (animate) {
                 item.setScaleX(0.9f);
@@ -787,6 +820,29 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                 item.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(280)
                         .setInterpolator(HomeMotion.EMPHASIZED).start();
             }
+        }
+        if (!photos.isEmpty() && front == null) {
+            View item = inflater.inflate(R.layout.item_add_front_photo, photoStrip, false);
+            View card = item.findViewById(R.id.front_thumbnail_add_card);
+            card.getLayoutParams().width = Math.min(maxWidth, height);
+            View button = item.findViewById(R.id.front_thumbnail_add_button);
+            card.setContentDescription(getString(R.string.crosscheck_add_photo));
+            card.setEnabled(!foodCrossCheck.isPhotoLoading());
+            button.setEnabled(!foodCrossCheck.isPhotoLoading());
+            card.setOnClickListener(foodCrossCheck::showPhotoMenu);
+            button.setOnClickListener(foodCrossCheck::showPhotoMenu);
+            photoStrip.addView(item);
+        }
+    }
+
+    private void onFrontPhotoChanged() {
+        if (isFinishing() || isDestroyed()) return;
+        updatePhotoLayout();
+        Bitmap label = currentBitmap();
+        if (analysisMode && pendingPhoto == null && label != null) {
+            endPhotoFlight();
+            bindThumbnails(Collections.singletonList(label), false);
+            if (analysisLoading.getVisibility() == View.VISIBLE) startScanning();
         }
     }
 
@@ -835,6 +891,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         analysisResult.setVisibility(View.GONE);
         restartButton.setVisibility(View.GONE);
         analysisLoading.setVisibility(View.VISIBLE);
+        updateCrossCheckVisibility();
         startScanning();
     }
 
@@ -883,6 +940,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         }
         analysisLoading.setVisibility(View.GONE);
         analysisResult.setVisibility(View.VISIBLE);
+        updateCrossCheckVisibility();
         restartButton.setVisibility(historyVisible ? View.GONE : View.VISIBLE);
         if (historyVisible) {
             return;
@@ -908,7 +966,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     private void startScanning() {
         stopScanning();
-        for (int i = 0; i < photoStrip.getChildCount(); i++) {
+        // Only the ingredient photo is being read by OCR; the front photo has its own check.
+        for (int i = 0; i < Math.min(1, photoStrip.getChildCount()); i++) {
             View item = photoStrip.getChildAt(i);
             ValueAnimator animator = HomeMotion.scan(item.findViewById(R.id.thumbnail_scan_line),
                     item.findViewById(R.id.thumbnail_image));
@@ -925,6 +984,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         scanAnimators.clear();
         for (int i = 0; i < photoStrip.getChildCount(); i++) {
             View line = photoStrip.getChildAt(i).findViewById(R.id.thumbnail_scan_line);
+            if (line == null) continue;
             line.animate().alpha(0f).setDuration(200)
                     .withEndAction(() -> line.setVisibility(View.INVISIBLE)).start();
         }
@@ -936,6 +996,23 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         updateCameraButton();
         replaceButton.setEnabled(!loading);
         startAnalysisButton.setEnabled(!loading);
+        updateCrossCheckVisibility();
+    }
+
+    private void updateCrossCheckVisibility() {
+        foodCrossCheck.setVisible(selectedPhoto != null && pendingPhoto == null
+                && (!analysisMode || analysisResult.getVisibility() == View.VISIBLE));
+    }
+
+    private void updatePhotoLayout() {
+        boolean hasPhoto = selectedPhoto != null || photoPreview.getDrawable() != null;
+        LinearLayout.LayoutParams mainPhoto = (LinearLayout.LayoutParams) photoCard.getLayoutParams();
+        mainPhoto.width = hasPhoto ? 0 : ViewGroup.LayoutParams.MATCH_PARENT;
+        mainPhoto.weight = hasPhoto ? 1f : 0f;
+        photoCard.setLayoutParams(mainPhoto);
+        photoInputRow.setVisibility(analysisMode ? View.GONE : View.VISIBLE);
+        frontPhotoCard.setVisibility(hasPhoto ? View.VISIBLE : View.GONE);
+        frontPhotoHint.setVisibility(hasPhoto ? View.VISIBLE : View.GONE);
     }
 
     /**
@@ -954,6 +1031,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         findViewById(R.id.empty_state).setVisibility(hasPhoto ? View.GONE : View.VISIBLE);
         findViewById(R.id.preview_state).setVisibility(hasPhoto ? View.VISIBLE : View.GONE);
         previewActions.setVisibility(hasPhoto && !analysisMode ? View.VISIBLE : View.GONE);
+        updatePhotoLayout();
         ((TextView) findViewById(R.id.eyebrow)).setText(
                 hasPhoto ? R.string.preview_eyebrow : R.string.new_scan);
         ((TextView) findViewById(R.id.home_title)).setText(
@@ -965,6 +1043,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void removePhoto() {
         ++imageRequest;
         aiRunner.cancel();
+        foodCrossCheck.onLabelPhoto(null);
         if (selectedPhoto != null) {
             releasePhotoAccess(selectedPhoto);
         }
@@ -1049,6 +1128,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     /** Always through the launcher, so a save from either section refreshes this screen. */
     private void openSettings(boolean showModel) {
         settingsOpen = true;
+        foodCrossCheck.suspend();
         if (analysisMode && analysisLoading.getVisibility() == View.VISIBLE) {
             settingsInterruptedScan = true;
             aiRunner.cancel();
@@ -1146,6 +1226,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
+        foodCrossCheck.saveState(outState);
         if (selectedPhoto != null) {
             outState.putString(PHOTO_STATE, selectedPhoto.toString());
         }
@@ -1174,6 +1255,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         scanProgress.cancel();
         ocrPipeline.close();
         aiRunner.close();
+        foodCrossCheck.close();
         imageExecutor.shutdownNow();
         super.onDestroy();
     }

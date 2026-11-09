@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Both input cards use the same preview height when they are paired. -->
+    <dimen name="photo_input_preview_height">200dp</dimen>
     <!-- Height of a label photo once a check moves it to the top of the page. -->
     <dimen name="photo_thumbnail_height">148dp</dimen>
     <dimen name="photo_thumbnail_max_width">220dp</dimen>

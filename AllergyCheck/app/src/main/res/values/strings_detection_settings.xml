@@ -14,7 +14,7 @@
     <string name="detection_openrouter_hint">Checks the whole ingredient list with a chat model you choose.</string>
     <string name="detection_decisions_hint">Scores each ingredient and flags those at or above your threshold.</string>
     <string name="detection_cloud_title">Cloud connection</string>
-    <string name="detection_cloud_hint">Only the extracted ingredient list is sent, one allergen per request. Photos and label text stay on this device. Save before scanning.</string>
+    <string name="detection_cloud_hint">Cloud ingredient detection sends extracted ingredients, one allergen per request. The optional food-type cross-check sends the front photo to the image-capable model below, including when ingredient detection runs on device. Save before using either cloud feature.</string>
     <string name="detection_api_key">OpenRouter API key</string>
     <string name="detection_api_key_hint">Stored on this device only and never backed up.</string>
     <string name="detection_model_id">OpenRouter model ID</string>
