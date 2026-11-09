@@ -26,6 +26,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/photo_thumbnail_height"
             android:importantForAccessibility="noHideDescendants">
 
             <ImageView
@@ -39,6 +40,7 @@
                 android:id="@+id/front_thumbnail_empty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:padding="8dp">

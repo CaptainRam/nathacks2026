@@ -47,7 +47,7 @@ final class AnalysisResultView {
     private final View ingredientsCard;
     private final TextView ingredientsText;
     private final AnalysisMessage message;
-    /** Stable reading nodes: display preference changes only recolor or filter existing rows. */
+    /** Stable reading nodes: display preference changes update the summary and existing rows. */
     private final Map<String, View> rowsByAllergen = new HashMap<>();
     @Nullable private AnalysisReport displayedReport;
 
@@ -78,7 +78,8 @@ final class AnalysisResultView {
      */
     void showReport(@NonNull AnalysisReport report, boolean showNotDetected) {
         displayedReport = report;
-        bindVerdict(report.overall(), message.title(report), message.verdict(report));
+        bindVerdict(report.overall(), message.title(report), message.verdict(report,
+                AllergenPreferences.mayContainRedWarning(root.getContext())));
         String reportNote = message.reportNote(report);
         setTextIfChanged(lowConfidenceNote, reportNote);
         lowConfidenceNote.setVisibility(reportNote.isEmpty() ? View.GONE : View.VISIBLE);
@@ -149,7 +150,7 @@ final class AnalysisResultView {
         ingredientsCard.setVisibility(View.GONE);
     }
 
-    /** Refresh colors/filtering without invoking OCR, analysis, or the scan-history writer. */
+    /** Refresh the summary, colors and filtering without rerunning or saving the analysis. */
     void refreshDisplayPreferences() {
         if (displayedReport != null) {
             showReport(displayedReport, AllergenPreferences.showNotDetected(root.getContext()));

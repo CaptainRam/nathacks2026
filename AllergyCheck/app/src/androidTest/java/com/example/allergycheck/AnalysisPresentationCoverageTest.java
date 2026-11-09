@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /** W-01–W-05, W-09, W-10 and W-12 against packaged strings and the actual result view. */
@@ -135,6 +136,63 @@ public class AnalysisPresentationCoverageTest {
                     MaterialColors.getColor(root,
                             com.google.android.material.R.attr.colorOnErrorContainer));
             assertPrecautionaryText(root, report);
+        });
+    }
+
+    @Test
+    public void mixedRedVerdictNamesDefiniteAndPrecautionaryAllergensSeparately() {
+        AllergenPreferences.saveMayContainRedWarning(context, true);
+        AnalysisReport report = mixedPrecautionaryReport();
+        render(report, root -> {
+            assertEquals(context.getString(R.string.status_contains_title),
+                    text(root, R.id.verdict_title));
+            assertEquals(mixedVerdict(), text(root, R.id.verdict_message));
+            assertEquals(MaterialColors.getColor(root,
+                    com.google.android.material.R.attr.colorErrorContainer), color(root));
+            assertMixedFindingDetails(root, report);
+        });
+    }
+
+    @Test
+    public void mixedYellowWarningsKeepTheirDetailsOutsideTheDefiniteSummary() {
+        AllergenPreferences.saveMayContainRedWarning(context, false);
+        AnalysisReport report = mixedPrecautionaryReport();
+        render(report, root -> {
+            assertEquals(context.getString(R.string.status_contains_message, "Milk"),
+                    text(root, R.id.verdict_message));
+            assertMixedFindingDetails(root, report);
+            for (String id : new String[] {"PEANUTS", "SOY"}) {
+                TextView status = allergenRow(root, id).findViewById(R.id.allergen_status);
+                assertEquals(ContextCompat.getColor(context, R.color.status_warning_container),
+                        status.getBackgroundTintList().getDefaultColor());
+            }
+        });
+    }
+
+    @Test
+    public void mixedVerdictRefreshesBothWaysWithoutReplacingEvidenceRows() {
+        AllergenPreferences.saveMayContainRedWarning(context, false);
+        AnalysisReport report = mixedPrecautionaryReport();
+        render(report, root -> {
+            AnalysisResultView renderer = new AnalysisResultView(root);
+            renderer.showReport(report, false);
+            View milk = allergenRow(root, "MILK");
+            View peanuts = allergenRow(root, "PEANUTS");
+            View soy = allergenRow(root, "SOY");
+            View heading = root.findViewById(R.id.verdict_title);
+
+            for (boolean redWarning : new boolean[] {true, false}) {
+                AllergenPreferences.saveMayContainRedWarning(context, redWarning);
+                renderer.refreshDisplayPreferences();
+                assertEquals(redWarning ? mixedVerdict()
+                                : context.getString(R.string.status_contains_message, "Milk"),
+                        text(root, R.id.verdict_message));
+                assertSame(heading, root.findViewById(R.id.verdict_title));
+                assertSame(milk, allergenRow(root, "MILK"));
+                assertSame(peanuts, allergenRow(root, "PEANUTS"));
+                assertSame(soy, allergenRow(root, "SOY"));
+                assertMixedFindingDetails(root, report);
+            }
         });
     }
 
@@ -244,6 +302,46 @@ public class AnalysisPresentationCoverageTest {
         assertEquals(View.VISIBLE, root.findViewById(R.id.result_disclaimer).getVisibility());
         assertEquals(context.getString(R.string.result_caution), text(root, R.id.result_caution));
         assertEquals(context.getString(R.string.disclaimer), text(root, R.id.result_disclaimer));
+    }
+
+    private AnalysisReport mixedPrecautionaryReport() {
+        return analyse("Ingredients: milk, sugar, salt. May contain soy and peanuts.",
+                "MILK", "SOY", "PEANUTS");
+    }
+
+    private String mixedVerdict() {
+        return context.getString(R.string.status_contains_message, "Milk") + "\n\n"
+                + context.getString(R.string.status_may_contain_message, "Peanuts, Soy");
+    }
+
+    private void assertMixedFindingDetails(ViewGroup root, AnalysisReport report) {
+        assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
+        ViewGroup rows = root.findViewById(R.id.allergen_rows);
+        assertEquals(3, rows.getChildCount());
+        assertEquals(3, report.results().size());
+        AnalysisMessage message = new AnalysisMessage(context.getResources());
+        for (AllergenResult result : report.results()) {
+            boolean definite = "MILK".equals(result.allergen().id());
+            assertEquals(definite ? AnalysisReport.Status.CONTAINS : AnalysisReport.Status.MAY_CONTAIN,
+                    result.status());
+            assertFalse(result.findings().isEmpty());
+            assertEquals(definite ? Finding.Source.INGREDIENT : Finding.Source.MAY_CONTAIN_STATEMENT,
+                    result.findings().get(0).source());
+            View row = allergenRow(root, result.allergen().id());
+            assertEquals(context.getString(definite ? R.string.result_contains : R.string.result_may_contain),
+                    text(row, R.id.allergen_status));
+            assertEquals(message.evidence(result), text(row, R.id.allergen_evidence));
+            assertEquals(View.VISIBLE, row.findViewById(R.id.allergen_evidence).getVisibility());
+        }
+    }
+
+    private static View allergenRow(ViewGroup root, String id) {
+        ViewGroup rows = root.findViewById(R.id.allergen_rows);
+        for (int index = 0; index < rows.getChildCount(); index++) {
+            View row = rows.getChildAt(index);
+            if (id.equals(row.getTag(R.id.allergen_name))) return row;
+        }
+        throw new AssertionError("Missing allergen row: " + id);
     }
 
     private void assertPrecautionaryText(ViewGroup root, AnalysisReport report) {

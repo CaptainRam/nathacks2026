@@ -50,16 +50,23 @@ final class AnalysisMessage {
         }
     }
 
-    /** The verdict explanation shown under the headline. */
+    /** The verdict explanation, including precautionary findings that share the red card. */
     @NonNull
-    String verdict(@NonNull AnalysisReport report) {
+    String verdict(@NonNull AnalysisReport report, boolean mayContainRedWarning) {
         if (onlyIncompleteAi(report)) {
             return resources.getString(R.string.status_ai_incomplete_message);
         }
         AnalysisReport.Status overall = report.overall();
         switch (overall) {
             case CONTAINS:
-                return resources.getString(R.string.status_contains_message, names(report, overall));
+                String contains = resources.getString(R.string.status_contains_message,
+                        names(report, overall));
+                String precautionary = names(report, AnalysisReport.Status.MAY_CONTAIN);
+                if (mayContainRedWarning && !precautionary.isEmpty()) {
+                    return contains + "\n\n" + resources.getString(
+                            R.string.status_may_contain_message, precautionary);
+                }
+                return contains;
             case MAY_CONTAIN:
                 return resources.getString(R.string.status_may_contain_message, names(report, overall));
             case POSSIBLE:
