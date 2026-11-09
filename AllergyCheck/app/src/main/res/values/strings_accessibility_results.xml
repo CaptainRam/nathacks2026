@@ -10,4 +10,8 @@
     <string name="history_load_retry">Retry loading history</string>
     <string name="history_restored_title">Scan restored</string>
     <string name="a11y_history_state_pane">History. %1$s</string>
+    <string name="a11y_allergen_row_expanded">Expanded</string>
+    <string name="a11y_allergen_row_collapsed">Collapsed</string>
+    <string name="a11y_allergen_row_show">Show where it was found</string>
+    <string name="a11y_allergen_row_hide">Hide where it was found</string>
 </resources>

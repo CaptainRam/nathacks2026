@@ -1,28 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One selected allergen in the result: its name, a status pill and the label text behind it. -->
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- One selected allergen in the result: a compact row with its name and a status pill (icon and
+     word, so it never relies on colour alone). The label text behind a finding stays collapsed
+     until the row is tapped; AnalysisResultView wires the toggle and its accessibility state. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Widget.Material3.CardView.Filled"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    android:screenReaderFocusable="true"
-    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-    app:cardElevation="0dp"
-    app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
-    app:strokeWidth="0dp">
+    android:background="?attr/selectableItemBackground"
+    android:minHeight="56dp"
+    android:orientation="vertical"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp"
+    android:screenReaderFocusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp">
+        android:gravity="center_vertical"
+        android:minHeight="32dp"
+        android:orientation="horizontal">
 
+        <!-- Name and pill side by side; AnalysisResultView stacks them at large font scales so
+             the name keeps the full width. -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/allergen_label_group"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -41,22 +46,35 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:background="@drawable/bg_status_pill"
-                android:paddingHorizontal="12dp"
+                android:drawablePadding="4dp"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="12dp"
                 android:paddingVertical="4dp"
                 android:textAppearance="?attr/textAppearanceLabelMedium"
                 tools:text="Contains" />
         </LinearLayout>
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/allergen_evidence"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:lineSpacingExtra="2dp"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone"
-            tools:text="• Ingredient &quot;whey&quot; matches milk"
-            tools:visibility="visible" />
+        <ImageView
+            android:id="@+id/allergen_expand_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_expand_more"
+            android:visibility="invisible"
+            app:tint="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/allergen_evidence"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:lineSpacingExtra="2dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:visibility="gone"
+        tools:text="• Ingredient &quot;whey&quot; matches milk"
+        tools:visibility="visible" />
+</LinearLayout>

@@ -331,7 +331,13 @@ public class AnalysisPresentationCoverageTest {
             assertEquals(context.getString(definite ? R.string.result_contains : R.string.result_may_contain),
                     text(row, R.id.allergen_status));
             assertEquals(message.evidence(result), text(row, R.id.allergen_evidence));
-            assertEquals(View.VISIBLE, row.findViewById(R.id.allergen_evidence).getVisibility());
+            // Rows open on tap and stay open across refreshes, so a repeat call finds them open.
+            View evidence = row.findViewById(R.id.allergen_evidence);
+            if (!Boolean.TRUE.equals(row.getTag(R.id.allergen_evidence))) {
+                assertEquals(View.GONE, evidence.getVisibility());
+                assertTrue(row.performClick());
+            }
+            assertEquals(View.VISIBLE, evidence.getVisibility());
         }
     }
 

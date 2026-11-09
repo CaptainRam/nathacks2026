@@ -59,9 +59,17 @@ public class ResultsHistoryAccessibilityTest {
                     .getText().toString());
             assertFalse(((TextView) row.findViewById(R.id.allergen_status)).getText()
                     .toString().isEmpty());
-            assertEquals(View.VISIBLE, row.findViewById(R.id.allergen_evidence).getVisibility());
+            // Evidence starts collapsed; tapping the row (or TalkBack's click) reveals it.
+            assertEquals(View.GONE, row.findViewById(R.id.allergen_evidence).getVisibility());
             assertFalse(((TextView) row.findViewById(R.id.allergen_evidence)).getText()
                     .toString().isEmpty());
+            assertTrue(row.isClickable());
+            assertEquals(context.getString(R.string.a11y_allergen_row_collapsed),
+                    String.valueOf(row.getStateDescription()));
+            assertTrue(row.performAccessibilityAction(AccessibilityNodeInfo.ACTION_CLICK, null));
+            assertEquals(View.VISIBLE, row.findViewById(R.id.allergen_evidence).getVisibility());
+            assertEquals(context.getString(R.string.a11y_allergen_row_expanded),
+                    String.valueOf(row.getStateDescription()));
             assertTrue(root.findViewById(R.id.verdict_title).isAccessibilityHeading());
         });
     }
@@ -93,6 +101,12 @@ public class ResultsHistoryAccessibilityTest {
                 renderer.showReport(report, true);
                 assertEquals(2, rows.getChildCount());
                 assertSame(soy, rows.getChildAt(0));
+                // Not-detected rows carry no evidence, so they are plain, non-expandable text.
+                View milk = rows.getChildAt(1);
+                assertFalse(milk.isClickable());
+                assertEquals(View.INVISIBLE, milk.findViewById(R.id.allergen_expand_icon).getVisibility());
+                assertEquals(View.VISIBLE, soy.findViewById(R.id.allergen_expand_icon).getVisibility());
+                assertTrue(soy.performClick());
                 AllergenPreferences.saveMayContainRedWarning(context, false);
                 AllergenPreferences.saveShowNotDetected(context, false);
                 renderer.refreshDisplayPreferences();
@@ -102,12 +116,20 @@ public class ResultsHistoryAccessibilityTest {
                 TextView statusView = soy.findViewById(R.id.allergen_status);
                 assertEquals(status, statusView.getText().toString());
                 assertEquals(evidence, ((TextView) soy.findViewById(R.id.allergen_evidence)).getText().toString());
+                // An opened row stays open when display preferences refresh the result.
+                assertEquals(View.VISIBLE, soy.findViewById(R.id.allergen_evidence).getVisibility());
                 assertEquals(context.getColor(R.color.status_warning_container),
                         statusView.getBackgroundTintList().getDefaultColor());
                 AllergenPreferences.saveShowNotDetected(context, true);
                 renderer.refreshDisplayPreferences();
                 assertSame(soy, rows.getChildAt(0));
                 assertEquals(2, rows.getChildCount());
+                // A new scan reuses the row but must not inherit the previous scan's open state.
+                assertEquals(View.VISIBLE, soy.findViewById(R.id.allergen_evidence).getVisibility());
+                renderer.showReport(Analyzer.analyse("Ingredients: sugar, water, salt. May contain soy.",
+                        dictionary, Arrays.asList(dictionary.byId("SOY"), dictionary.byId("MILK"))), true);
+                assertSame(soy, rows.getChildAt(0));
+                assertEquals(View.GONE, soy.findViewById(R.id.allergen_evidence).getVisibility());
                 renderer.showMessage("Read failed", "Fixture body");
                 renderer.refreshDisplayPreferences();
                 assertEquals("Read failed", ((TextView) root.findViewById(R.id.verdict_title)).getText().toString());

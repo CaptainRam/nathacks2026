@@ -1,6 +1,7 @@
 package com.example.allergycheck;
 
 import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,8 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import com.example.allergycheck.analysis.AllergenResult;
 import com.example.allergycheck.analysis.AnalysisReport;
@@ -30,10 +33,13 @@ import java.util.Set;
 
 /**
  * Fills the in-page result (view_analysis.xml) from an {@link AnalysisReport}: a verdict card
- * coloured by severity, one row per selected allergen with the label text behind it, the
- * ingredients that were read and the disclaimer.
+ * coloured by severity, one compact row per selected allergen (name and status, with the label
+ * text behind it collapsed until the row is tapped), the ingredients that were read and the
+ * disclaimer.
  */
 final class AnalysisResultView {
+
+    private static final float LARGE_TEXT_SCALE = 1.5f;
 
     private final ViewGroup root;
     private final MaterialCardView verdictCard;
@@ -77,6 +83,7 @@ final class AnalysisResultView {
      * {@code showNotDetected} is set; the verdict still covers every selected allergen.
      */
     void showReport(@NonNull AnalysisReport report, boolean showNotDetected) {
+        boolean newReport = report != displayedReport;
         displayedReport = report;
         bindVerdict(report.overall(), message.title(report), message.verdict(report,
                 AllergenPreferences.mayContainRedWarning(root.getContext())));
@@ -106,7 +113,12 @@ final class AnalysisResultView {
             if (row == null) {
                 row = inflater.inflate(R.layout.item_allergen_result, allergenRows, false);
                 row.setTag(R.id.allergen_name, id);
+                row.setOnClickListener(this::toggleEvidence);
+                if (largeText()) stackLabel(row);
                 rowsByAllergen.put(id, row);
+            } else if (newReport) {
+                // A new scan starts collapsed; only display refreshes keep rows open.
+                row.setTag(R.id.allergen_evidence, null);
             }
             setTextIfChanged(row.findViewById(R.id.allergen_name), result.allergen().label());
             TextView status = row.findViewById(R.id.allergen_status);
@@ -114,10 +126,10 @@ final class AnalysisResultView {
             Tone tone = tone(result.status());
             status.setBackgroundTintList(ColorStateList.valueOf(tone.container));
             status.setTextColor(tone.onContainer);
+            bindStatusIcon(status, tone);
             TextView evidence = row.findViewById(R.id.allergen_evidence);
-            String lines = message.evidence(result);
-            setTextIfChanged(evidence, lines);
-            evidence.setVisibility(lines.isEmpty() ? View.GONE : View.VISIBLE);
+            setTextIfChanged(evidence, message.evidence(result));
+            bindExpansion(row, false);
             if (row.getParent() == null) {
                 allergenRows.addView(row, shown);
             } else if (allergenRows.indexOfChild(row) != shown) {
@@ -179,6 +191,90 @@ final class AnalysisResultView {
         // Inverted colours make the icon read as a badge on the tinted card.
         verdictIcon.setBackgroundTintList(ColorStateList.valueOf(tone.onContainer));
         verdictIcon.setImageTintList(ColorStateList.valueOf(tone.container));
+    }
+
+    /** The status pill leads with the same icon as the verdict, sized to the label text. */
+    private void bindStatusIcon(TextView status, Tone tone) {
+        status.setCompoundDrawableTintList(ColorStateList.valueOf(tone.onContainer));
+        Object current = status.getTag(R.id.allergen_status);
+        if (current instanceof Integer && (Integer) current == tone.icon) return;
+        Drawable icon = ContextCompat.getDrawable(root.getContext(), tone.icon);
+        if (icon != null) {
+            icon = icon.mutate();
+            int size = root.getResources().getDimensionPixelSize(R.dimen.allergen_status_icon);
+            icon.setBounds(0, 0, size, size);
+        }
+        status.setCompoundDrawablesRelative(icon, null, null, null);
+        status.setTag(R.id.allergen_status, tone.icon);
+    }
+
+    /** At 150% text and above the pill no longer fits beside the name, so it moves under it. */
+    private boolean largeText() {
+        return root.getResources().getConfiguration().fontScale >= LARGE_TEXT_SCALE;
+    }
+
+    private static void stackLabel(View row) {
+        LinearLayout group = row.findViewById(R.id.allergen_label_group);
+        group.setOrientation(LinearLayout.VERTICAL);
+        group.setGravity(android.view.Gravity.START);
+        View name = row.findViewById(R.id.allergen_name);
+        LinearLayout.LayoutParams nameParams = (LinearLayout.LayoutParams) name.getLayoutParams();
+        nameParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        nameParams.weight = 0;
+        name.setLayoutParams(nameParams);
+        View status = row.findViewById(R.id.allergen_status);
+        LinearLayout.LayoutParams statusParams = (LinearLayout.LayoutParams) status.getLayoutParams();
+        statusParams.setMarginStart(0);
+        statusParams.topMargin = Math.round(4 * row.getResources().getDisplayMetrics().density);
+        status.setLayoutParams(statusParams);
+    }
+
+    /** Tapping a row with findings shows or hides the label text behind its status. */
+    private void toggleEvidence(View row) {
+        row.setTag(R.id.allergen_evidence, !isExpanded(row));
+        bindExpansion(row, true);
+    }
+
+    private static boolean isExpanded(View row) {
+        return Boolean.TRUE.equals(row.getTag(R.id.allergen_evidence));
+    }
+
+    /**
+     * Evidence starts collapsed and keeps its open state across display refreshes. Rows without
+     * evidence (not detected) are plain text: not clickable and without a chevron.
+     */
+    private void bindExpansion(View row, boolean animate) {
+        TextView evidence = row.findViewById(R.id.allergen_evidence);
+        ImageView chevron = row.findViewById(R.id.allergen_expand_icon);
+        boolean expandable = evidence.getText().length() > 0;
+        if (!expandable) row.setTag(R.id.allergen_evidence, null);
+        boolean expanded = expandable && isExpanded(row);
+        evidence.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        // Normally the empty slot keeps pills aligned; at large text the name needs the room.
+        chevron.setVisibility(expandable ? View.VISIBLE
+                : largeText() ? View.GONE : View.INVISIBLE);
+        float rotation = expanded ? 180f : 0f;
+        chevron.animate().cancel();
+        if (animate) {
+            chevron.animate().rotation(rotation).setDuration(
+                    root.getResources().getInteger(android.R.integer.config_shortAnimTime));
+        } else {
+            chevron.setRotation(rotation);
+        }
+        row.setClickable(expandable);
+        if (expandable) {
+            ViewCompat.setStateDescription(row, root.getContext().getString(expanded
+                    ? R.string.a11y_allergen_row_expanded : R.string.a11y_allergen_row_collapsed));
+            ViewCompat.replaceAccessibilityAction(row,
+                    AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                    root.getContext().getString(expanded
+                            ? R.string.a11y_allergen_row_hide : R.string.a11y_allergen_row_show),
+                    null);
+        } else {
+            ViewCompat.setStateDescription(row, null);
+            ViewCompat.replaceAccessibilityAction(row,
+                    AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK, null, null);
+        }
     }
 
     private static void setTextIfChanged(TextView view, CharSequence text) {
