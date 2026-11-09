@@ -445,41 +445,11 @@ Please read these before relying on any output:
 - Make sure the full ingredient list and any allergen statement are legible.
 - For the optional cross-check, provide a separate front photo of the same product with its name and food type visible.
 
-## Evaluation
-
-Validation will follow the MoSCoW priorities. First evaluate the Must-have local path on product photos with annotated ingredient lists, allergen statements, and per-allergen findings. No evaluation results are available yet.
-
-MVP checks should cover image input, multiple allergen selections, saved-preference retrieval, OCR and structured extraction, synonym mapping, preservation of "contains" and "may contain" evidence, and whether reports clearly distinguish findings, uncertainty, and processing failures. For unreadable images and analysis failures, let users upload another image or retry instead of reporting that no allergen was found.
-
-Evaluate Should-have and Could-have features only as they are implemented: history retrieval, cloud analysis, front-photo reminders, image preparation, additional model scoring, and exploratory unpackaged-food recognition.
-
-| Priority | Metric / check | Result |
-| --- | --- | --- |
-| Must | Image input and multiple allergen selections | _pending_ |
-| Must | Saved-preference retrieval | _pending_ |
-| Must | OCR text accuracy, including allergen statements | _pending_ |
-| Must | Structured ingredient extraction and synonym mapping accuracy | _pending_ |
-| Must | Precision, recall, and false-negative rate for each selected allergen in local analysis | _pending_ |
-| Must | Supporting label evidence and uncertainty reporting | _pending_ |
-| Must | Unreadable input, processing failures, and retry behavior | _pending_ |
-| Should | Scan history | _pending_ |
-| Should | Cloud LLM per-allergen precision, recall, and false-negative rate | _pending_ |
-| Should | Front-photo reminder accuracy and false-reminder rate | _pending_ |
-| Could | Image cropping and rotation | _pending_ |
-| Could | Decisions-model precision, recall, false-negative rate, and threshold evaluation | _pending_ |
-| Could | Unpackaged-food type estimates and clarity of their limitations | _pending_ |
-
 ## Team
 
-- [Name], [role]
-- [Name], [role]
+- Roddy 
+- Eddie
+- Annas
+- Alvin
 
-Built during [Hackathon Name], [dates].
-
-## License
-
-[Choose a license, e.g. MIT].
-
-## Acknowledgements
-
-- [Datasets, models, libraries, and mentors, to be added]
+Built during NatHacks 2026, from Nov 6th to the 9th.
