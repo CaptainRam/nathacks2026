@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,6 +22,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,6 +40,18 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
     private RecyclerView list;
     private View emptyState;
     private MaterialButton clearButton;
+    private View loadState;
+    private View loadProgress;
+    private TextView loadTitle;
+    private View loadMessage;
+    private View retryButton;
+    private int pendingRemovalFocusPosition = RecyclerView.NO_POSITION;
+    private int pendingRemovalFocusGeneration;
+    private int removalFocusGeneration;
+    private long initialScanId = RecyclerView.NO_ID;
+    private int initialActionId = View.NO_ID;
+    private int initialHintGeneration;
+    private int initialHintRequest;
 
     /** Swiped rows awaiting their Snackbar, newest first. Keyed by row id. */
     private final Map<Long, Pending> pendingDeletes = new LinkedHashMap<>();
@@ -69,12 +84,26 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
 
         list = view.findViewById(R.id.history_list);
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter.setInitialFocusCandidate(this::shouldOfferScanHint);
         list.setAdapter(adapter);
         new ItemTouchHelper(new SwipeToDelete()).attachToRecyclerView(list);
 
         emptyState = view.findViewById(R.id.history_empty);
         clearButton = view.findViewById(R.id.clear_history_button);
+        loadState = view.findViewById(R.id.history_load_state);
+        loadProgress = view.findViewById(R.id.history_loading_progress);
+        loadTitle = view.findViewById(R.id.history_load_title);
+        loadMessage = view.findViewById(R.id.history_load_message);
+        retryButton = view.findViewById(R.id.history_load_retry);
+        retryButton.setOnClickListener(button -> {
+            cancelPendingRemovalFocus();
+            reload();
+        });
         clearButton.setOnClickListener(button -> confirmClearAll());
+        InitialFocusHint.install(retryButton, () -> shouldOfferActionHint(R.id.history_load_retry));
+        InitialFocusHint.install(clearButton, () -> shouldOfferActionHint(R.id.clear_history_button));
+        InitialFocusHint.install(view.findViewById(R.id.history_empty_action),
+                () -> shouldOfferActionHint(R.id.history_empty_action));
         view.findViewById(R.id.history_empty_action).setOnClickListener(button -> {
             if (getActivity() instanceof HistoryHost) {
                 ((HistoryHost) getActivity()).showScanTab();
@@ -110,7 +139,15 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
     }
 
     @Override
+    public void onPause() {
+        cancelPendingRemovalFocus();
+        super.onPause();
+    }
+
+    @Override
     public void onDestroyView() {
+        cancelPendingRemovalFocus();
+        ++loadRequest;
         adapter.shutDown();
         super.onDestroyView();
     }
@@ -118,38 +155,159 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
     // ----- Loading -----
 
     private void reload() {
-        // Prune the retention window before reading, so the list never shows scans the policy has
-        // already dropped. Startup alone would miss a session left open past a row's expiry.
-        history.maintain(() -> {
-            if (isAdded()) {
-                load();
-            }
-        });
+        beginLoad(true);
     }
 
     private void load() {
+        beginLoad(false);
+    }
+
+    private void beginLoad(boolean maintain) {
+        View page = getView();
+        if (page == null) return;
         int request = ++loadRequest;
-        history.load(ScanHistory.DEFAULT_LIMIT, items -> {
-            if (!isAdded() || getView() == null || request != loadRequest) {
-                return;
+        showLoadState(false);
+        Runnable query = () -> {
+            if (!isAdded() || getView() != page || request != loadRequest) return;
+            history.loadWithStatus(ScanHistory.DEFAULT_LIMIT, new ScanHistory.LoadCallback() {
+                @Override
+                public void onLoaded(@NonNull List<ScanHistoryItem> items) {
+                    if (!isCurrentLoad(page, request)) return;
+                    // Anything swiped but not yet committed must stay out of the list.
+                    items.removeIf(item -> pendingDeletes.containsKey(item.id()));
+                    adapter.submit(items);
+                    declarePendingLoadHint(request);
+                    showEmptyState(adapter.isEmpty());
+                }
+
+                @Override
+                public void onFailure() {
+                    if (!isCurrentLoad(page, request)) return;
+                    // Keep cached rows in the adapter, but do not expose stale data or destructive
+                    // controls while their current state could not be read.
+                    declarePendingLoadHint(request, true);
+                    showLoadState(true);
+                }
+            });
+        };
+        // Prune the retention window before reading, so the list never shows scans the policy has
+        // already dropped. Startup alone would miss a session left open past a row's expiry.
+        if (maintain) history.maintain(query::run);
+        else query.run();
+    }
+
+    private boolean isCurrentLoad(View page, int request) {
+        return isAdded() && getView() == page && request == loadRequest;
+    }
+
+    private void declarePendingLoadHint(int request) {
+        declarePendingLoadHint(request, false);
+    }
+
+    private void declarePendingLoadHint(int request, boolean failed) {
+        if (pendingRemovalFocusPosition == RecyclerView.NO_POSITION) return;
+        int position = pendingRemovalFocusPosition;
+        int generation = pendingRemovalFocusGeneration;
+        pendingRemovalFocusPosition = RecyclerView.NO_POSITION;
+        if (!canOfferReadingHint(getView(), generation) || request != loadRequest) return;
+        if (failed) offerActionHint(R.id.history_load_retry, generation);
+        else if (adapter.isEmpty()) offerActionHint(R.id.history_empty_action, generation);
+        else offerScanHint(adapter.itemAt(Math.min(position, adapter.size() - 1)).id(), generation);
+    }
+
+    private void showLoadState(boolean failed) {
+        list.setVisibility(View.GONE);
+        emptyState.setVisibility(View.GONE);
+        clearButton.setVisibility(View.GONE);
+        loadState.setVisibility(View.VISIBLE);
+        loadProgress.setVisibility(failed ? View.GONE : View.VISIBLE);
+        updateHeader(failed ? R.string.history_load_failed_title : R.string.history_loading);
+        loadMessage.setVisibility(failed ? View.VISIBLE : View.GONE);
+        retryButton.setVisibility(failed ? View.VISIBLE : View.GONE);
+    }
+
+    /** Offer a fallback after an explicit action; TalkBack decides whether it needs one. */
+    private void offerScanHint(long id, int generation) {
+        if (!canOfferReadingHint(getView(), generation)) return;
+        initialScanId = id;
+        initialActionId = View.NO_ID;
+        initialHintGeneration = generation;
+        initialHintRequest = loadRequest;
+    }
+
+    private void offerActionHint(int actionId, int generation) {
+        if (!canOfferReadingHint(getView(), generation)) return;
+        initialScanId = RecyclerView.NO_ID;
+        initialActionId = actionId;
+        initialHintGeneration = generation;
+        initialHintRequest = loadRequest;
+    }
+
+    private boolean shouldOfferScanHint(long id) {
+        if (id != initialScanId || !isCurrentHint() || !list.isShown()) return false;
+        RecyclerView.ViewHolder holder = list.findViewHolderForItemId(id);
+        return holder != null && holder.itemView.isShown()
+                && !hasOtherReadingPosition(requireView(), holder.itemView);
+    }
+
+    private boolean shouldOfferActionHint(int actionId) {
+        if (actionId != initialActionId || !isCurrentHint()) return false;
+        View target = requireView().findViewById(actionId);
+        return target != null && target.isShown()
+                && !hasOtherReadingPosition(requireView(), target);
+    }
+
+    private boolean isCurrentHint() {
+        return initialHintRequest == loadRequest
+                && canOfferReadingHint(getView(), initialHintGeneration)
+                && requireView().hasWindowFocus();
+    }
+
+    private boolean canOfferReadingHint(@Nullable View page, int generation) {
+        return page != null && generation == removalFocusGeneration && getView() == page
+                && isAdded() && isResumed() && isVisible() && page.isShown();
+    }
+
+    private static boolean hasOtherReadingPosition(View view, View candidate) {
+        if (!view.isShown()) return false;
+        if (view != candidate && view.isAccessibilityFocused()) return true;
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int index = 0; index < group.getChildCount(); index++) {
+                if (hasOtherReadingPosition(group.getChildAt(index), candidate)) return true;
             }
-            // Anything swiped but not yet committed must stay out of the list.
-            items.removeIf(item -> pendingDeletes.containsKey(item.id()));
-            adapter.submit(items);
-            showEmptyState(adapter.isEmpty());
-        });
+        }
+        return false;
+    }
+
+    /** Revoke any old declaration when navigation, a new action or lifecycle changes its origin. */
+    void cancelPendingRemovalFocus() {
+        ++removalFocusGeneration;
+        pendingRemovalFocusPosition = RecyclerView.NO_POSITION;
+        initialScanId = RecyclerView.NO_ID;
+        initialActionId = View.NO_ID;
+    }
+
+    private void updateHeader(int titleRes) {
+        String title = getString(titleRes);
+        if (!title.contentEquals(loadTitle.getText())) loadTitle.setText(title);
+        ViewCompat.setAccessibilityPaneTitle(loadTitle, titleRes == R.string.history_title
+                ? title : getString(R.string.a11y_history_state_pane, title));
     }
 
     private void showEmptyState(boolean empty) {
+        loadState.setVisibility(View.GONE);
         list.setVisibility(empty ? View.GONE : View.VISIBLE);
         emptyState.setVisibility(empty ? View.VISIBLE : View.GONE);
         clearButton.setVisibility(empty ? View.GONE : View.VISIBLE);
+        updateHeader(R.string.history_title);
     }
 
     // ----- Rows -----
 
     @Override
     public void onScanClicked(@NonNull ScanHistoryItem item) {
+        cancelPendingRemovalFocus();
         getParentFragmentManager().beginTransaction()
                 .replace(R.id.history_container, ScanDetailFragment.of(item.id()))
                 .addToBackStack(null)
@@ -158,15 +316,39 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
 
     @Override
     public void onScanLongPressed(@NonNull ScanHistoryItem item) {
+        cancelPendingRemovalFocus();
+        final int generation = removalFocusGeneration;
+        final View page = getView();
+        int itemPosition = 0;
+        for (int position = 0; position < adapter.size(); position++) {
+            if (adapter.itemAt(position).id() == item.id()) {
+                itemPosition = position;
+                break;
+            }
+        }
+        final int removedPosition = itemPosition;
+        Runnable declareCancelledRowHint = () -> {
+            for (int position = 0; position < adapter.size(); position++) {
+                if (adapter.itemAt(position).id() == item.id()) {
+                    offerScanHint(item.id(), generation);
+                    return;
+                }
+            }
+        };
         // The dialog is the confirmation, so this deletes straight away: offering undo after an
         // explicit confirm is just noise.
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.history_delete_one_title)
                 .setMessage(R.string.history_delete_one_message)
-                .setNegativeButton(R.string.cancel, null)
+                .setNegativeButton(R.string.cancel, (dialog, which) -> declareCancelledRowHint.run())
+                .setOnCancelListener(dialog -> declareCancelledRowHint.run())
                 .setPositiveButton(R.string.history_delete, (dialog, which) ->
                         history.delete(item.id(), () -> {
                             if (isAdded()) {
+                                if (canOfferReadingHint(page, generation)) {
+                                    pendingRemovalFocusPosition = removedPosition;
+                                    pendingRemovalFocusGeneration = generation;
+                                }
                                 load();
                             }
                         }))
@@ -175,16 +357,26 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
 
     @Override
     public void onScanSwiped(int position, @NonNull ScanHistoryItem item) {
+        cancelPendingRemovalFocus();
+        final int generation = removalFocusGeneration;
+        final View page = getView();
         adapter.removeAt(position);
         pendingDeletes.put(item.id(), new Pending(item, position));
-        showEmptyState(adapter.isEmpty());
+        if (loadState.getVisibility() != View.VISIBLE) showEmptyState(adapter.isEmpty());
 
         Snackbar.make(requireView(), R.string.history_deleted, Snackbar.LENGTH_LONG)
                 .setAction(R.string.history_undo, view -> {
                     Pending restored = pendingDeletes.remove(item.id());
                     if (restored != null) {
                         adapter.insertAt(restored.position, restored.item);
-                        showEmptyState(adapter.isEmpty());
+                        if (canOfferReadingHint(page, generation)
+                                && loadState.getVisibility() != View.VISIBLE) {
+                            offerScanHint(restored.item.id(), generation);
+                        }
+                        if (loadState.getVisibility() != View.VISIBLE) {
+                            showEmptyState(adapter.isEmpty());
+                            updateHeader(R.string.history_restored_title);
+                        }
                     }
                 })
                 .addCallback(new Snackbar.Callback() {
@@ -218,6 +410,9 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
     }
 
     private void confirmClearAll() {
+        cancelPendingRemovalFocus();
+        final int generation = removalFocusGeneration;
+        final View page = getView();
         // Pending swipes are part of what is being cleared; applying them first keeps the count
         // honest and avoids a Snackbar outliving the thing it referred to.
         flushPendingDeletes();
@@ -226,10 +421,16 @@ public class HistoryFragment extends Fragment implements ScanHistoryAdapter.List
                 .setTitle(R.string.history_clear_confirm_title)
                 .setMessage(getResources().getQuantityString(
                         R.plurals.history_clear_confirm_message, count, count))
-                .setNegativeButton(R.string.cancel, null)
+                .setNegativeButton(R.string.cancel, (dialog, which) ->
+                        offerActionHint(R.id.clear_history_button, generation))
+                .setOnCancelListener(dialog -> offerActionHint(R.id.clear_history_button, generation))
                 .setPositiveButton(R.string.history_clear_confirm_action, (dialog, which) ->
                         history.clear(() -> {
                             if (isAdded()) {
+                                if (canOfferReadingHint(page, generation)) {
+                                    pendingRemovalFocusPosition = 0;
+                                    pendingRemovalFocusGeneration = generation;
+                                }
                                 load();
                             }
                         }))

@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.allergycheck.history.ScanHistory;
@@ -61,23 +62,27 @@ public class ScanDetailFragment extends Fragment {
 
         long id = requireArguments().getLong(ARG_ID);
         history.detail(id, detail -> {
-            if (!isAdded() || getView() == null) {
+            if (!isAdded() || getView() != view) {
                 return;
             }
-            bind(getView(), detail);
+            bind(view, detail);
         });
     }
 
     private void bind(@NonNull View view, @Nullable ScanHistoryDetail detail) {
         HistorySummary summary = new HistorySummary(requireContext());
         TextView timestamp = view.findViewById(R.id.detail_timestamp);
+        // Keep the loading heading's View and accessibility node alive. Updating its label in
+        // place preserves a reader on that heading without taking focus from Back or another item.
 
         if (detail == null) {
             // The row went away under us, e.g. pruned while this was opening.
-            timestamp.setText(R.string.history_detail_title);
+            timestamp.setText(R.string.history_report_unavailable_title);
             resultRoot.setVisibility(View.VISIBLE);
             resultView.showMessage(getString(R.string.history_report_unavailable_title),
                     getString(R.string.history_report_unavailable_message));
+            ViewCompat.setAccessibilityPaneTitle(timestamp, getString(
+                    R.string.history_report_unavailable_title));
             return;
         }
 
@@ -99,6 +104,10 @@ public class ScanDetailFragment extends Fragment {
 
         bindPhoto(view, detail);
         bindRawText(view, detail);
+        // Publish the ready state after its content is bound so services announce the saved
+        // result when the asynchronous load finishes without moving the user's current focus.
+        ViewCompat.setAccessibilityPaneTitle(timestamp, getString(R.string.a11y_history_detail_pane,
+                timestamp.getText(), resultView.title()));
     }
 
     private void bindPhoto(@NonNull View view, @NonNull ScanHistoryDetail detail) {

@@ -9,6 +9,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
+    android:importantForAccessibility="no"
     android:orientation="vertical">
 
     <LinearLayout
@@ -36,8 +37,8 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:accessibilityHeading="true"
-            android:ellipsize="end"
-            android:maxLines="1"
+            android:accessibilityPaneTitle="@string/history_detail_title"
+            android:text="@string/history_detail_loading"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnSurface"
             tools:text="Today, 14:32" />

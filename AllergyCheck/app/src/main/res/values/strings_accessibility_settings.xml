@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="a11y_show_not_detected">Show allergens not detected. Also list your allergens that weren’t found on the label.</string>
+    <string name="a11y_model_download_progress">Local AI model download</string>
+    <string name="a11y_model_details">Local AI model details</string>
+    <string name="a11y_settings_expanded">Expanded</string>
+    <string name="a11y_settings_collapsed">Collapsed</string>
+    <string name="a11y_model_download">Download local AI model</string>
+    <string name="a11y_model_retry">Retry local AI model download</string>
+    <string name="a11y_model_delete">Delete local AI model</string>
+</resources>

@@ -212,9 +212,9 @@ public class LocalModelUiTest {
             screen.onActivity(activity -> {
                 assertText(activity, R.id.model_availability, R.string.model_settings_installed);
                 assertText(activity, R.id.model_download_status, R.string.model_settings_ready);
-                assertFalse(activity.findViewById(R.id.model_download_button).isEnabled());
-                assertTrue(activity.findViewById(R.id.model_delete_button).isEnabled());
-                assertTrue(activity.findViewById(R.id.model_delete_button).performClick());
+                assertTrue(activity.findViewById(R.id.model_download_button).isEnabled());
+                assertText(activity, R.id.model_download_button, R.string.model_settings_delete);
+                assertTrue(activity.findViewById(R.id.model_download_button).performClick());
             });
             assertTrue("Opening confirmation must not delete a model", model.isFile());
             screen.onActivity(activity -> {
@@ -225,7 +225,7 @@ public class LocalModelUiTest {
             assertTrue("Cancel must keep the model", model.isFile());
 
             screen.onActivity(activity -> assertTrue(
-                    activity.findViewById(R.id.model_delete_button).performClick()));
+                    activity.findViewById(R.id.model_download_button).performClick()));
             screen.onActivity(activity -> {
                 View dialog = deletionDialogRoot();
                 assertNotNull(dialog);
@@ -262,7 +262,7 @@ public class LocalModelUiTest {
         assertText(activity, R.id.model_availability, R.string.model_settings_missing);
         assertText(activity, R.id.model_download_status, R.string.model_settings_not_downloaded);
         assertTrue(activity.findViewById(R.id.model_download_button).isEnabled());
-        assertFalse(activity.findViewById(R.id.model_delete_button).isEnabled());
+        assertText(activity, R.id.model_download_button, R.string.model_settings_download);
     }
 
     private static void assertText(Activity activity, int viewId, int textId) {
@@ -358,6 +358,9 @@ public class LocalModelUiTest {
             TestActivity<T> screen = new TestActivity<>();
             Intent intent = new Intent(context, activityClass)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            if (activityClass.equals(SettingsActivity.class)) {
+                intent.putExtra(SettingsActivity.EXTRA_SHOW_MODEL, true);
+            }
             screen.activity = activityClass.cast(screen.instrumentation.startActivitySync(intent));
             assertNotNull(screen.activity);
             screen.instrumentation.waitForIdleSync();

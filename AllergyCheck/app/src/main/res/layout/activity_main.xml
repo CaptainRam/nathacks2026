@@ -63,6 +63,7 @@
             android:id="@+id/content_scroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:accessibilityPaneTitle="@string/tab_scan"
             android:clipToPadding="false"
             android:fillViewport="true"
             android:overScrollMode="ifContentScrolls">
@@ -190,6 +191,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="16dp"
+                                    android:accessibilityHeading="true"
                                     android:gravity="center"
                                     android:text="@string/add_label_title"
                                     android:textAppearance="?attr/textAppearanceTitleMedium"
@@ -234,8 +236,8 @@
                                 <com.google.android.material.button.MaterialButton
                                     android:id="@+id/remove_button"
                                     style="@style/Widget.AllergyCheck.TonalIconButton"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
+                                    android:layout_width="48dp"
+                                    android:layout_height="48dp"
                                     android:layout_gravity="top|end"
                                     android:layout_margin="12dp"
                                     android:contentDescription="@string/remove_photo"
@@ -277,15 +279,16 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:background="?attr/colorSurfaceContainerLow"
-                                android:clickable="true"
-                                android:focusable="true"
+                                android:contentDescription="@string/loading_photo"
+                                android:importantForAccessibility="yes"
+                                android:screenReaderFocusable="true"
                                 android:visibility="gone">
 
                                 <com.google.android.material.progressindicator.CircularProgressIndicator
                                     android:layout_width="48dp"
                                     android:layout_height="48dp"
                                     android:layout_gravity="center"
-                                    android:contentDescription="@string/loading_photo"
+                                    android:importantForAccessibility="no"
                                     android:indeterminate="true"
                                     app:indicatorSize="40dp" />
                             </FrameLayout>
@@ -375,6 +378,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal"
                             android:layout_marginTop="4dp"
+                            android:importantForAccessibility="noHideDescendants"
                             android:visibility="gone"
                             app:chipSpacingHorizontal="6dp"
                             app:chipSpacingVertical="6dp" />

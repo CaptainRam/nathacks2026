@@ -1,0 +1,10 @@
+<resources>
+    <string name="ocr_output_heading">Extracted text and ingredients</string>
+    <string name="ocr_reading_label">Reading label text…</string>
+    <string name="ocr_output_ready">Ingredient extraction complete. Results are below.</string>
+    <string name="ocr_output_no_ingredients">No ingredient list found. The label text is below.</string>
+    <string name="ocr_output_empty">No text found. Review the message below.</string>
+    <string name="ocr_output_failed">Ingredient extraction failed. Review the message below.</string>
+    <string name="ocr_waiting_for_model">Ingredient extraction is waiting for the AI model.</string>
+    <string name="ocr_stats_accessibility">%1$d lines, %2$d characters, %3$d milliseconds.</string>
+</resources>

@@ -28,7 +28,6 @@
         android:visibility="gone"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:accessibilityLiveRegion="polite"
         android:gravity="center_horizontal"
         android:orientation="vertical">
 
@@ -59,10 +58,21 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:accessibilityHeading="true"
+            android:accessibilityLiveRegion="polite"
             android:gravity="center"
             android:text="@string/reading_ingredients"
             android:textAppearance="?attr/textAppearanceTitleLarge"
             android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/analysis_check_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone" />
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
@@ -80,7 +90,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="@string/cancel_analysis" />
+            android:text="@string/cancel_analysis"
+            android:contentDescription="@string/cancel_ingredient_check" />
     </LinearLayout>
 
     <!-- Result. No layout_* attributes here on purpose: the included root carries its own, and an

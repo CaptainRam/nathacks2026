@@ -10,6 +10,7 @@
     android:layout_marginBottom="12dp"
     android:clickable="true"
     android:focusable="true"
+    android:screenReaderFocusable="true"
     app:cardElevation="0dp"
     app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
     app:strokeWidth="0dp">
@@ -18,6 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
+        android:importantForAccessibility="noHideDescendants"
         android:orientation="horizontal"
         android:padding="12dp">
 

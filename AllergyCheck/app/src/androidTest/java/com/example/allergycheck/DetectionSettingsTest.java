@@ -5,7 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -19,6 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Locale;
 
@@ -149,6 +153,8 @@ public class DetectionSettingsTest {
             scenario.recreate();
             scenario.onActivity(activity -> activity.getOnBackPressedDispatcher().onBackPressed());
             assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+            assertTrue(scenario.getResult().getResultData().getBooleanExtra(
+                    SettingsActivity.EXTRA_ANALYSIS_CONFIGURATION_CHANGED, false));
             assertEquals("test-draft-key", AnalysisPreferences.openRouterApiKey(context));
         }
     }
@@ -171,6 +177,180 @@ public class DetectionSettingsTest {
                 }
             });
         }
+    }
+
+    @Test
+    public void savedKeyWithMissingModelRequestsTheModelInsteadOfAnotherKey() {
+        AnalysisPreferences.saveOpenRouterApiKey(context, "test-saved-key");
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.OPENROUTER);
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                TextView status = activity.findViewById(R.id.detection_cloud_save_status);
+                assertTrue(status.isShown());
+                assertEquals(context.getString(R.string.detection_cloud_needs_model),
+                        status.getText().toString());
+                activity.findViewById(R.id.detection_mode_decisions).performClick();
+                assertEquals(context.getString(R.string.detection_cloud_needs_model),
+                        status.getText().toString());
+                assertEquals("test-saved-key", AnalysisPreferences.openRouterApiKey(context));
+            });
+        }
+    }
+
+    @Test
+    public void sectionPanesExposeTheirStaticContentAsSeparateReadingTargets() {
+        AnalysisPreferences.saveOpenRouterApiKey(context, "test-saved-key");
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.DECISIONS);
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                ViewGroup scroll = activity.findViewById(R.id.settings_scroll);
+                View model = activity.findViewById(R.id.model_section);
+                TextView status = activity.findViewById(R.id.detection_cloud_save_status);
+                ArrayList<View> readingTargets = new ArrayList<>();
+                // This is the platform's projection into the accessibility tree. An important
+                // section wrapper becomes the target instead and TalkBack merges static text.
+                scroll.addChildrenForAccessibility(readingTargets);
+                assertFalse("The model pane must not merge all of its static descendants",
+                        readingTargets.contains(model));
+                assertTrue("Missing-model guidance must be its own reading target",
+                        readingTargets.contains(status));
+                assertTrue(status.isImportantForAccessibility());
+                assertPaneEventTitle(model, context.getString(R.string.settings_section_model));
+
+                activity.findViewById(R.id.section_allergens_button).performClick();
+                readingTargets.clear();
+                scroll.addChildrenForAccessibility(readingTargets);
+                View allergens = activity.findViewById(R.id.allergen_section);
+                assertFalse(readingTargets.contains(allergens));
+                assertTrue("The allergen explanation must be independently readable",
+                        readingTargets.stream().anyMatch(view -> view instanceof TextView
+                                && context.getString(R.string.allergens_hint).contentEquals(
+                                        ((TextView) view).getText())));
+                assertPaneEventTitle(allergens,
+                        context.getString(R.string.settings_section_allergens));
+            });
+        }
+    }
+
+    private static void assertPaneEventTitle(View pane, String title) {
+        AccessibilityEvent event = AccessibilityEvent.obtain(
+                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED);
+        try {
+            // Removing the wrapper from reading order must retain its section-change semantics.
+            pane.onPopulateAccessibilityEvent(event);
+            assertEquals(title, pane.getAccessibilityPaneTitle());
+            assertTrue(event.getText().contains(title));
+        } finally {
+            event.recycle();
+        }
+    }
+
+    @Test
+    public void localSaveIgnoresInvalidHiddenCloudConcurrencyAndKeepsItsSavedValue() {
+        for (AnalysisPreferences.Mode local : new AnalysisPreferences.Mode[] {
+                AnalysisPreferences.Mode.MATCHING, AnalysisPreferences.Mode.LOCAL_AI}) {
+            AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.OPENROUTER);
+            AnalysisPreferences.saveCloudConcurrency(context, 7);
+            try (ActivityScenario<SettingsActivity> scenario =
+                         ActivityScenario.launchActivityForResult(settingsIntent())) {
+                scenario.onActivity(activity -> {
+                    input(activity, R.id.detection_concurrency).setText("0");
+                    activity.findViewById(R.id.detection_location_local).performClick();
+                    if (local == AnalysisPreferences.Mode.LOCAL_AI) {
+                        activity.findViewById(R.id.detection_mode_local_ai).performClick();
+                    }
+                    assertEquals(View.GONE, activity.findViewById(
+                            R.id.detection_cloud_configuration).getVisibility());
+                    // Exercise Save in the real unsaved-changes dialog, not a hidden save button.
+                    activity.getOnBackPressedDispatcher().onBackPressed();
+                    SettingsActivity.DiscardChangesDialog dialog =
+                            (SettingsActivity.DiscardChangesDialog) activity.getSupportFragmentManager()
+                                    .findFragmentByTag(SettingsActivity.DiscardChangesDialog.TAG);
+                    assertNotNull(dialog);
+                    assertTrue(dialog.requireDialog().findViewById(android.R.id.button1)
+                            .performAccessibilityAction(
+                                    android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK, null));
+                });
+                assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+                assertEquals(local, AnalysisPreferences.mode(context));
+                assertEquals(7, AnalysisPreferences.cloudConcurrency(context));
+            }
+        }
+    }
+
+    @Test
+    public void savingAllergensDoesNotClaimTheCloudConfigurationChanged() {
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launchActivityForResult(
+                new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> activity.findViewById(R.id.save_preferences_button).performClick());
+            assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+            assertFalse(scenario.getResult().getResultData().getBooleanExtra(
+                    SettingsActivity.EXTRA_ANALYSIS_CONFIGURATION_CHANGED, true));
+        }
+    }
+
+    @Test
+    public void unchangedCloudSaveAndModeRoundTripDoNotReportAProviderChange() {
+        for (boolean roundTrip : new boolean[] {false, true}) {
+            savedCloudConfiguration();
+            try (ActivityScenario<SettingsActivity> scenario =
+                         ActivityScenario.launchActivityForResult(settingsIntent())) {
+                scenario.onActivity(activity -> {
+                    if (roundTrip) {
+                        activity.findViewById(R.id.detection_location_local).performClick();
+                        activity.findViewById(R.id.detection_location_cloud).performClick();
+                    }
+                    activity.findViewById(R.id.detection_save_cloud).performClick();
+                    activity.getOnBackPressedDispatcher().onBackPressed();
+                });
+                Intent result = scenario.getResult().getResultData();
+                assertFalse(result.getBooleanExtra(SettingsActivity.EXTRA_ANALYSIS_CONFIGURATION_CHANGED, true));
+                assertFalse(result.getBooleanExtra(SettingsActivity.EXTRA_AI_PROVIDER_CHANGED, true));
+            }
+        }
+    }
+
+    @Test
+    public void concurrencyChangeRequiresReanalysisWithoutChangingTheProviderIdentity() {
+        savedCloudConfiguration();
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                input(activity, R.id.detection_concurrency).setText("8");
+                activity.findViewById(R.id.detection_save_cloud).performClick();
+                activity.getOnBackPressedDispatcher().onBackPressed();
+            });
+            Intent result = scenario.getResult().getResultData();
+            assertTrue(result.getBooleanExtra(SettingsActivity.EXTRA_ANALYSIS_CONFIGURATION_CHANGED, false));
+            assertFalse(result.getBooleanExtra(SettingsActivity.EXTRA_AI_PROVIDER_CHANGED, true));
+        }
+    }
+
+    @Test
+    public void changedKeyOrActiveModelIsRecognizedAcrossRotation() {
+        for (boolean key : new boolean[] {false, true}) {
+            savedCloudConfiguration();
+            try (ActivityScenario<SettingsActivity> scenario =
+                         ActivityScenario.launchActivityForResult(settingsIntent())) {
+                scenario.onActivity(activity -> {
+                    input(activity, key ? R.id.detection_api_key : R.id.detection_model_id)
+                            .setText(key ? "test-updated-key" : "example/updated-model");
+                    activity.findViewById(R.id.detection_save_cloud).performClick();
+                });
+                scenario.recreate();
+                scenario.onActivity(activity -> activity.getOnBackPressedDispatcher().onBackPressed());
+                Intent result = scenario.getResult().getResultData();
+                assertTrue(result.getBooleanExtra(SettingsActivity.EXTRA_ANALYSIS_CONFIGURATION_CHANGED, false));
+                assertTrue(result.getBooleanExtra(SettingsActivity.EXTRA_AI_PROVIDER_CHANGED, false));
+            }
+        }
+    }
+
+    private void savedCloudConfiguration() {
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.OPENROUTER);
+        AnalysisPreferences.saveOpenRouterApiKey(context, "test-original-key");
+        AnalysisPreferences.saveOpenRouterModel(context, "example/original-model");
+        AnalysisPreferences.saveCloudConcurrency(context, 7);
     }
 
     @Test

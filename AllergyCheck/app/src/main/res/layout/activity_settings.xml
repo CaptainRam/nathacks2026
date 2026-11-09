@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/settings"
+    android:importantForAccessibility="no"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
@@ -29,11 +30,11 @@
         android:paddingHorizontal="20dp"
         android:paddingBottom="12dp">
 
-        <com.google.android.material.button.MaterialButtonToggleGroup
+        <com.example.allergycheck.WrappingButtonToggleGroup
             android:id="@+id/settings_section_toggle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/settings_sections"
+            android:importantForAccessibility="no"
             app:checkedButton="@id/section_allergens_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -61,7 +62,7 @@
                 android:minHeight="48dp"
                 android:text="@string/settings_section_model"
                 android:textAllCaps="false" />
-        </com.google.android.material.button.MaterialButtonToggleGroup>
+        </com.example.allergycheck.WrappingButtonToggleGroup>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Shown only once the content scrolls under the pinned header. -->
@@ -101,10 +102,13 @@
                     android:id="@+id/allergen_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:accessibilityPaneTitle="@string/settings_section_allergens"
+                    android:importantForAccessibility="no"
                     android:orientation="vertical">
 
                     <com.google.android.material.textview.MaterialTextView
                         style="@style/Widget.AllergyCheck.SettingsSectionTitle"
+                        android:accessibilityHeading="true"
                         android:text="@string/allergens_title" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -128,6 +132,7 @@
                     <com.google.android.material.textview.MaterialTextView
                         style="@style/Widget.AllergyCheck.SettingsSectionTitle"
                         android:layout_marginTop="24dp"
+                        android:accessibilityHeading="true"
                         android:text="@string/results_settings_title" />
 
                     <com.google.android.material.card.MaterialCardView
@@ -141,6 +146,7 @@
                             android:layout_height="wrap_content"
                             android:background="?attr/selectableItemBackground"
                             android:gravity="center_vertical"
+                            android:importantForAccessibility="no"
                             android:minHeight="64dp"
                             android:orientation="horizontal"
                             android:paddingVertical="8dp"
@@ -152,6 +158,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="12dp"
                                 android:layout_weight="1"
+                                android:importantForAccessibility="noHideDescendants"
                                 android:orientation="vertical">
 
                                 <com.google.android.material.textview.MaterialTextView
@@ -175,7 +182,9 @@
                                 android:id="@+id/show_not_detected_switch"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:contentDescription="@string/show_not_detected" />
+                                android:minWidth="48dp"
+                                android:minHeight="48dp"
+                                android:contentDescription="@string/a11y_show_not_detected" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
@@ -185,6 +194,8 @@
                     android:id="@+id/model_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:accessibilityPaneTitle="@string/settings_section_model"
+                    android:importantForAccessibility="no"
                     android:orientation="vertical"
                     android:visibility="gone">
 
@@ -194,6 +205,7 @@
                         android:id="@+id/local_model_title"
                         style="@style/Widget.AllergyCheck.SettingsSectionTitle"
                         android:layout_marginTop="24dp"
+                        android:accessibilityHeading="true"
                         android:text="@string/model_settings_title" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -235,9 +247,7 @@
                                     android:layout_height="wrap_content"
                                     android:accessibilityLiveRegion="polite"
                                     android:background="@drawable/bg_pill"
-                                    android:ellipsize="end"
                                     android:gravity="center"
-                                    android:maxLines="1"
                                     android:paddingHorizontal="10dp"
                                     android:paddingVertical="4dp"
                                     android:text="@string/model_settings_missing"
@@ -268,7 +278,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
-                                android:contentDescription="@string/model_settings_title"
+                                android:contentDescription="@string/a11y_model_download_progress"
                                 android:max="100"
                                 android:visibility="gone"
                                 app:trackCornerRadius="2dp"
@@ -286,7 +296,7 @@
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textColorLink="?attr/colorPrimary" />
 
-                            <!-- Only one of Download/Retry or Delete shows at a time. -->
+                            <!-- One stable action becomes Delete, Download or Retry in place. -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
@@ -302,15 +312,6 @@
                                     android:minHeight="48dp"
                                     android:text="@string/model_settings_download" />
 
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/model_delete_button"
-                                    style="@style/Widget.AllergyCheck.OutlinedButton"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:enabled="false"
-                                    android:minHeight="48dp"
-                                    android:text="@string/model_settings_delete"
-                                    android:visibility="gone" />
                             </LinearLayout>
 
                             <com.google.android.material.divider.MaterialDivider
@@ -329,6 +330,8 @@
                                 android:layout_marginTop="4dp"
                                 android:insetTop="0dp"
                                 android:insetBottom="0dp"
+                                android:minHeight="48dp"
+                                android:contentDescription="@string/a11y_model_details"
                                 android:text="@string/model_settings_details"
                                 app:icon="@drawable/ic_expand_more"
                                 app:iconGravity="end"

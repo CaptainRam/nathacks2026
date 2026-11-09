@@ -3,79 +3,107 @@
   Temporary harness for the OCR pipeline. Delete this layout, OcrTestActivity and its manifest
   entry once the real label-capture screen exists; nothing else depends on them.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/ocr_test_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
+    android:fillViewport="true"
     tools:context=".OcrTestActivity">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/pick_image_button"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/pick_image" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/enhance_switch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:checked="true"
-        android:text="@string/enhance_image" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityHeading="true"
+            android:text="@string/ocr_test_title"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
-    <include layout="@layout/view_model_download" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pick_image_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:text="@string/pick_image" />
 
-    <ImageView
-        android:id="@+id/image_preview"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/image_preview_description"
-        android:maxHeight="220dp"
-        android:scaleType="fitCenter"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/enhance_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:checked="true"
+            android:text="@string/enhance_image" />
 
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/progress"
-        style="@style/Widget.Material3.CircularProgressIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp"
-        android:indeterminate="true"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        <include layout="@layout/view_model_download" />
 
-    <TextView
-        android:id="@+id/ocr_stats"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:textStyle="bold"
-        android:visibility="gone"
-        tools:text="lines: 42 · chars: 913 · 680 ms"
-        tools:visibility="visible" />
+        <ImageView
+            android:id="@+id/image_preview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/image_preview_description"
+            android:maxHeight="220dp"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1">
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progress"
+            style="@style/Widget.Material3.CircularProgressIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:indeterminate="true"
+            android:importantForAccessibility="no"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- Announce short stage/result updates without speaking the entire extracted label. -->
+        <TextView
+            android:id="@+id/ocr_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:accessibilityLiveRegion="polite"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/ocr_stats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="lines: 42 · chars: 913 · 680 ms"
+            tools:visibility="visible" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:accessibilityHeading="true"
+            android:text="@string/ocr_output_heading"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
 
         <TextView
             android:id="@+id/ocr_output"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:fontFamily="monospace"
             android:text="@string/ocr_placeholder"
             android:textIsSelectable="true"
             android:textSize="14sp" />
 
-    </ScrollView>
+    </LinearLayout>
 
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>
