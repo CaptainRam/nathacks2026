@@ -215,6 +215,10 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
                     return MaterialColors.getColor(itemView,
                             androidx.appcompat.R.attr.colorError);
                 case MAY_CONTAIN:
+                    if (AllergenPreferences.mayContainRedWarning(itemView.getContext())) {
+                        return MaterialColors.getColor(itemView,
+                                androidx.appcompat.R.attr.colorError);
+                    }
                 case POSSIBLE:
                     return itemView.getContext().getColor(R.color.status_warning_container);
                 case NOT_DETECTED:

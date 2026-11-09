@@ -26,6 +26,7 @@ import com.example.allergycheck.analysis.Finding;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,8 +42,11 @@ import static org.junit.Assert.assertTrue;
 /** W-01–W-05, W-09, W-10 and W-12 against packaged strings and the actual result view. */
 @RunWith(AndroidJUnit4.class)
 public class AnalysisPresentationCoverageTest {
+    private static final String MAY_CONTAIN_RED_WARNING = "may_contain_red_warning";
+
     private Context context;
     private AllergenDictionary dictionary;
+    private Boolean originalMayContainRedWarning;
 
     @Before
     public void loadResources() {
@@ -50,6 +54,19 @@ public class AnalysisPresentationCoverageTest {
                 InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 R.style.Theme_AllergyCheck);
         dictionary = AllergenDictionaryProvider.get(context);
+        originalMayContainRedWarning = AllergenPreferences.preferences(context)
+                .contains(MAY_CONTAIN_RED_WARNING)
+                ? AllergenPreferences.mayContainRedWarning(context) : null;
+        AllergenPreferences.preferences(context).edit().remove(MAY_CONTAIN_RED_WARNING).apply();
+    }
+
+    @After
+    public void restorePreferences() {
+        if (originalMayContainRedWarning == null) {
+            AllergenPreferences.preferences(context).edit().remove(MAY_CONTAIN_RED_WARNING).apply();
+        } else {
+            AllergenPreferences.saveMayContainRedWarning(context, originalMayContainRedWarning);
+        }
     }
 
     @Test
@@ -87,17 +104,49 @@ public class AnalysisPresentationCoverageTest {
     }
 
     @Test
-    public void precautionaryAndPossibleFindingsUseTheWarningTone() {
-        String[] labels = {
-                "Ingredients: sugar, water, salt. May contain soy.",
-                "Ingredients: sugar, lecithin, salt."};
-        AnalysisReport.Status[] statuses = {
-                AnalysisReport.Status.MAY_CONTAIN, AnalysisReport.Status.POSSIBLE};
-        for (int index = 0; index < labels.length; index++) {
-            AnalysisReport report = analyse(labels[index], "SOY");
-            assertEquals(statuses[index], report.overall());
-            render(report, root -> assertEquals(ContextCompat.getColor(context,
-                    R.color.status_warning_container), color(root)));
+    public void precautionaryFindingsUseTheErrorToneByDefault() {
+        assertTrue(AllergenPreferences.mayContainRedWarning(context));
+        AnalysisReport report = analyse("Ingredients: sugar, water, salt. May contain soy.", "SOY");
+        assertEquals(AnalysisReport.Status.MAY_CONTAIN, report.overall());
+        render(report, root -> {
+            assertResultTone(root, MaterialColors.getColor(root,
+                    com.google.android.material.R.attr.colorErrorContainer),
+                    MaterialColors.getColor(root,
+                            com.google.android.material.R.attr.colorOnErrorContainer));
+            assertPrecautionaryText(root, report);
+        });
+    }
+
+    @Test
+    public void precautionaryToneCanBeChangedWithoutChangingTheFinding() {
+        AnalysisReport report = analyse("Ingredients: sugar, water, salt. May contain soy.", "SOY");
+        AllergenPreferences.saveMayContainRedWarning(context, false);
+        render(report, root -> {
+            AnalysisResultView resultView = new AnalysisResultView(root);
+            resultView.showReport(report, false);
+            assertResultTone(root, ContextCompat.getColor(context, R.color.status_warning_container),
+                    ContextCompat.getColor(context, R.color.status_on_warning_container));
+            assertPrecautionaryText(root, report);
+
+            AllergenPreferences.saveMayContainRedWarning(context, true);
+            resultView.showReport(report, false);
+            assertResultTone(root, MaterialColors.getColor(root,
+                    com.google.android.material.R.attr.colorErrorContainer),
+                    MaterialColors.getColor(root,
+                            com.google.android.material.R.attr.colorOnErrorContainer));
+            assertPrecautionaryText(root, report);
+        });
+    }
+
+    @Test
+    public void possibleFindingsKeepTheWarningToneForEitherPreference() {
+        AnalysisReport report = analyse("Ingredients: sugar, lecithin, salt.", "SOY");
+        assertEquals(AnalysisReport.Status.POSSIBLE, report.overall());
+        for (boolean redWarning : new boolean[] {true, false}) {
+            AllergenPreferences.saveMayContainRedWarning(context, redWarning);
+            render(report, root -> assertResultTone(root,
+                    ContextCompat.getColor(context, R.color.status_warning_container),
+                    ContextCompat.getColor(context, R.color.status_on_warning_container)));
         }
     }
 
@@ -195,6 +244,26 @@ public class AnalysisPresentationCoverageTest {
         assertEquals(View.VISIBLE, root.findViewById(R.id.result_disclaimer).getVisibility());
         assertEquals(context.getString(R.string.result_caution), text(root, R.id.result_caution));
         assertEquals(context.getString(R.string.disclaimer), text(root, R.id.result_disclaimer));
+    }
+
+    private void assertPrecautionaryText(ViewGroup root, AnalysisReport report) {
+        assertEquals(AnalysisReport.Status.MAY_CONTAIN, report.overall());
+        assertEquals(context.getString(R.string.status_may_contain_title),
+                text(root, R.id.verdict_title));
+        assertEquals(context.getString(R.string.result_may_contain), text(root, R.id.allergen_status));
+        AllergenResult result = report.results().get(0);
+        assertEquals(Finding.Source.MAY_CONTAIN_STATEMENT, result.findings().get(0).source());
+        assertEquals(new AnalysisMessage(context.getResources()).evidence(result),
+                text(root, R.id.allergen_evidence));
+    }
+
+    private static void assertResultTone(ViewGroup root, int background, int foreground) {
+        assertEquals(background, color(root));
+        assertEquals(foreground, ((TextView) root.findViewById(R.id.verdict_title)).getCurrentTextColor());
+        assertEquals(foreground, ((TextView) root.findViewById(R.id.verdict_message)).getCurrentTextColor());
+        TextView badge = root.findViewById(R.id.allergen_status);
+        assertEquals(background, badge.getBackgroundTintList().getDefaultColor());
+        assertEquals(foreground, badge.getCurrentTextColor());
     }
 
     private AnalysisReport analyse(String label, String... ids) {

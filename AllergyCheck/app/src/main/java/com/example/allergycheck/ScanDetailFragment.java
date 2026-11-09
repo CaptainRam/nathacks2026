@@ -58,7 +58,12 @@ public class ScanDetailFragment extends Fragment {
         resultView = new AnalysisResultView((ViewGroup) resultRoot);
         view.findViewById(R.id.detail_back_button).setOnClickListener(button ->
                 requireActivity().getOnBackPressedDispatcher().onBackPressed());
+    }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Rebind saved results after returning from Settings with new display preferences.
         long id = requireArguments().getLong(ARG_ID);
         history.detail(id, detail -> {
             if (!isAdded() || getView() == null) {

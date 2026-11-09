@@ -138,6 +138,11 @@ final class AnalysisResultView {
                         attr(com.google.android.material.R.attr.colorOnErrorContainer),
                         R.drawable.ic_warning);
             case MAY_CONTAIN:
+                if (AllergenPreferences.mayContainRedWarning(root.getContext())) {
+                    return new Tone(attr(com.google.android.material.R.attr.colorErrorContainer),
+                            attr(com.google.android.material.R.attr.colorOnErrorContainer),
+                            R.drawable.ic_warning);
+                }
             case POSSIBLE:
                 return new Tone(color(R.color.status_warning_container),
                         color(R.color.status_on_warning_container), R.drawable.ic_warning);
