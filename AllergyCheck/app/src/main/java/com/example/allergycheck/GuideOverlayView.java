@@ -176,6 +176,10 @@ public final class GuideOverlayView extends View {
 
         framePaint.setStyle(Paint.Style.STROKE);
         framePaint.setStrokeWidth(FRAME_STROKE_DP * density);
+        // Installed here and not left to the first setVerdict call: the initial verdict is already
+        // SEARCHING, so setVerdict early-returns on it and the dashed outline that marks "still
+        // looking" would never appear until the verdict had changed and come back.
+        framePaint.setPathEffect(searchingDash);
 
         bracketPaint.setStyle(Paint.Style.STROKE);
         bracketPaint.setStrokeWidth(BRACKET_STROKE_DP * density);
@@ -234,21 +238,33 @@ public final class GuideOverlayView extends View {
     @MainThread
     public void setLockTarget(@Nullable RectF textBounds) {
         if (textBounds == null || textBounds.isEmpty() || getWidth() == 0) {
-            if (hasLock) {
-                hasLock = false;
-                targetWindow.set(defaultWindow);
-                postInvalidateOnAnimation();
-            }
+            releaseLock();
             return;
         }
         float padding = LOCK_PADDING_DP * density;
         scratch.set(textBounds.left - padding, textBounds.top - padding,
                 textBounds.right + padding, textBounds.bottom + padding);
         expandToMinimum(scratch);
-        clampToView(scratch);
+        if (!clampToView(scratch)) {
+            // The text mapped wholly outside the displayed preview, which a cropping scale type
+            // makes routine: the analysis stream is 4:3 and FILL_CENTER shows a slice of it, so text
+            // the camera can see may sit well off-screen. There is nothing to lock onto, so fall
+            // back to the centred default rather than tracking a rect the user cannot see.
+            releaseLock();
+            return;
+        }
         hasLock = true;
         targetWindow.set(scratch);
         postInvalidateOnAnimation();
+    }
+
+    /** Returns the window to the centred default, if it is not already there. */
+    private void releaseLock() {
+        if (hasLock) {
+            hasLock = false;
+            targetWindow.set(defaultWindow);
+            postInvalidateOnAnimation();
+        }
     }
 
     /** Sets the recognised lines to highlight, in view coordinates. The list is copied. */
@@ -284,7 +300,14 @@ public final class GuideOverlayView extends View {
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         if (currentWindow.isEmpty()) {
-            return;
+            // Re-seeded rather than returned on, so an empty window can never become permanent: a
+            // bare return here would skip advance(), and the lerp that is the only thing able to
+            // move the window back out of empty would never run again.
+            currentWindow.set(targetWindow);
+            if (currentWindow.isEmpty()) {
+                // Genuinely nothing to draw yet — onSizeChanged has not run.
+                return;
+            }
         }
         boolean animating = advance();
 
@@ -472,12 +495,24 @@ public final class GuideOverlayView extends View {
         }
     }
 
-    private void clampToView(@NonNull RectF rect) {
+    /**
+     * Clamps {@code rect} to the view, returning whether anything of it survived.
+     *
+     * <p>The return value is the point. Clamping each edge against its own bound is only valid for a
+     * rect that overlaps the view at all; for one lying entirely off it the two bounds cross and the
+     * result is <em>inverted</em> — {@code left > right} or {@code top > bottom}. An inverted rect is
+     * {@link RectF#isEmpty()}, and an empty {@code currentWindow} used to make {@link #onDraw} return
+     * before it could lerp back out, latching the whole overlay blank for the rest of the screen's
+     * life. Rejecting it here is the first of the two guards; re-seeding in {@code onDraw} is the
+     * second.
+     */
+    private boolean clampToView(@NonNull RectF rect) {
         float margin = LOCK_PADDING_DP * density;
         rect.left = Math.max(margin, rect.left);
         rect.top = Math.max(margin, rect.top);
         rect.right = Math.min(getWidth() - margin, rect.right);
         rect.bottom = Math.min(getHeight() - margin, rect.bottom);
+        return rect.left < rect.right && rect.top < rect.bottom;
     }
 
     @ColorInt

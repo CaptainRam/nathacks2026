@@ -1,11 +1,14 @@
 package com.example.allergycheck;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.Size;
 import android.view.Display;
@@ -31,6 +34,7 @@ import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.core.resolutionselector.ResolutionStrategy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -39,10 +43,14 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.allergycheck.ocr.LiveLabelReader;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -92,8 +100,7 @@ public class CameraCaptureActivity extends AppCompatActivity {
                 if (granted) {
                     startCamera();
                 } else {
-                    setResult(RESULT_CANCELED);
-                    finish();
+                    explainPermissionRefusal();
                 }
             });
 
@@ -117,7 +124,7 @@ public class CameraCaptureActivity extends AppCompatActivity {
                 (ImageView) findViewById(R.id.capture_status_icon),
                 (MaterialTextView) findViewById(R.id.capture_status_text), captureButton,
                 this::capturePhoto);
-        labelReader = new LiveLabelReader(feedback, viewGeometry);
+        labelReader = new LiveLabelReader(feedback, viewGeometry, analysisExecutor);
         bindAutoCaptureToggle(autoButton);
 
         captureButton.setOnClickListener(view -> capturePhoto());
@@ -132,6 +139,63 @@ public class CameraCaptureActivity extends AppCompatActivity {
         } else {
             permissionLauncher.launch(Manifest.permission.CAMERA);
         }
+    }
+
+    /**
+     * Explains a refused CAMERA permission instead of closing on the spot.
+     *
+     * <p>Worth the dialog because of what this screen replaced. The old flow used
+     * {@code ActivityResultContracts.TakePicture}, which needs no permission of our own at all, so
+     * the in-app preview introduced a refusal path that had never existed. Finishing silently made
+     * it indistinguishable from a crash: the user taps the camera button, the screen flashes, and
+     * they are back where they started with nothing said. After a permanent denial that repeats on
+     * every tap, with no way to discover the cause, because Android stops showing the system prompt
+     * entirely and the launch returns denied immediately.
+     *
+     * <p>Two cases, told apart by {@code shouldShowRequestPermissionRationale}: a one-off denial can
+     * simply be asked again, while a permanent one can only be undone in Settings, so that is where
+     * the button goes. Either way the dismissal still returns {@code RESULT_CANCELED} and the caller
+     * is unchanged — the user keeps the gallery picker, which needs no camera permission.
+     */
+    private void explainPermissionRefusal() {
+        boolean canAskAgain =
+                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.camera_permission_title)
+                .setMessage(canAskAgain
+                        ? R.string.camera_permission_message
+                        : R.string.camera_permission_message_blocked)
+                .setNegativeButton(R.string.cancel, (dialog, which) -> cancelAndFinish())
+                // Dismissing by back gesture or outside tap must leave by the same door, or the
+                // screen sits on a dead black preview with no way forward.
+                .setOnCancelListener(dialog -> cancelAndFinish());
+        if (canAskAgain) {
+            builder.setPositiveButton(R.string.camera_permission_retry,
+                    (dialog, which) -> permissionLauncher.launch(Manifest.permission.CAMERA));
+        } else {
+            builder.setPositiveButton(R.string.camera_permission_settings, (dialog, which) -> {
+                openAppSettings();
+                cancelAndFinish();
+            });
+        }
+        builder.show();
+    }
+
+    private void openAppSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", getPackageName(), null));
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException exception) {
+            // No settings activity to answer the intent. Nothing left to offer, and the dialog has
+            // already said what is wrong, so leaving quietly beats crashing.
+            Log.w("CameraCapture", "No app-details settings screen available", exception);
+        }
+    }
+
+    private void cancelAndFinish() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 
     /**
@@ -236,6 +300,13 @@ public class CameraCaptureActivity extends AppCompatActivity {
      * <p>The button follows {@code getTorchState} rather than its own click, so it stays truthful if
      * the torch is turned off by anything other than a tap — the camera being released and rebound
      * across a stop/start, or the system shutting it down when the device overheats.
+     *
+     * <p>That alone is not enough, though, which is why the click path also waits on its own future.
+     * A rejected {@code enableTorch} never changes the torch state, so the observer never fires, and
+     * a {@link MaterialButton} flips its own {@code checked} on the tap before the listener even
+     * runs — leaving the button filled, and announcing a light that is off. The failure is not
+     * theoretical: the control is rejected while the camera is closing, and on an overheating device
+     * it is rejected for as long as the thermal throttle lasts.
      */
     private void bindTorch(@NonNull Camera camera) {
         if (!camera.getCameraInfo().hasFlashUnit()) {
@@ -246,16 +317,47 @@ public class CameraCaptureActivity extends AppCompatActivity {
         }
         torchButton.setVisibility(View.VISIBLE);
         camera.getCameraControl().enableTorch(false);
-        camera.getCameraInfo().getTorchState().observe(this, state -> {
-            boolean on = state != null && state == TorchState.ON;
-            if (torchButton.isChecked() != on) {
-                torchButton.setChecked(on);
+        camera.getCameraInfo().getTorchState().observe(this,
+                state -> describeTorch(state != null && state == TorchState.ON));
+        torchButton.setOnClickListener(view -> requestTorch(camera, torchButton.isChecked()));
+    }
+
+    /** Puts the torch button in the state {@code on}, both visibly and for a screen reader. */
+    private void describeTorch(boolean on) {
+        if (torchButton.isChecked() != on) {
+            torchButton.setChecked(on);
+        }
+        torchButton.setContentDescription(getString(
+                on ? R.string.camera_flashlight_on : R.string.camera_flashlight_off));
+    }
+
+    /** Asks for the torch, putting the button back where it was if the camera refuses. */
+    private void requestTorch(@NonNull Camera camera, boolean on) {
+        ListenableFuture<Void> request = camera.getCameraControl().enableTorch(on);
+        request.addListener(() -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
             }
-            torchButton.setContentDescription(getString(
-                    on ? R.string.camera_flashlight_on : R.string.camera_flashlight_off));
-        });
-        torchButton.setOnClickListener(view ->
-                camera.getCameraControl().enableTorch(torchButton.isChecked()));
+            try {
+                request.get();
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                revertTorch(camera, exception);
+            } catch (ExecutionException | CancellationException exception) {
+                revertTorch(camera, exception);
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void revertTorch(@NonNull Camera camera, @NonNull Throwable cause) {
+        Log.w("CameraCapture", "The camera refused the torch request", cause);
+        // Re-read the real state rather than inverting the tap: between the request and its failure
+        // the torch may have been changed by something else entirely.
+        Integer state = camera.getCameraInfo().getTorchState().getValue();
+        describeTorch(state != null && state == TorchState.ON);
+        Snackbar.make(findViewById(R.id.camera_root), R.string.camera_flashlight_unavailable,
+                Snackbar.LENGTH_SHORT).show();
+        torchButton.announceForAccessibility(getString(R.string.camera_flashlight_unavailable));
     }
 
     private ImageAnalysis buildImageAnalysis() {

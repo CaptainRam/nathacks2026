@@ -19,6 +19,10 @@
     <!-- Auto-capture is counting down. Shown so the shot is never a surprise and there is still a
          moment to pull away. -->
     <string name="camera_state_capturing">Holding steady — taking the photo</string>
+    <!-- The framing is right but the text is coming back with words broken up, so auto-capture is
+         withholding the shot. Phrased as the action that fixes it. The button stays live throughout:
+         this is the app declining to shoot on its own, never refusing the user a photo. -->
+    <string name="camera_state_unclear">Hold steady — the text is not reading clearly</string>
 
     <!-- Screen title and standing hint, in the same voice as the home screen's heading pair. -->
     <string name="camera_title">Scan ingredient list</string>
@@ -35,6 +39,21 @@
     <string name="camera_flashlight_hint">Light up the label</string>
     <string name="camera_flashlight_on">Flashlight on</string>
     <string name="camera_flashlight_off">Flashlight off</string>
+    <!-- The camera refused the torch request. Says what happened and nothing more: the common cause
+         is a thermal throttle the user can do nothing about, and it clears by itself. -->
+    <string name="camera_flashlight_unavailable">The camera could not turn the flashlight on</string>
+
+    <!-- Shown when the CAMERA permission is refused, rather than closing the screen in silence.
+         Both messages name the alternative, because the gallery picker needs no permission at all
+         and a user who does not want to grant one still has a working way to scan a label. -->
+    <string name="camera_permission_title">Camera access needed</string>
+    <string name="camera_permission_message">AllergyCheck needs the camera to scan a label. You can
+        also pick a photo you have already taken instead.</string>
+    <string name="camera_permission_message_blocked">Camera access is turned off for AllergyCheck.
+        Turn it on in Settings to scan a label, or pick a photo you have already taken
+        instead.</string>
+    <string name="camera_permission_retry">Allow camera</string>
+    <string name="camera_permission_settings">Open settings</string>
 
     <!-- Auto-capture toggle in the capture screen's top bar. -->
     <string name="camera_auto_capture">Auto-capture</string>

@@ -5,7 +5,6 @@ import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -22,6 +21,7 @@ import com.example.allergycheck.ocr.CaptureGate;
 import com.example.allergycheck.ocr.FrameReadability;
 import com.example.allergycheck.ocr.LiveLabelReader;
 import com.example.allergycheck.ocr.VerdictStabilizer;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.textview.MaterialTextView;
 
 import java.util.List;
@@ -67,9 +67,21 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
     private final Runnable refresh = new Runnable() {
         @Override
         public void run() {
+            if (frozen) {
+                return;
+            }
             long now = SystemClock.uptimeMillis();
-            apply(stabilizer.refresh(now), now);
-            handler.postDelayed(this, REFRESH_INTERVAL_MILLIS);
+            apply(stabilizer.refresh(now), now, false);
+            // Both guards are needed. The outer one catches a tick already queued when the screen
+            // froze; this one catches the re-entrant case, which is the one that actually bit:
+            // apply() can run the capture request, which freezes this feedback from inside this very
+            // run(), and freeze()'s removeCallbacks cannot cancel a runnable that is mid-execution.
+            // Re-arming regardless left the watchdog ticking through the capture, so ~1.2 s into
+            // writing the JPEG the stabiliser went stale and the screen reset itself to "point at
+            // the ingredient list" — losing the frozen framing the shot was composed on.
+            if (!frozen) {
+                handler.postDelayed(this, REFRESH_INTERVAL_MILLIS);
+            }
         }
     };
 
@@ -77,7 +89,17 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
     private FrameReadability.Verdict shown;
     private boolean shownEnabled;
     private boolean shownArmed;
+    private boolean shownHeld;
     private boolean frozen;
+
+    /**
+     * Whether the last analysed frame's list read cleanly.
+     *
+     * <p>Held here rather than passed to {@link #apply} by every caller, because the watchdog has no
+     * frame of its own and must reuse the last one's answer; re-deriving it would mean inventing
+     * evidence on a tick that carries none.
+     */
+    private boolean cleanRead = true;
 
     CaptureFeedback(@NonNull GuideOverlayView overlay, @NonNull View chip,
             @NonNull ImageView chipIcon, @NonNull MaterialTextView chipText, @NonNull View action,
@@ -88,14 +110,14 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
         this.chipText = chipText;
         this.action = action;
         this.captureRequest = captureRequest;
-        apply(FrameReadability.Verdict.SEARCHING, SystemClock.uptimeMillis());
+        apply(FrameReadability.Verdict.SEARCHING, SystemClock.uptimeMillis(), false);
     }
 
     /** Turns auto-capture on or off and reflects it immediately, without waiting for a frame. */
     @MainThread
     void setAutoCaptureEnabled(boolean enabled) {
         gate.setAutoCaptureEnabled(enabled);
-        apply(stabilizer.displayed(), SystemClock.uptimeMillis());
+        apply(stabilizer.displayed(), SystemClock.uptimeMillis(), false);
     }
 
     /** Begins the stale-frame watchdog. Call once the camera is bound. */
@@ -122,7 +144,7 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
 
     @Override
     @MainThread
-    public void onAssessment(@NonNull FrameReadability.Assessment assessment,
+    public void onAssessment(@NonNull FrameReadability.Assessment assessment, boolean cleanRead,
             @Nullable RectF textBounds, @NonNull List<RectF> lineBounds) {
         if (frozen) {
             return;
@@ -130,27 +152,40 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
         long now = SystemClock.uptimeMillis();
         overlay.setLockTarget(textBounds);
         overlay.setDetectedLines(lineBounds);
-        apply(stabilizer.accept(assessment.verdict(), now), now);
+        this.cleanRead = cleanRead;
+        apply(stabilizer.accept(assessment.verdict(), now), now, true);
     }
 
-    /** Pushes one displayed verdict out to the views, doing nothing if nothing has changed. */
+    /**
+     * Pushes one displayed verdict out to the views, doing nothing if nothing has changed.
+     *
+     * @param fromFrame whether a frame has just been analysed. Only then may the gate advance its
+     *                  auto-capture dwell: see {@code CaptureGate.refresh}. Passing {@code true}
+     *                  from the watchdog would let a stalled recogniser fire the shutter off a
+     *                  verdict no frame had renewed in over a second.
+     */
     @MainThread
-    private void apply(@NonNull FrameReadability.Verdict verdict, long nowMillis) {
-        CaptureGate.Decision decision = gate.update(verdict, nowMillis);
+    private void apply(@NonNull FrameReadability.Verdict verdict, long nowMillis,
+            boolean fromFrame) {
+        CaptureGate.Decision decision = fromFrame
+                ? gate.update(verdict, cleanRead, nowMillis)
+                : gate.refresh(verdict, nowMillis);
 
-        // The whole decision is compared, not just the verdict: the gate can give up, or an
-        // auto-capture countdown can start, while the verdict itself is unchanged, and an
-        // early return on the verdict alone would swallow both.
+        // The whole decision is compared, not just the verdict: the gate can give up, an
+        // auto-capture countdown can start, or a shot can be withheld for a bad read, while the
+        // verdict itself is unchanged, and an early return on the verdict alone would swallow them.
         boolean changed = shown != verdict
                 || shownEnabled != decision.captureEnabled()
-                || shownArmed != decision.autoCaptureArmed();
+                || shownArmed != decision.autoCaptureArmed()
+                || shownHeld != decision.autoCaptureHeld();
         if (changed) {
             shown = verdict;
             shownEnabled = decision.captureEnabled();
             shownArmed = decision.autoCaptureArmed();
+            shownHeld = decision.autoCaptureHeld();
 
             overlay.setVerdict(verdict);
-            bindChip(verdict, decision.autoCaptureArmed());
+            bindChip(verdict, decision.autoCaptureArmed(), decision.autoCaptureHeld());
 
             action.setEnabled(decision.captureEnabled());
             action.setContentDescription(action.getResources().getString(
@@ -171,17 +206,28 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
      * <p>While auto-capture is counting down the chip says so rather than repeating the READY copy,
      * keeping the READY tone: the shot is imminent and good, and the user gets a moment to pull away
      * instead of being surprised by a shutter.
+     *
+     * <p>When the shot is being withheld for a bad read it says that instead — also in the READY
+     * tone, since the framing is right and the only thing left is to hold still. Saying nothing
+     * would leave the user waiting on a shutter that is not coming, which is exactly the confusion
+     * the whole chip exists to prevent.
      */
     @MainThread
-    private void bindChip(@NonNull FrameReadability.Verdict verdict, boolean autoCaptureArmed) {
+    private void bindChip(@NonNull FrameReadability.Verdict verdict, boolean autoCaptureArmed,
+            boolean autoCaptureHeld) {
         Tone tone = toneFor(verdict);
         chip.setBackgroundTintList(ColorStateList.valueOf(tone.container));
         chipIcon.setImageResource(tone.icon);
         chipIcon.setImageTintList(ColorStateList.valueOf(tone.onContainer));
         chipText.setTextColor(tone.onContainer);
 
-        String message = chipText.getResources().getString(
-                autoCaptureArmed ? R.string.camera_state_capturing : messageFor(verdict));
+        int copy = messageFor(verdict);
+        if (autoCaptureArmed) {
+            copy = R.string.camera_state_capturing;
+        } else if (autoCaptureHeld) {
+            copy = R.string.camera_state_unclear;
+        }
+        String message = chipText.getResources().getString(copy);
         chipText.setText(message);
         // Announced rather than declared as a live region: the stabiliser already guarantees a
         // minimum dwell per message, so this fires at a readable pace, and doing it explicitly
@@ -225,11 +271,18 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
         }
     }
 
+    /**
+     * One theme colour attribute, resolved the way the rest of the app resolves them.
+     *
+     * <p>{@code MaterialColors.getColor} rather than {@code resolveAttribute} plus
+     * {@code TypedValue.data}: {@code data} is only a colour when the attribute resolved to a
+     * literal one. If it resolves to a {@code ColorStateList} — which a theme overlay or an OEM
+     * Material variant is free to do — {@code data} is an index into the string pool, read as an
+     * arbitrary ARGB value, and the chip is tinted with garbage and no error anywhere.
+     */
     @ColorInt
     private int attr(@AttrRes int attribute) {
-        TypedValue value = new TypedValue();
-        chip.getContext().getTheme().resolveAttribute(attribute, value, true);
-        return value.data;
+        return MaterialColors.getColor(chip, attribute);
     }
 
     @ColorInt

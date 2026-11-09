@@ -4,6 +4,8 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.media.Image;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -21,6 +23,8 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -51,12 +55,16 @@ public final class LiveLabelReader implements ImageAnalysis.Analyzer {
 
         /**
          * @param assessment the verdict for this frame
+         * @param cleanRead  whether the list this frame yielded shows no sign of a misread; see
+         *                   {@link ReadQuality}. Deliberately separate from the verdict rather than
+         *                   folded into it: it is capture <em>policy</em> input, not a readability
+         *                   judgement, and it must never gate the capture button
          * @param textBounds bounds of the text the verdict is about, in view coordinates, or
          *                   {@code null} when no text was found
          * @param lineBounds every recognised line, in view coordinates, for drawing
          */
         @MainThread
-        void onAssessment(@NonNull FrameReadability.Assessment assessment,
+        void onAssessment(@NonNull FrameReadability.Assessment assessment, boolean cleanRead,
                 @Nullable RectF textBounds, @NonNull List<RectF> lineBounds);
     }
 
@@ -99,14 +107,22 @@ public final class LiveLabelReader implements ImageAnalysis.Analyzer {
     private final AtomicBoolean busy = new AtomicBoolean(false);
     private final Assessor assessor;
     private final ViewGeometry geometry;
-
+    private final Executor worker;
+    private final Handler main = new Handler(Looper.getMainLooper());
 
     private volatile boolean closed;
     private volatile long lastStartNanos;
 
-    public LiveLabelReader(@NonNull Assessor assessor, @NonNull ViewGeometry geometry) {
+    /**
+     * @param worker the same executor CameraX runs {@link #analyze} on. Recognition results land
+     *               here first so the text parsing happens off the main thread; only the part that
+     *               genuinely needs view state is posted on.
+     */
+    public LiveLabelReader(@NonNull Assessor assessor, @NonNull ViewGeometry geometry,
+            @NonNull Executor worker) {
         this.assessor = assessor;
         this.geometry = geometry;
+        this.worker = worker;
     }
 
     @OptIn(markerClass = ExperimentalGetImage.class)
@@ -137,21 +153,59 @@ public final class LiveLabelReader implements ImageAnalysis.Analyzer {
         }
 
         int rotation = imageProxy.getImageInfo().getRotationDegrees();
+        // The analysis executor is owned by the capture screen and shut down in its onDestroy, so a
+        // recognition finishing on that boundary can have its dispatch refused. Swallowed here, and
+        // only here, because the throw would otherwise surface on an ML Kit worker with nothing
+        // above it to catch — and because the one thing that still matters for a frame this late is
+        // that its buffer goes back to the pool.
+        Executor dispatch = command -> {
+            try {
+                worker.execute(command);
+            } catch (RejectedExecutionException rejected) {
+                imageProxy.close();
+                busy.set(false);
+            }
+        };
         try {
             // One addOnCompleteListener, not success + failure listeners: it is the only arrangement
             // where the proxy is closed on exactly one path no matter the outcome. The failure case
             // is not hypothetical — close() cancels any task still pending, so teardown routes
             // through here too, which is the same trap OcrPipeline documents.
+            //
+            // Dispatched to the analysis executor rather than the default main looper. What follows
+            // recognition is not free: signalFor runs IngredientExtractor over the whole OCR text,
+            // which is five regex passes plus a paren-depth scan, and it happens four times a second
+            // while the overlay is animating at display rate. None of it needs the main thread, so
+            // it runs here and only the view-dependent remainder is posted on.
             recognizer.process(InputImage.fromMediaImage(image, rotation))
-                    .addOnCompleteListener(task -> {
+                    .addOnCompleteListener(dispatch, task -> {
+                        boolean handedOn = false;
                         try {
                             if (closed || !task.isSuccessful() || task.getResult() == null) {
                                 return;
                             }
-                            publish(MlKitLines.toResult(task.getResult()), imageProxy);
+                            OcrResult result = MlKitLines.toResult(task.getResult());
+                            LiveRead read = interpret(result);
+                            // The proxy has to stay open across the hop: the matrix is built from
+                            // its rotation and dimensions. Ownership moves to the posted task, which
+                            // closes it on every path of its own — and only once the post is known
+                            // to have been accepted, so a dead looper still falls through to the
+                            // finally below rather than stranding a buffer.
+                            handedOn = main.post(() -> {
+                                try {
+                                    if (!closed) {
+                                        publish(result, read, imageProxy);
+                                    }
+                                } finally {
+                                    imageProxy.close();
+                                    busy.set(false);
+                                }
+                            });
                         } finally {
-                            imageProxy.close();
-                            busy.set(false);
+                            if (!handedOn) {
+                                imageProxy.close();
+                                busy.set(false);
+                            }
                         }
                     });
         } catch (RuntimeException exception) {
@@ -175,10 +229,14 @@ public final class LiveLabelReader implements ImageAnalysis.Analyzer {
      * Maps the recognised lines into view coordinates and reports the verdict.
      *
      * <p>Runs on the main thread — which is where it has to be, since both pieces of view state it
-     * needs ({@code PreviewView}'s transform and the overlay's window) may only be read there.
+     * needs ({@code PreviewView}'s transform and the overlay's window) may only be read there. That
+     * is also the reason {@code signal} arrives precomputed rather than being derived here: it is by
+     * far the most expensive part of interpreting a frame and the only part that needs no view state
+     * at all, so it is done on the analysis thread before this is posted.
      */
     @MainThread
-    private void publish(@NonNull OcrResult result, @NonNull ImageProxy imageProxy) {
+    private void publish(@NonNull OcrResult result, @NonNull LiveRead read,
+            @NonNull ImageProxy imageProxy) {
         RectF window = geometry.judgeWindow();
         if (window == null) {
             return;
@@ -206,8 +264,21 @@ public final class LiveLabelReader implements ImageAnalysis.Analyzer {
         FrameReadability.Box windowBox = new FrameReadability.Box(
                 window.left, window.top, window.right, window.bottom);
         FrameReadability.Assessment assessment =
-                FrameReadability.evaluate(boxes, windowBox, signalFor(result));
-        assessor.onAssessment(assessment, toRectF(assessment.textBounds()), lineBounds);
+                FrameReadability.evaluate(boxes, windowBox, read.signal);
+        assessor.onAssessment(assessment, read.cleanRead, toRectF(assessment.textBounds()),
+                lineBounds);
+    }
+
+    /** What one frame's recognised text amounts to: how far it got, and how well it read. */
+    private static final class LiveRead {
+
+        final FrameReadability.TextSignal signal;
+        final boolean cleanRead;
+
+        LiveRead(FrameReadability.TextSignal signal, boolean cleanRead) {
+            this.signal = signal;
+            this.cleanRead = cleanRead;
+        }
     }
 
     /**
@@ -222,23 +293,31 @@ public final class LiveLabelReader implements ImageAnalysis.Analyzer {
      * <p>Requiring the heading is not over-strict: without one the post-capture extractor returns
      * nothing and the scan ends at {@code status_unreadable_title}. Going green on a headless panel
      * would promise a result the rest of the app cannot deliver.
+     *
+     * <p>The extraction is also what {@link ReadQuality} judges, which is why both answers come out
+     * of here together: {@code extract} is the expensive part of interpreting a frame and running it
+     * twice to ask two questions about the same list would double the cost of the live path.
      */
-    private static FrameReadability.TextSignal signalFor(@NonNull OcrResult result) {
+    private static LiveRead interpret(@NonNull OcrResult result) {
         if (result.isEmpty()) {
-            return FrameReadability.TextSignal.NONE;
+            return new LiveRead(FrameReadability.TextSignal.NONE, true);
         }
-        if (!IngredientExtractor.extract(result.fullText()).isEmpty()) {
-            return FrameReadability.TextSignal.LIST_PARSED;
+        List<String> extracted = IngredientExtractor.extract(result.fullText());
+        if (!extracted.isEmpty()) {
+            return new LiveRead(FrameReadability.TextSignal.LIST_PARSED,
+                    ReadQuality.looksClean(extracted));
         }
+        // No list yet, so there is no extraction to judge the quality of. Reported clean so the
+        // flag never reads as "this frame is garbled" on a frame that simply has no list in it.
         List<OcrLine> lines = result.lines();
         for (int index = 0; index < lines.size(); index++) {
             if (IngredientListFilter.startsWithAny(
                     IngredientListFilter.normalise(lines.get(index).text()),
                     IngredientListFilter.INGREDIENT_HEADINGS)) {
-                return FrameReadability.TextSignal.HEADING_VISIBLE;
+                return new LiveRead(FrameReadability.TextSignal.HEADING_VISIBLE, true);
             }
         }
-        return FrameReadability.TextSignal.TEXT_ONLY;
+        return new LiveRead(FrameReadability.TextSignal.TEXT_ONLY, true);
     }
 
     @Nullable
