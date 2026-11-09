@@ -247,9 +247,16 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (view, insets) -> {
             Insets systemBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars()
                     | WindowInsetsCompat.Type.displayCutout());
+            // The bottom inset is left to the BottomNavigationView, which pads itself for the
+            // navigation bar and draws its background behind it. Padding the root as well
+            // would double the gap and make the tab bar too tall.
             view.setPadding(systemBarInsets.left, systemBarInsets.top,
-                    systemBarInsets.right, systemBarInsets.bottom);
-            return insets;
+                    systemBarInsets.right, 0);
+            return new WindowInsetsCompat.Builder(insets)
+                    .setInsets(WindowInsetsCompat.Type.systemBars()
+                                    | WindowInsetsCompat.Type.displayCutout(),
+                            Insets.of(0, 0, 0, systemBarInsets.bottom))
+                    .build();
         });
 
         loadingOverlay = findViewById(R.id.loading_overlay);
