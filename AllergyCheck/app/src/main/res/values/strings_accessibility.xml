@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cancel_ingredient_check">Cancel ingredient check</string>
+    <string name="scan_in_progress">Ingredient check in progress</string>
+    <string name="ai_checks_completed">AI checks completed: %1$d of %2$d</string>
+    <string name="selected_allergens_action">%1$s. Selected allergens: %2$s. Change allergens</string>
+</resources>

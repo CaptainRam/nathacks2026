@@ -8,8 +8,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.view.View;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -19,6 +21,8 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenResult;
@@ -91,6 +95,7 @@ final class FoodCrossCheckController implements AutoCloseable {
     private boolean visible;
     private boolean closed;
     private boolean suspended;
+    private boolean pickerOpen;
     private PopupMenu photoMenu;
     private Runnable onPhotoChanged;
 
@@ -128,8 +133,11 @@ final class FoodCrossCheckController implements AutoCloseable {
         settings = panel.findViewById(R.id.front_crosscheck_settings);
         progress = panel.findViewById(R.id.front_crosscheck_progress);
         message = panel.findViewById(R.id.front_crosscheck_message);
-        androidx.activity.result.ActivityResultCallback<Uri> onPick =
-                uri -> { if (uri != null && labelPhoto != null) loadPhoto(uri); };
+        androidx.activity.result.ActivityResultCallback<Uri> onPick = uri -> {
+            pickerOpen = false;
+            if (uri != null && labelPhoto != null) loadPhoto(uri);
+            else render();
+        };
         androidx.activity.result.ActivityResultCallback<Boolean> onCapture =
                 success -> {
                     Uri captured = pendingCapture;
@@ -151,6 +159,8 @@ final class FoodCrossCheckController implements AutoCloseable {
             capture = activity.getActivityResultRegistry().register(key + "_capture",
                     new ActivityResultContracts.TakePicture(), onCapture);
         }
+        // Keep one native reading target as the photo is added, replaced, loaded or removed.
+        // The visual children remain touch targets; their actions belong to this stable card.
         add.setOnClickListener(this::showPhotoMenu);
         photoCard.setOnClickListener(this::showPhotoMenu);
         emptyPhoto.setOnClickListener(this::showPhotoMenu);
@@ -163,6 +173,7 @@ final class FoodCrossCheckController implements AutoCloseable {
             labelPhoto = saved.getString("label");
             photo = parse(saved.getString("photo"));
             pendingCapture = parse(saved.getString("capture"));
+            pickerOpen = saved.getBoolean("picker_open");
             estimate = saved.getSerializable("estimate", FoodTypeEstimate.class);
             estimateAllergens = saved.getStringArrayList("allergens");
             estimateModel = saved.getString("model");
@@ -188,6 +199,10 @@ final class FoodCrossCheckController implements AutoCloseable {
     }
 
     boolean isPhotoLoading() { return loading; }
+
+    boolean isPhotoInteractionOpen() {
+        return photoMenu != null || pickerOpen || pendingCapture != null;
+    }
 
     /** Shared by the plus slot and the front-photo edit badge, on either screen. */
     void showPhotoMenu(View anchor) {
@@ -263,9 +278,11 @@ final class FoodCrossCheckController implements AutoCloseable {
 
     private void choosePhoto() {
         try {
+            pickerOpen = true;
             picker.launch(new PickVisualMediaRequest.Builder()
                     .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
-        } catch (ActivityNotFoundException exception) {
+        } catch (ActivityNotFoundException | SecurityException | IllegalArgumentException exception) {
+            pickerOpen = false;
             status = R.string.crosscheck_photo_error;
             render();
         }
@@ -450,8 +467,8 @@ final class FoodCrossCheckController implements AutoCloseable {
                     estimateAllergens = ids;
                     estimateModel = model;
                     status = R.string.crosscheck_ready;
+                    // The polite status live region announces this update once without moving focus.
                     render();
-                    message.announceForAccessibility(message.getText());
                 });
             } catch (Exception | LinkageError failure) {
                 if (failure instanceof InterruptedException) Thread.currentThread().interrupt();
@@ -484,9 +501,31 @@ final class FoodCrossCheckController implements AutoCloseable {
                 || status == R.string.crosscheck_photo_error)
                 ? View.VISIBLE : View.GONE);
         boolean busy = loading || current != null;
-        photoCard.setEnabled(!closed && !loading && pendingCapture == null);
-        photoCard.setContentDescription(activity.getString(hasPhoto
-                ? R.string.crosscheck_front_photo_label : R.string.crosscheck_add_photo));
+        boolean editable = !closed && !loading && pendingCapture == null && labelPhoto != null;
+        photoCard.setEnabled(!closed && pendingCapture == null && labelPhoto != null);
+        photoCard.setClickable(editable);
+        photoCard.setContentDescription(activity.getString(R.string.crosscheck_photo_accessibility_label));
+        photoCard.setStateDescription(activity.getString(loading
+                ? R.string.crosscheck_photo_loading
+                : pendingCapture != null ? R.string.crosscheck_photo_camera_open
+                : hasPhoto ? R.string.crosscheck_photo_added : R.string.crosscheck_photo_empty));
+        ViewCompat.removeAccessibilityAction(photoCard, AccessibilityNodeInfo.ACTION_CLICK);
+        if (editable) {
+            ViewCompat.replaceAccessibilityAction(photoCard,
+                    AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                    activity.getString(hasPhoto ? R.string.crosscheck_change_photo
+                            : R.string.crosscheck_add_photo), null);
+        }
+        if (!closed && (hasPhoto || loading)) {
+            ViewCompat.replaceAccessibilityAction(photoCard,
+                    AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_DISMISS,
+                    activity.getString(R.string.crosscheck_remove_photo), (view, arguments) -> {
+                        removePhoto();
+                        return true;
+                    });
+        } else {
+            ViewCompat.removeAccessibilityAction(photoCard, AccessibilityNodeInfo.ACTION_DISMISS);
+        }
         emptyPhoto.setEnabled(!closed && !loading && pendingCapture == null);
         add.setEnabled(!closed && !loading && pendingCapture == null);
         preview.setVisibility(hasPhoto ? View.VISIBLE : View.GONE);
@@ -497,32 +536,43 @@ final class FoodCrossCheckController implements AutoCloseable {
         progress.setVisibility(busy ? View.VISIBLE : View.GONE);
         run.setVisibility(photo == null ? View.GONE : View.VISIBLE);
         run.setEnabled(!closed && !suspended && !busy && photo != null && usableReport() && configured());
+        run.setStateDescription(current != null
+                ? activity.getString(R.string.crosscheck_running) : null);
         run.setText(status == R.string.crosscheck_error || status == R.string.crosscheck_unknown_food
                 ? R.string.crosscheck_retry : R.string.crosscheck_run);
         settings.setVisibility(!configured() ? View.VISIBLE : View.GONE);
-        if (loading) message.setText(R.string.crosscheck_photo_loading);
-        else if (status == R.string.crosscheck_photo_error) message.setText(status);
-        else if (!configured()) message.setText(R.string.crosscheck_config_missing);
-        else if (report == null) message.setText(R.string.crosscheck_awaiting_analysis);
-        else if (report.results().isEmpty()) message.setText(R.string.crosscheck_no_allergens);
-        else if (!usableReport()) message.setText(R.string.crosscheck_label_unavailable);
-        else if (photo == null) message.setText(R.string.crosscheck_waiting_photo);
+        if (loading) setMessage(R.string.crosscheck_photo_loading);
+        else if (status == R.string.crosscheck_photo_error) setMessage(status);
+        else if (!configured()) setMessage(R.string.crosscheck_config_missing);
+        else if (report == null) setMessage(R.string.crosscheck_awaiting_analysis);
+        else if (report.results().isEmpty()) setMessage(R.string.crosscheck_no_allergens);
+        else if (!usableReport()) setMessage(R.string.crosscheck_label_unavailable);
+        else if (photo == null) setMessage(R.string.crosscheck_waiting_photo);
         else if (estimate != null) showAdvice();
-        else message.setText(status);
+        else setMessage(status);
+    }
+
+    private void setMessage(int text) {
+        setMessage(activity.getText(text));
+    }
+
+    private void setMessage(CharSequence text) {
+        // Rebinding a photo or returning from Settings must not repeat the same live status.
+        if (!TextUtils.equals(message.getText(), text)) message.setText(text);
     }
 
     private void showAdvice() {
         FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report, estimate);
         List<Allergen> missing = advice.missingAllergens();
         if (missing.isEmpty()) {
-            message.setText(activity.getString(R.string.crosscheck_no_missing, advice.foodType()));
+            setMessage(activity.getString(R.string.crosscheck_no_missing, advice.foodType()));
         } else {
             StringBuilder names = new StringBuilder();
             for (Allergen allergen : missing) {
                 if (names.length() > 0) names.append(", ");
                 names.append(allergen.label());
             }
-            message.setText(activity.getString(R.string.crosscheck_missing_allergens,
+            setMessage(activity.getString(R.string.crosscheck_missing_allergens,
                     advice.foodType(), names.toString()));
         }
     }
@@ -533,6 +583,7 @@ final class FoodCrossCheckController implements AutoCloseable {
         saved.putString("photo", photo == null ? null : photo.toString());
         saved.putString("pending", pendingPhoto == null ? null : pendingPhoto.toString());
         saved.putString("capture", pendingCapture == null ? null : pendingCapture.toString());
+        saved.putBoolean("picker_open", pickerOpen);
         saved.putSerializable("estimate", estimate);
         saved.putStringArrayList("allergens", estimateAllergens);
         saved.putString("model", estimateModel);

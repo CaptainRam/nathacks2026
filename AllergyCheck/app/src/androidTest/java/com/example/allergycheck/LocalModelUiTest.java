@@ -12,6 +12,7 @@ import android.view.inspector.WindowInspector;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -212,9 +213,9 @@ public class LocalModelUiTest {
             screen.onActivity(activity -> {
                 assertText(activity, R.id.model_availability, R.string.model_settings_installed);
                 assertText(activity, R.id.model_download_status, R.string.model_settings_ready);
-                assertFalse(activity.findViewById(R.id.model_download_button).isEnabled());
-                assertTrue(activity.findViewById(R.id.model_delete_button).isEnabled());
-                assertTrue(activity.findViewById(R.id.model_delete_button).performClick());
+                assertTrue(activity.findViewById(R.id.model_download_button).isEnabled());
+                assertText(activity, R.id.model_download_button, R.string.model_settings_delete);
+                assertTrue(activity.findViewById(R.id.model_download_button).performClick());
             });
             assertTrue("Opening confirmation must not delete a model", model.isFile());
             screen.onActivity(activity -> {
@@ -225,7 +226,7 @@ public class LocalModelUiTest {
             assertTrue("Cancel must keep the model", model.isFile());
 
             screen.onActivity(activity -> assertTrue(
-                    activity.findViewById(R.id.model_delete_button).performClick()));
+                    activity.findViewById(R.id.model_download_button).performClick()));
             screen.onActivity(activity -> {
                 View dialog = deletionDialogRoot();
                 assertNotNull(dialog);
@@ -234,6 +235,86 @@ public class LocalModelUiTest {
             assertFalse(model.exists());
             screen.onActivity(this::assertMissingSettingsState);
         }
+    }
+
+    @Test
+    public void installedModelSignalsLocalAnalysisChangeAfterRotationAndSave() throws Exception {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(settingsIntent())) {
+            writeManualModelFixture();
+            refreshManager();
+            assertTrue(LocalModelManager.installedModel(context) != null);
+            scenario.recreate();
+            scenario.onActivity(activity -> assertTrue(
+                    activity.findViewById(R.id.save_preferences_button).performClick()));
+            assertLocalModelChangedResult(scenario.getResult());
+        }
+    }
+
+    @Test
+    public void deletingModelSignalsLocalAnalysisChangeWhenLeavingWithBack() throws Exception {
+        File model = writeManualModelFixture();
+        refreshManager();
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(settingsIntent())) {
+            scenario.onActivity(activity -> assertTrue(
+                    activity.findViewById(R.id.model_download_button).performClick()));
+            scenario.onActivity(activity -> {
+                View dialog = deletionDialogRoot();
+                assertNotNull(dialog);
+                assertTrue(dialog.findViewById(android.R.id.button1).performClick());
+            });
+            assertFalse(model.exists());
+            scenario.onActivity(activity -> activity.getOnBackPressedDispatcher().onBackPressed());
+            assertLocalModelChangedResult(scenario.getResult());
+        }
+    }
+
+    @Test
+    public void unchangedLocalModelAvailabilityDoesNotSignalConfigurationChanges() {
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(settingsIntent())) {
+            refreshManager();
+            refreshManager();
+            scenario.onActivity(activity -> assertTrue(
+                    activity.findViewById(R.id.save_preferences_button).performClick()));
+            assertEquals(Activity.RESULT_CANCELED, scenario.getResult().getResultCode());
+        }
+    }
+
+    @Test
+    public void installingLocalModelDoesNotChangeMatchingConfiguration() throws Exception {
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.MATCHING);
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launchActivityForResult(settingsIntent())) {
+            writeManualModelFixture();
+            refreshManager();
+            scenario.onActivity(activity -> assertTrue(
+                    activity.findViewById(R.id.save_preferences_button).performClick()));
+            assertEquals(Activity.RESULT_CANCELED, scenario.getResult().getResultCode());
+        }
+    }
+
+    private Intent settingsIntent() {
+        return new Intent(context, SettingsActivity.class)
+                .putExtra(SettingsActivity.EXTRA_SHOW_MODEL, true);
+    }
+
+    private File writeManualModelFixture() throws IOException {
+        assertTrue(modelDirectory.isDirectory() || modelDirectory.mkdirs());
+        File model = new File(modelDirectory, ModelFiles.MODEL_FILE);
+        // Exercise the existing manual-model presence contract; never load this fixture for inference.
+        Files.write(model.toPath(), "UI presence fixture".getBytes(StandardCharsets.UTF_8));
+        return model;
+    }
+
+    private void assertLocalModelChangedResult(Instrumentation.ActivityResult result) {
+        assertEquals(Activity.RESULT_OK, result.getResultCode());
+        Intent data = result.getResultData();
+        assertNotNull(data);
+        assertTrue(data.getBooleanExtra(SettingsActivity.EXTRA_ANALYSIS_CONFIGURATION_CHANGED, false));
+        assertTrue(data.getBooleanExtra(SettingsActivity.EXTRA_AI_PROVIDER_CHANGED, false));
+        assertFalse(data.getBooleanExtra(SettingsActivity.EXTRA_ALLERGEN_SELECTION_CHANGED, true));
     }
 
     @Test
@@ -262,7 +343,7 @@ public class LocalModelUiTest {
         assertText(activity, R.id.model_availability, R.string.model_settings_missing);
         assertText(activity, R.id.model_download_status, R.string.model_settings_not_downloaded);
         assertTrue(activity.findViewById(R.id.model_download_button).isEnabled());
-        assertFalse(activity.findViewById(R.id.model_delete_button).isEnabled());
+        assertText(activity, R.id.model_download_button, R.string.model_settings_download);
     }
 
     private static void assertText(Activity activity, int viewId, int textId) {
@@ -358,6 +439,9 @@ public class LocalModelUiTest {
             TestActivity<T> screen = new TestActivity<>();
             Intent intent = new Intent(context, activityClass)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            if (activityClass.equals(SettingsActivity.class)) {
+                intent.putExtra(SettingsActivity.EXTRA_SHOW_MODEL, true);
+            }
             screen.activity = activityClass.cast(screen.instrumentation.startActivitySync(intent));
             assertNotNull(screen.activity);
             screen.instrumentation.waitForIdleSync();

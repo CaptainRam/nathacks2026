@@ -54,9 +54,12 @@ public class AllergenVocabularyCoverageTest {
                 {"A-31", "peanut free facility", "PEANUTS", AnalysisReport.Status.NOT_DETECTED},
                 {"A-32", "free-range eggs", "EGGS", AnalysisReport.Status.CONTAINS},
                 {"A-33", "milk (free of antibiotics)", "MILK", AnalysisReport.Status.CONTAINS},
-                {"A-36", "chocolate", "MILK", AnalysisReport.Status.POSSIBLE},
-                {"A-36", "natural flavour", "MILK", AnalysisReport.Status.POSSIBLE},
-                {"A-36", "caramel", "MILK", AnalysisReport.Status.POSSIBLE},
+                // These generic compound ingredients no longer imply undeclared milk.
+                {"A-36", "chocolate", "MILK", AnalysisReport.Status.NOT_DETECTED},
+                {"A-36", "natural flavour", "MILK", AnalysisReport.Status.NOT_DETECTED},
+                {"A-36", "caramel", "MILK", AnalysisReport.Status.NOT_DETECTED},
+                {"A-36", "nougat", "MILK", AnalysisReport.Status.POSSIBLE},
+                {"A-36", "margarine", "MILK", AnalysisReport.Status.POSSIBLE},
                 // The shipped dictionary deliberately treats coconut as ambiguous, not a firm hit.
                 {"A-37", "coconut", "TREE_NUTS", AnalysisReport.Status.POSSIBLE}
         });

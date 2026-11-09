@@ -1,20 +1,26 @@
 package com.example.allergycheck;
 
 import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.TextAppearanceSpan;
 import android.text.format.Formatter;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -33,6 +39,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.Lifecycle;
 
 import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenDictionary;
@@ -64,6 +71,12 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String DRAFT_SHOW_NOT_DETECTED = "draft_show_not_detected";
     private static final String DRAFT_MAY_CONTAIN_RED_WARNING = "draft_may_contain_red_warning";
     private static final String ANALYSIS_CONFIGURATION_CHANGED = "analysis_configuration_changed";
+    static final String EXTRA_ANALYSIS_CONFIGURATION_CHANGED = ANALYSIS_CONFIGURATION_CHANGED;
+    static final String EXTRA_AI_PROVIDER_CHANGED = "ai_provider_changed";
+    static final String EXTRA_ALLERGEN_SELECTION_CHANGED = "allergen_selection_changed";
+    private static final String INITIAL_ANALYSIS_SIGNATURE = "initial_analysis_signature";
+    private static final String INITIAL_PROVIDER_SIGNATURE = "initial_provider_signature";
+    private static final String MODEL_NAVIGATION_GENERATION = "model_navigation_generation";
 
     /**
      * Allergen ids. Only ids the dictionary defines ever enter this set, so its size is the
@@ -88,8 +101,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView modelAvailability;
     private TextView modelStatus;
     private LinearProgressIndicator modelProgress;
-    private MaterialButton modelDownloadButton;
-    private MaterialButton modelDeleteButton;
+    private MaterialButton modelActionButton;
     private View modelDetails;
     private View modelTerms;
     private MaterialButton modelDetailsButton;
@@ -101,17 +113,34 @@ public class SettingsActivity extends AppCompatActivity {
     private EditText cloudConcurrencyInput;
     private boolean renderingDetectionMode;
     private boolean analysisConfigurationChanged;
+    private String initialAnalysisSignature;
+    private String initialProviderSignature;
+    private ModelReturnFocus modelReturnFocus;
+    private Boolean modelSectionShown;
 
     /** Keeps the unsaved key through rotation without putting credentials into saved state. */
     public static final class CloudDraft extends ViewModel {
         String apiKey;
+    }
+
+    /** Retains the dialog's navigation origin; the screen reader owns the returning focus. */
+    public static final class ModelReturnFocus extends ViewModel {
+        boolean initialized;
+        int navigationGeneration;
+        int targetId = View.NO_ID;
+        int targetNavigationGeneration;
+        long deadline;
     }
     /** Pill colors, resolved once: they only differ between FAILED and every other state. */
     private ColorStateList pillBackground;
     private ColorStateList pillFailedBackground;
     private int pillText;
     private int pillFailedText;
-    private final LocalModelManager.Listener modelListener = this::renderModelStatus;
+    private Boolean lastObservedLocalModelAvailability;
+    private final LocalModelManager.Listener modelListener = status -> {
+        renderModelStatus(status);
+        updateLocalModelAvailabilityResult();
+    };
 
     /** Leaving with an unsaved allergen or cloud draft asks first instead of dropping it silently. */
     private final OnBackPressedCallback unsavedChangesCallback = new OnBackPressedCallback(false) {
@@ -144,14 +173,62 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    /** Retains the original model action while the confirmation is recreated on rotation. */
+    public static class DeleteModelDialog extends DialogFragment {
+        static final String TAG = "delete_model_dialog";
+        private static final String GENERATION = "navigation_generation";
+
+        static DeleteModelDialog of(int generation) {
+            DeleteModelDialog dialog = new DeleteModelDialog();
+            Bundle arguments = new Bundle();
+            arguments.putInt(GENERATION, generation);
+            dialog.setArguments(arguments);
+            return dialog;
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            SettingsActivity activity = (SettingsActivity) requireActivity();
+            activity.armModelReturnHint(requireArguments().getInt(GENERATION), Long.MAX_VALUE);
+            return new MaterialAlertDialogBuilder(activity)
+                    .setTitle(R.string.model_settings_delete_title)
+                    .setMessage(R.string.model_settings_delete_message)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.model_settings_delete, (dialog, which) ->
+                            activity.deleteConfirmedModel(requireArguments().getInt(GENERATION)))
+                    .create();
+        }
+
+        @Override
+        public void onDismiss(@NonNull DialogInterface dialog) {
+            super.onDismiss(dialog);
+            if (getActivity() instanceof SettingsActivity) {
+                SettingsActivity activity = (SettingsActivity) getActivity();
+                if (!activity.isChangingConfigurations()) {
+                    activity.retainModelReturnHint(requireArguments().getInt(GENERATION));
+                }
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        modelReturnFocus = new ViewModelProvider(this).get(ModelReturnFocus.class);
+        if (!modelReturnFocus.initialized) {
+            modelReturnFocus.initialized = true;
+            modelReturnFocus.navigationGeneration = savedInstanceState == null ? 0
+                    : savedInstanceState.getInt(MODEL_NAVIGATION_GENERATION);
+        }
         WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_settings);
-        analysisConfigurationChanged = savedInstanceState != null
-                && savedInstanceState.getBoolean(ANALYSIS_CONFIGURATION_CHANGED);
-        if (analysisConfigurationChanged) setResult(RESULT_OK);
+        initialAnalysisSignature = savedInstanceState == null ? configurationSignature(false)
+                : savedInstanceState.getString(INITIAL_ANALYSIS_SIGNATURE, configurationSignature(false));
+        initialProviderSignature = savedInstanceState == null ? configurationSignature(true)
+                : savedInstanceState.getString(INITIAL_PROVIDER_SIGNATURE, configurationSignature(true));
+        analysisConfigurationChanged = !initialAnalysisSignature.equals(configurationSignature(false));
+
 
         boolean darkTheme = (getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
@@ -186,6 +263,7 @@ public class SettingsActivity extends AppCompatActivity {
         saveBar = findViewById(R.id.settings_save_bar);
         selectionSummary = findViewById(R.id.selection_summary);
         modelSaveNote = findViewById(R.id.model_save_note);
+        arrangeSaveBar(findViewById(R.id.settings));
 
         modelManager = LocalModelManager.get(this);
         modelAvailability = findViewById(R.id.model_availability);
@@ -199,8 +277,11 @@ public class SettingsActivity extends AppCompatActivity {
                 com.google.android.material.R.attr.colorOnErrorContainer);
         modelStatus = findViewById(R.id.model_download_status);
         modelProgress = findViewById(R.id.model_download_progress);
-        modelDownloadButton = findViewById(R.id.model_download_button);
-        modelDeleteButton = findViewById(R.id.model_delete_button);
+        // Keep this same View and ID when Delete becomes Download. TalkBack's window history
+        // can then restore the original node instead of searching for a removed control.
+        modelActionButton = findViewById(R.id.model_download_button);
+        InitialFocusHint.install(modelActionButton, this::hasModelReturnHint);
+        observeModelReadingPosition();
         modelDetails = findViewById(R.id.model_details);
         modelDetailsButton = findViewById(R.id.model_details_button);
         setModelDetailsExpanded(savedInstanceState != null
@@ -211,15 +292,20 @@ public class SettingsActivity extends AppCompatActivity {
                 .setMovementMethod(LinkMovementMethod.getInstance());
         modelTerms = findViewById(R.id.model_terms_link);
         ((TextView) modelTerms).setMovementMethod(LinkMovementMethod.getInstance());
-        modelDownloadButton.setOnClickListener(view -> modelManager.download());
-        modelDeleteButton.setOnClickListener(view ->
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle(R.string.model_settings_delete_title)
-                        .setMessage(R.string.model_settings_delete_message)
-                        .setNegativeButton(R.string.cancel, null)
-                        .setPositiveButton(R.string.model_settings_delete,
-                                (dialog, which) -> modelManager.delete())
-                        .show());
+        modelActionButton.setOnClickListener(view -> {
+            if (!modelManager.getStatus().isInstalled()) {
+                clearModelReturnHint(false);
+                modelManager.download();
+                return;
+            }
+            FragmentManager fragments = getSupportFragmentManager();
+            if (!fragments.isStateSaved()
+                    && fragments.findFragmentByTag(DeleteModelDialog.TAG) == null) {
+                clearModelReturnHint(false);
+                DeleteModelDialog.of(modelReturnFocus.navigationGeneration)
+                        .showNow(fragments, DeleteModelDialog.TAG);
+            }
+        });
         renderModelStatus(modelManager.getStatus());
         initializeDetectionSettings();
 
@@ -292,12 +378,24 @@ public class SettingsActivity extends AppCompatActivity {
                 scroll.scrollTo(0, 0);
             }
         });
+        // Allergen baselines must be initialized before restoring an immediate mode-change result.
+        if (analysisConfigurationChanged) setSavedResult();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         modelManager.addListener(modelListener);
+    }
+
+    @Override
+    protected void onPause() {
+        // Model actions apply immediately, including leaving with Back after a completed download.
+        updateLocalModelAvailabilityResult();
+        // A translucent foreground Activity may pause us without ever reaching onStop.
+        // Keep the dialog's origin, but never revive its old return request after resuming.
+        clearModelReturnHint(false);
+        super.onPause();
     }
 
     @Override
@@ -311,6 +409,10 @@ public class SettingsActivity extends AppCompatActivity {
      * cloud fields together, so a draft started on one section can be saved from the other.
      */
     private void showSection(boolean model) {
+        if (modelSectionShown != null && modelSectionShown != model) {
+            clearModelReturnHint(true);
+        }
+        modelSectionShown = model;
         allergenSection.setVisibility(model ? View.GONE : View.VISIBLE);
         modelSection.setVisibility(model ? View.VISIBLE : View.GONE);
         updateSaveBar();
@@ -330,11 +432,22 @@ public class SettingsActivity extends AppCompatActivity {
         headerDivider.setVisibility(scroll.canScrollVertically(-1) ? View.VISIBLE : View.INVISIBLE);
     }
 
-    /**
-     * Stores every pending edit and leaves. RESULT_OK is reported only when something was stored
-     * (here, by a cloud save or by an earlier mode change), because the caller re-checks the label
-     * on screen, which in cloud mode means new requests.
-     */
+    /** Keep short windows scrollable while retaining Save for either settings section. */
+    static void arrangeSaveBar(@NonNull View root) {
+        if (root.getResources().getConfiguration().screenHeightDp >= 400) return;
+        View bar = root.findViewById(R.id.settings_save_bar);
+        ViewGroup content = root.findViewById(R.id.settings_scroll_content);
+        ViewGroup parent = (ViewGroup) bar.getParent();
+        if (parent != content) {
+            parent.removeView(bar);
+            content.addView(bar);
+            // The shared scroll content already supplies the page's horizontal margins.
+            View inner = bar.findViewById(R.id.settings_save_content);
+            inner.setPaddingRelative(0, inner.getPaddingTop(), 0, inner.getPaddingBottom());
+        }
+    }
+
+    /** Validate cloud drafts first, then store the complete allergen/results draft and leave. */
     private void savePreferences() {
         if (cloudSettingsChanged() && !saveCloudConfiguration()) {
             ((MaterialButtonToggleGroup) findViewById(R.id.settings_section_toggle))
@@ -345,7 +458,12 @@ public class SettingsActivity extends AppCompatActivity {
             AllergenPreferences.saveSelectedAllergenIds(this, selectedAllergens);
             AllergenPreferences.saveShowNotDetected(this, showNotDetected);
             AllergenPreferences.saveMayContainRedWarning(this, mayContainRedWarning);
-            setResult(RESULT_OK);
+            setSavedResult();
+        }
+        // Catch a model installed or removed outside the manager's latest status notification.
+        if (analysisConfigurationChanged
+                || !initialAnalysisSignature.equals(configurationSignature(false))) {
+            setSavedResult();
         }
         finish();
     }
@@ -417,9 +535,9 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void selectDetectionMode(AnalysisPreferences.Mode mode) {
+        clearModelReturnHint(true);
         AnalysisPreferences.saveMode(this, mode);
-        analysisConfigurationChanged = true;
-        setResult(RESULT_OK);
+        setSavedResult();
         renderDetectionMode();
     }
 
@@ -477,10 +595,13 @@ public class SettingsActivity extends AppCompatActivity {
                 ? AnalysisPreferences.decisionsModel(this) : AnalysisPreferences.openRouterModel(this);
         boolean cloud = mode == AnalysisPreferences.Mode.OPENROUTER
                 || mode == AnalysisPreferences.Mode.DECISIONS;
-        boolean unusable = cloud && (AnalysisPreferences.openRouterApiKey(this).isEmpty()
-                || !validModelId(savedModel));
-        if (unusable) {
+        boolean missingKey = cloud && AnalysisPreferences.openRouterApiKey(this).isEmpty();
+        boolean missingModel = cloud && !validModelId(savedModel);
+        if (missingKey) {
             showStatus(status, R.string.detection_cloud_needs_key, R.drawable.ic_info_small,
+                    androidx.appcompat.R.attr.colorError);
+        } else if (missingModel) {
+            showStatus(status, R.string.detection_cloud_needs_model, R.drawable.ic_info_small,
                     androidx.appcompat.R.attr.colorError);
         } else {
             status.setVisibility(View.GONE);
@@ -489,7 +610,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void showStatus(TextView status, int textRes, int iconRes, int colorAttr) {
         int color = MaterialColors.getColor(status, colorAttr);
-        status.setText(textRes);
+        setTextIfChanged(status, getText(textRes));
         status.setTextColor(color);
         Drawable icon = AppCompatResources.getDrawable(this, iconRes).mutate();
         int size = Math.round(18 * getResources().getDisplayMetrics().density);
@@ -523,13 +644,13 @@ public class SettingsActivity extends AppCompatActivity {
         try {
             concurrency = parseConcurrency(input(cloudConcurrencyInput));
         } catch (NumberFormatException exception) {
-            // Outside cloud mode the field is hidden, so keep the stored value instead of
-            // blocking Save on an error nobody can see — as the threshold does below.
             if (cloud) {
                 concurrencyLayout.setError(getString(R.string.detection_concurrency_invalid));
                 cloudConcurrencyInput.requestFocus();
                 return false;
             }
+            // Local modes do not use this hidden draft. Keep the last usable saved value.
+            cloudConcurrencyInput.setText(formatConcurrency(concurrency));
         }
         if ((cloud || !foodTypeModel.isEmpty()) && (key.isEmpty() || key.matches(".*\\s+.*"))) {
             keyLayout.setError(getString(R.string.detection_key_required));
@@ -571,8 +692,7 @@ public class SettingsActivity extends AppCompatActivity {
         AnalysisPreferences.saveDecisionsThreshold(this, threshold);
         AnalysisPreferences.saveCloudConcurrency(this, concurrency);
         cloudConcurrencyInput.setText(formatConcurrency(concurrency));
-        analysisConfigurationChanged = true;
-        setResult(RESULT_OK);
+        setSavedResult();
         renderCloudStatus();
         updateUnsavedChanges();
         return true;
@@ -595,6 +715,54 @@ public class SettingsActivity extends AppCompatActivity {
             throw new NumberFormatException("Cloud concurrency must be positive");
         }
         return concurrency;
+    }
+
+    private void setSavedResult() {
+        analysisConfigurationChanged = !initialAnalysisSignature.equals(configurationSignature(false));
+        setResult(RESULT_OK, new Intent().putExtra(EXTRA_ANALYSIS_CONFIGURATION_CHANGED,
+                analysisConfigurationChanged).putExtra(EXTRA_AI_PROVIDER_CHANGED,
+                !initialProviderSignature.equals(configurationSignature(true)))
+                .putExtra(EXTRA_ALLERGEN_SELECTION_CHANGED,
+                        !AllergenPreferences.selectedAllergenIds(this,
+                                AllergenDictionaryProvider.get(this)).equals(savedAllergens)));
+    }
+
+    /** Save only a one-way comparison token across rotation, never the API key itself. */
+    private String configurationSignature(boolean providerOnly) {
+        AnalysisPreferences.Mode mode = AnalysisPreferences.mode(this);
+        StringBuilder value = new StringBuilder(mode.name());
+        if (mode == AnalysisPreferences.Mode.LOCAL_AI) {
+            // Availability changes whether an incomplete local result can now be checked. Other
+            // detection modes do not use this model and must retain their displayed label result.
+            appendSignatureValue(value, Boolean.toString(LocalModelManager.installedModel(this) != null));
+        }
+        if (mode == AnalysisPreferences.Mode.OPENROUTER || mode == AnalysisPreferences.Mode.DECISIONS) {
+            appendSignatureValue(value, AnalysisPreferences.openRouterApiKey(this));
+            appendSignatureValue(value, mode == AnalysisPreferences.Mode.DECISIONS
+                    ? AnalysisPreferences.decisionsModel(this) : AnalysisPreferences.openRouterModel(this));
+            if (!providerOnly) {
+                appendSignatureValue(value, Integer.toString(AnalysisPreferences.cloudConcurrency(this)));
+                if (mode == AnalysisPreferences.Mode.DECISIONS) {
+                    appendSignatureValue(value, Double.toString(AnalysisPreferences.decisionsThreshold(this)));
+                }
+            }
+        }
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(
+                    value.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte part : digest) {
+                hex.append(Character.forDigit((part >>> 4) & 15, 16));
+                hex.append(Character.forDigit(part & 15, 16));
+            }
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("SHA-256 is unavailable", impossible);
+        }
+    }
+
+    private static void appendSignatureValue(StringBuilder signature, String value) {
+        signature.append(':').append(value.length()).append(':').append(value);
     }
 
     private static String input(EditText field) {
@@ -637,62 +805,146 @@ public class SettingsActivity extends AppCompatActivity {
                                 getResources().getConfiguration().getLocales().get(0))));
     }
 
+    private void updateLocalModelAvailabilityResult() {
+        boolean installed = LocalModelManager.installedModel(this) != null;
+        if (lastObservedLocalModelAvailability != null
+                && lastObservedLocalModelAvailability == installed) return;
+        lastObservedLocalModelAvailability = installed;
+        if (AnalysisPreferences.mode(this) == AnalysisPreferences.Mode.LOCAL_AI
+                && (analysisConfigurationChanged
+                || !initialAnalysisSignature.equals(configurationSignature(false)))) {
+            // Byte counts, waiting and retry states do not change installed availability. Only
+            // a real transition updates the result, including a return to the original state.
+            setSavedResult();
+        }
+    }
+
     private void renderModelStatus(LocalModelManager.Status status) {
         boolean installed = status.isInstalled();
         boolean downloading = status.state == LocalModelManager.State.DOWNLOADING
                 || status.state == LocalModelManager.State.PAUSED;
         boolean installing = status.state == LocalModelManager.State.INSTALLING;
         boolean failed = status.state == LocalModelManager.State.FAILED;
-        modelAvailability.setText(badgeText(status, installed));
+        setTextIfChanged(modelAvailability, getText(badgeText(status, installed)));
         modelAvailability.setBackgroundTintList(failed ? pillFailedBackground : pillBackground);
         modelAvailability.setTextColor(failed ? pillFailedText : pillText);
-        modelDownloadButton.setVisibility(installed ? View.GONE : View.VISIBLE);
-        modelDownloadButton.setEnabled(!installed && !downloading && !installing);
-        modelDownloadButton.setText(failed
-                ? R.string.model_settings_retry : R.string.model_settings_download);
-        modelDeleteButton.setEnabled(installed && !downloading && !installing);
-        modelDeleteButton.setVisibility(installed ? View.VISIBLE : View.GONE);
+        modelActionButton.setEnabled(!downloading && !installing);
+        modelActionButton.setText(installed ? R.string.model_settings_delete
+                : failed ? R.string.model_settings_retry : R.string.model_settings_download);
+        modelActionButton.setContentDescription(getText(installed ? R.string.a11y_model_delete
+                : failed ? R.string.a11y_model_retry : R.string.a11y_model_download));
         // The terms ask to be read before downloading, so they only matter until it is installed.
         modelTerms.setVisibility(installed ? View.GONE : View.VISIBLE);
         // "Installed" already says it all; the line returns for progress, errors and hints.
         modelStatus.setVisibility(status.state == LocalModelManager.State.READY
                 ? View.GONE : View.VISIBLE);
+        // The badge announces state changes. Byte counts update every second, so leave those
+        // available to explore without repeatedly interrupting TalkBack's current reading.
+        modelStatus.setAccessibilityLiveRegion(status.state == LocalModelManager.State.DOWNLOADING
+                ? View.ACCESSIBILITY_LIVE_REGION_NONE : View.ACCESSIBILITY_LIVE_REGION_POLITE);
 
-        modelProgress.setVisibility(View.GONE);
         if (downloading || installing) {
-            modelProgress.setIndeterminate(installing || status.totalBytes <= 0);
+            boolean indeterminate = installing || status.totalBytes <= 0;
+            if (modelProgress.isIndeterminate() != indeterminate) {
+                modelProgress.hide();
+                modelProgress.setIndeterminate(indeterminate);
+            }
             if (!installing && status.totalBytes > 0) {
                 int percent = (int) Math.max(0, Math.min(100,
                         Math.round(100d * status.downloadedBytes / status.totalBytes)));
                 modelProgress.setProgressCompat(percent, false);
             }
             modelProgress.setVisibility(View.VISIBLE);
+        } else {
+            modelProgress.setVisibility(View.GONE);
         }
 
         switch (status.state) {
             case READY:
-                modelStatus.setText(R.string.model_settings_ready);
+                setTextIfChanged(modelStatus, getText(R.string.model_settings_ready));
                 break;
             case DOWNLOADING:
-                modelStatus.setText(downloadProgress(status));
+                setTextIfChanged(modelStatus, downloadProgress(status));
                 break;
             case PAUSED:
-                modelStatus.setText(status.error == null
+                setTextIfChanged(modelStatus, status.error == null
                         ? getString(R.string.model_settings_waiting, downloadProgress(status)) : status.error);
                 break;
             case INSTALLING:
-                modelStatus.setText(R.string.model_settings_installing);
+                setTextIfChanged(modelStatus, getText(R.string.model_settings_installing));
                 break;
             case FAILED:
-                modelStatus.setText(status.error == null || status.error.trim().isEmpty()
+                setTextIfChanged(modelStatus, status.error == null || status.error.trim().isEmpty()
                         ? getString(R.string.model_settings_failed)
                         : getString(R.string.model_settings_failed_reason, status.error));
                 break;
             case MISSING:
             default:
-                modelStatus.setText(R.string.model_settings_not_downloaded);
+                setTextIfChanged(modelStatus, getText(R.string.model_settings_not_downloaded));
                 break;
         }
+    }
+
+    private boolean isModelActionPage(int generation) {
+        return modelReturnFocus.navigationGeneration == generation && !isFinishing()
+                && !isDestroyed() && modelSection.getVisibility() == View.VISIBLE
+                && findViewById(R.id.local_model_section).getVisibility() == View.VISIBLE;
+    }
+
+    private void deleteConfirmedModel(int generation) {
+        if (!isModelActionPage(generation)
+                || !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+            return;
+        }
+        modelManager.delete();
+        // Bind the replacement action before the dialog gives its window back to this Activity.
+        renderModelStatus(modelManager.getStatus());
+    }
+
+    private void retainModelReturnHint(int generation) {
+        if (!isModelActionPage(generation)
+                || !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) return;
+        armModelReturnHint(generation, SystemClock.uptimeMillis() + 1500);
+    }
+
+    private void armModelReturnHint(int generation, long deadline) {
+        if (!isModelActionPage(generation)) return;
+        modelReturnFocus.targetId = R.id.model_download_button;
+        modelReturnFocus.targetNavigationGeneration = generation;
+        modelReturnFocus.deadline = deadline;
+    }
+
+    private boolean hasModelReturnHint() {
+        return modelReturnFocus.targetId == R.id.model_download_button
+                && isModelActionPage(modelReturnFocus.targetNavigationGeneration)
+                && SystemClock.uptimeMillis() < modelReturnFocus.deadline
+                && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)
+                && modelActionButton.isShown() && modelActionButton.isEnabled();
+    }
+
+    private void clearModelReturnHint(boolean navigationChanged) {
+        if (navigationChanged) ++modelReturnFocus.navigationGeneration;
+        modelReturnFocus.targetId = View.NO_ID;
+    }
+
+    private void observeModelReadingPosition() {
+        View root = findViewById(R.id.settings);
+        root.setAccessibilityDelegate(new InitialFocusHint.Delegate(root) {
+            @Override
+            public boolean onRequestSendAccessibilityEvent(ViewGroup host, View child,
+                                                           AccessibilityEvent event) {
+                if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
+                    // The service has selected its own reading position, whether the returned
+                    // action or another control. Consume the fallback without moving that focus.
+                    clearModelReturnHint(false);
+                }
+                return super.onRequestSendAccessibilityEvent(host, child, event);
+            }
+        });
+    }
+
+    private static void setTextIfChanged(TextView view, CharSequence text) {
+        if (!TextUtils.equals(view.getText(), text)) view.setText(text);
     }
 
     private int badgeText(LocalModelManager.Status status, boolean installed) {
@@ -716,6 +968,8 @@ public class SettingsActivity extends AppCompatActivity {
                 : R.string.model_settings_details);
         modelDetailsButton.setIconResource(expanded ? R.drawable.ic_expand_less
                 : R.drawable.ic_expand_more);
+        ViewCompat.setStateDescription(modelDetailsButton, getText(expanded
+                ? R.string.a11y_settings_expanded : R.string.a11y_settings_collapsed));
     }
 
     private String downloadProgress(LocalModelManager.Status status) {
@@ -737,7 +991,7 @@ public class SettingsActivity extends AppCompatActivity {
      */
     private void updateSaveBar() {
         int count = selectedAllergens.size();
-        selectionSummary.setText(count == 0 ? getString(R.string.no_allergens_selected)
+        setTextIfChanged(selectionSummary, count == 0 ? getString(R.string.no_allergens_selected)
                 : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
         boolean model = modelSectionShown();
         selectionSummary.setVisibility(model ? View.GONE : View.VISIBLE);
@@ -753,7 +1007,10 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putInt(MODEL_NAVIGATION_GENERATION, modelReturnFocus.navigationGeneration);
         outState.putBoolean(ANALYSIS_CONFIGURATION_CHANGED, analysisConfigurationChanged);
+        outState.putString(INITIAL_ANALYSIS_SIGNATURE, initialAnalysisSignature);
+        outState.putString(INITIAL_PROVIDER_SIGNATURE, initialProviderSignature);
         outState.putStringArrayList(DRAFT_ALLERGENS, new ArrayList<>(selectedAllergens));
         outState.putBoolean(DRAFT_SHOW_NOT_DETECTED, showNotDetected);
         outState.putBoolean(DRAFT_MAY_CONTAIN_RED_WARNING, mayContainRedWarning);

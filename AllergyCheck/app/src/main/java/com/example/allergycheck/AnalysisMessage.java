@@ -82,6 +82,10 @@ final class AnalysisMessage {
     @NonNull
     String reportNote(@NonNull AnalysisReport report) {
         List<String> notes = new ArrayList<>();
+        if (report.aiIncomplete()) {
+            int reason = failureNote(report.aiFailure());
+            if (reason != 0) notes.add(resources.getString(reason));
+        }
         if (report.aiAnalysis()) {
             notes.add(resources.getString(report.aiIncomplete()
                     ? R.string.ai_analysis_incomplete_note : R.string.ai_analysis_note));
@@ -90,6 +94,19 @@ final class AnalysisMessage {
             notes.add(resources.getString(R.string.low_confidence_warning));
         }
         return String.join("\n\n", notes);
+    }
+
+    private static int failureNote(AnalysisReport.AiFailure failure) {
+        switch (failure) {
+            case AUTHENTICATION: return R.string.ai_failure_authentication;
+            case QUOTA: return R.string.ai_failure_quota;
+            case MODEL: return R.string.ai_failure_model;
+            case RATE_LIMIT: return R.string.ai_failure_rate_limit;
+            case UNAVAILABLE: return R.string.ai_failure_unavailable;
+            case TIMEOUT: return R.string.ai_failure_timeout;
+            case INVALID_RESPONSE: return R.string.ai_failure_invalid_response;
+            default: return 0;
+        }
     }
 
     /** An unavailable model must not produce an empty "might involve:" allergen list. */

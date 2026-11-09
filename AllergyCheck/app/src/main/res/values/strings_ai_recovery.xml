@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detection_cloud_needs_model">Add the model ID for this detection method and save to start cloud detection.</string>
+    <string name="ai_failure_authentication">OpenRouter rejected the API key. Update it in AI detection settings before checking again.</string>
+    <string name="ai_failure_quota">OpenRouter could not run this check because credits or quota are unavailable. Review the account or use another detection method.</string>
+    <string name="ai_failure_model">OpenRouter could not use the selected model. Choose a supported model in AI detection settings.</string>
+    <string name="ai_failure_rate_limit">OpenRouter limited these requests. Wait before retrying, or choose another detection model.</string>
+    <string name="ai_failure_unavailable">AI detection is unavailable. Check the connection or model settings and try again later.</string>
+    <string name="ai_failure_timeout">The AI check timed out. Try again when the connection or model is ready.</string>
+    <string name="ai_failure_invalid_response">AI returned an answer the app could not read. Try again or choose another detection model.</string>
+    <string name="ai_retry_at">Try again at %1$s</string>
+    <string name="ai_retry_wait_state">Waiting for the retry time</string>
+</resources>

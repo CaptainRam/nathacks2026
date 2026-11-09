@@ -196,8 +196,13 @@ public class PairedPhotoUiTest {
             AtomicReference<AnalysisReport> before = new AtomicReference<>();
             AtomicReference<Bitmap> labelBitmap = new AtomicReference<>();
             AtomicReference<Object> labelUri = new AtomicReference<>();
+            AtomicReference<View> labelTarget = new AtomicReference<>();
+            AtomicReference<View> frontTarget = new AtomicReference<>();
             scan.onActivity(activity -> {
                 before.set((AnalysisReport) field(controller(activity), "report"));
+                ViewGroup strip = activity.findViewById(R.id.photo_strip);
+                labelTarget.set(strip.getChildAt(0).findViewById(R.id.thumbnail_card));
+                frontTarget.set(strip.getChildAt(1).findViewById(R.id.thumbnail_card));
                 labelUri.set(field(activity, "selectedPhoto"));
                 labelBitmap.set(((BitmapDrawable) ((ImageView) activity.findViewById(R.id.photo_preview))
                         .getDrawable()).getBitmap());
@@ -209,6 +214,12 @@ public class PairedPhotoUiTest {
             scan.onActivity(activity -> {
                 ViewGroup strip = activity.findViewById(R.id.photo_strip);
                 assertEquals(2, strip.getChildCount());
+                assertSame("Ingredient target must survive front-photo removal", labelTarget.get(),
+                        strip.getChildAt(0).findViewById(R.id.thumbnail_card));
+                assertSame("Front target must survive its transition to Add", frontTarget.get(),
+                        strip.getChildAt(1).findViewById(R.id.front_thumbnail_add_card));
+                assertEquals(android.widget.Button.class.getName(),
+                        frontTarget.get().createAccessibilityNodeInfo().getClassName());
                 assertNotNull(strip.getChildAt(0).findViewById(R.id.thumbnail_image));
                 assertNull(((ImageView) activity.findViewById(R.id.front_photo_preview)).getDrawable());
                 assertSame(before.get(), field(controller(activity), "report"));

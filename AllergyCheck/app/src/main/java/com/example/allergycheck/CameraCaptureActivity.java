@@ -13,6 +13,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Display;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Surface;
 import android.widget.ImageView;
 
@@ -110,6 +111,14 @@ public class CameraCaptureActivity extends AppCompatActivity {
         WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_camera_capture);
         applyInsets();
+        View cameraRoot = findViewById(R.id.camera_root);
+        View cameraScroll = findViewById(R.id.camera_scroll);
+        cameraScroll.addOnLayoutChangeListener((view, left, top, right, bottom,
+                oldLeft, oldTop, oldRight, oldBottom) -> {
+            if (bottom - top != oldBottom - oldTop || right - left != oldRight - oldLeft) {
+                view.post(() -> fitPreviewToViewport(cameraRoot));
+            }
+        });
 
         previewView = findViewById(R.id.camera_preview);
         guideOverlay = findViewById(R.id.guide_overlay);
@@ -215,14 +224,12 @@ public class CameraCaptureActivity extends AppCompatActivity {
             CameraPreferences.saveAutoCapture(this, checked);
             feedback.setAutoCaptureEnabled(checked);
             describeAutoCapture(autoButton, checked);
-            // The fill change is the sighted affordance; this is its spoken equivalent.
-            autoButton.announceForAccessibility(autoButton.getContentDescription());
         });
     }
 
     private void describeAutoCapture(@NonNull MaterialButton autoButton, boolean enabled) {
-        autoButton.setContentDescription(getString(
-                enabled ? R.string.camera_auto_capture_on : R.string.camera_auto_capture_off));
+        describeCameraToggle(autoButton, R.string.camera_auto_capture,
+                enabled ? R.string.camera_auto_capture_on : R.string.camera_auto_capture_off, enabled);
     }
 
     @Override
@@ -324,11 +331,8 @@ public class CameraCaptureActivity extends AppCompatActivity {
 
     /** Puts the torch button in the state {@code on}, both visibly and for a screen reader. */
     private void describeTorch(boolean on) {
-        if (torchButton.isChecked() != on) {
-            torchButton.setChecked(on);
-        }
-        torchButton.setContentDescription(getString(
-                on ? R.string.camera_flashlight_on : R.string.camera_flashlight_off));
+        describeCameraToggle(torchButton, R.string.camera_flashlight,
+                on ? R.string.camera_flashlight_on : R.string.camera_flashlight_off, on);
     }
 
     /** Asks for the torch, putting the button back where it was if the camera refuses. */
@@ -357,7 +361,34 @@ public class CameraCaptureActivity extends AppCompatActivity {
         describeTorch(state != null && state == TorchState.ON);
         Snackbar.make(findViewById(R.id.camera_root), R.string.camera_flashlight_unavailable,
                 Snackbar.LENGTH_SHORT).show();
-        torchButton.announceForAccessibility(getString(R.string.camera_flashlight_unavailable));
+    }
+
+    /** Stable control names let native checkable semantics report the state once. */
+    static void describeCameraToggle(@NonNull MaterialButton button, int label, int tooltip,
+            boolean checked) {
+        button.setCheckable(true);
+        button.setChecked(checked);
+        CharSequence name = button.getResources().getText(label);
+        if (!name.equals(button.getContentDescription())) button.setContentDescription(name);
+        button.setTooltipText(button.getResources().getText(tooltip));
+    }
+
+    /** Keep a useful preview while letting large text and the shutter scroll in a short window. */
+    static void fitPreviewToViewport(@NonNull View root) {
+        View scroll = root.findViewById(R.id.camera_scroll);
+        View body = root.findViewById(R.id.camera_content_body);
+        View column = root.findViewById(R.id.camera_column);
+        View card = root.findViewById(R.id.camera_card);
+        if (scroll.getHeight() == 0 || column.getHeight() == 0) return;
+        int minimum = Math.round(160 * root.getResources().getDisplayMetrics().density);
+        int fixed = column.getHeight() - card.getHeight();
+        int height = Math.max(minimum, scroll.getHeight() - body.getPaddingTop()
+                - body.getPaddingBottom() - fixed);
+        ViewGroup.LayoutParams params = card.getLayoutParams();
+        if (params.height != height) {
+            params.height = height;
+            card.setLayoutParams(params);
+        }
     }
 
     private ImageAnalysis buildImageAnalysis() {
@@ -428,10 +459,11 @@ public class CameraCaptureActivity extends AppCompatActivity {
             return;
         }
         capturing = true;
-        captureButton.setEnabled(false);
+        findViewById(R.id.capture_auto_button).setEnabled(false);
+        torchButton.setEnabled(false);
         // Freeze the overlay on the framing that was actually photographed, and stop spending CPU on
         // analysis during the shot.
-        feedback.freeze();
+        feedback.beginCapture();
         imageAnalysis.clearAnalyzer();
 
         ImageCapture.OutputFileOptions outputOptions =

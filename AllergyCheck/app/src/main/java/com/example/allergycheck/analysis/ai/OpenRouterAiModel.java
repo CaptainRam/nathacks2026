@@ -13,6 +13,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,16 +35,35 @@ public final class OpenRouterAiModel implements AiModel {
     /** A failure whose status can tell the caller to stop rather than repeat a broken configuration. */
     public static final class ApiException extends IOException {
         private final int status;
+        private final long retryAtMillis;
+        private final boolean modelConfigurationError;
 
-        ApiException(int status) {
+        public ApiException(int status) {
+            this(status, 0);
+        }
+
+        public ApiException(int status, long retryAtMillis) {
+            this(status, retryAtMillis, status == 404);
+        }
+
+        private ApiException(int status, long retryAtMillis, boolean modelConfigurationError) {
             super(status == 401 ? "OpenRouter rejected the API key"
                     : status == 402 ? "OpenRouter credits or quota are exhausted"
                     : status == 429 ? "OpenRouter rate limit reached; try again later"
                     : "OpenRouter request failed (HTTP " + status + ")");
             this.status = status;
+            this.retryAtMillis = Math.max(0, retryAtMillis);
+            this.modelConfigurationError = modelConfigurationError;
         }
 
         public int status() { return status; }
+        public long retryAtMillis() { return retryAtMillis; }
+        public boolean modelConfigurationError() { return modelConfigurationError; }
+
+        /** Stop queued work instead of sending more requests into the service's cooldown. */
+        public boolean stopsFurtherRequests() {
+            return permanent() || status == 429 || retryAtMillis > System.currentTimeMillis();
+        }
 
         /**
          * Only account-wide problems: a bad key, no credits, or an unknown model. OpenRouter also
@@ -49,7 +71,9 @@ public final class OpenRouterAiModel implements AiModel {
          * stop the other allergens; a truly broken setup still hits the consecutive-failure limit.
          */
         public boolean permanent() {
-            return status == 401 || status == 402 || status == 404;
+            // 402 with Retry-After is an in-flight budget limit, rather than exhausted credits.
+            return status == 401 || (status == 402 && retryAtMillis == 0)
+                    || modelConfigurationError;
         }
     }
 
@@ -95,7 +119,6 @@ public final class OpenRouterAiModel implements AiModel {
         String response = post(DECISIONS_URL, decisionsRequest(ingredient, allergen).toString());
         if (closed || Thread.currentThread().isInterrupted()) throw new InterruptedException();
         JSONObject root = new JSONObject(response);
-        if (root.has("error")) throw new IOException("OpenRouter could not complete the request");
         return parseDecisions(root, threshold);
     }
 
@@ -111,7 +134,6 @@ public final class OpenRouterAiModel implements AiModel {
         String response = post(CHAT_URL, chatRequest(ingredients, allergen).toString());
         if (closed || Thread.currentThread().isInterrupted()) throw new InterruptedException();
         JSONObject root = new JSONObject(response);
-        if (root.has("error")) throw new IOException("OpenRouter could not complete the request");
         return parseChat(root, ingredients.size());
     }
 
@@ -197,9 +219,12 @@ public final class OpenRouterAiModel implements AiModel {
                 output.write(bytes);
             }
             int status = connection.getResponseCode();
+            long retryAt = retryAtMillis(connection.getHeaderField("Retry-After"),
+                    System.currentTimeMillis());
             if (status < 200 || status >= 300) {
                 // Provider bodies can echo requests. Never log or display them, or the API key.
-                throw new ApiException(status);
+                throw new ApiException(status, retryAt,
+                        status == 404 || (status == 400 && isInvalidConfiguredModel(connection)));
             }
             try (InputStream input = connection.getInputStream();
                  ByteArrayOutputStream output = new ByteArrayOutputStream()) {
@@ -212,11 +237,66 @@ public final class OpenRouterAiModel implements AiModel {
                     }
                     output.write(buffer, 0, count);
                 }
-                return output.toString(StandardCharsets.UTF_8.name());
+                String response = output.toString(StandardCharsets.UTF_8.name());
+                JSONObject envelope = new JSONObject(response);
+                if (envelope.has("error")) {
+                    JSONObject error = envelope.optJSONObject("error");
+                    Object code = error == null ? null : error.opt("code");
+                    int errorStatus = code instanceof Number
+                            && ((Number) code).doubleValue() == ((Number) code).intValue()
+                            ? ((Number) code).intValue() : 502;
+                    if (errorStatus < 400 || errorStatus > 599) errorStatus = 502;
+                    // HTTP 200 can carry a provider failure after generation has begun.
+                    // Retain only its typed code, never its message or metadata.
+                    throw new ApiException(errorStatus, retryAt, errorStatus == 404
+                            || (errorStatus == 400 && isInvalidConfiguredModel(error)));
+                }
+                return response;
             }
         } finally {
             activeConnection = null;
             connection.disconnect();
+        }
+    }
+
+    private boolean isInvalidConfiguredModel(HttpURLConnection connection) {
+        try (InputStream input = connection.getErrorStream();
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            if (input == null) return false;
+            byte[] buffer = new byte[4096];
+            int count;
+            while ((count = input.read(buffer)) != -1) {
+                if (closed || Thread.currentThread().isInterrupted()
+                        || output.size() + count > MAX_RESPONSE_BYTES) return false;
+                output.write(buffer, 0, count);
+            }
+            return isInvalidConfiguredModel(new JSONObject(
+                    output.toString(StandardCharsets.UTF_8.name())).optJSONObject("error"));
+        } catch (IOException | JSONException | RuntimeException invalid) {
+            return false;
+        }
+    }
+
+    private boolean isInvalidConfiguredModel(JSONObject error) {
+        return error != null && error.optInt("code") == 400
+                && (modelId + " is not a valid model ID").equals(error.optString("message"));
+    }
+
+    private static long retryAtMillis(String header, long now) {
+        if (header == null) return 0;
+        String value = header.trim();
+        try {
+            long seconds = Long.parseLong(value);
+            if (seconds <= 0) return 0;
+            return seconds > (Long.MAX_VALUE - now) / 1000 ? Long.MAX_VALUE : now + seconds * 1000;
+        } catch (NumberFormatException ignored) {
+            try {
+                long date = ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME)
+                        .toInstant().toEpochMilli();
+                return date > now ? date : 0;
+            } catch (DateTimeParseException | ArithmeticException invalid) {
+                return 0;
+            }
         }
     }
 

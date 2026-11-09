@@ -24,7 +24,7 @@ public class AnalyzerCoverageTest {
     @Test
     public void repeatedAllergenEvidenceIsPreservedWithStrongestFindingsFirst() {
         AnalysisReport report = Analyzer.analyse(
-                "Ingredients: chocolate, milk, salt. Contains: milk. May contain milk.",
+                "Ingredients: nougat, milk, salt. Contains: milk. May contain milk.",
                 DICT, Collections.singletonList(DICT.byId("MILK")));
 
         assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
@@ -35,7 +35,7 @@ public class AnalyzerCoverageTest {
         assertEquals(Finding.Source.CONTAINS_STATEMENT, findings.get(1).source());
         assertEquals(Finding.Source.MAY_CONTAIN_STATEMENT, findings.get(2).source());
         assertEquals(Finding.Reason.AMBIGUOUS_INGREDIENT, findings.get(3).reason());
-        assertEquals("chocolate", findings.get(3).evidence());
+        assertEquals("nougat", findings.get(3).evidence());
         assertEquals(Arrays.asList(Finding.Level.CONTAINS, Finding.Level.CONTAINS,
                         Finding.Level.MAY_CONTAIN, Finding.Level.POSSIBLE),
                 Arrays.asList(findings.get(0).level(), findings.get(1).level(),

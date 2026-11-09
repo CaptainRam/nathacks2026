@@ -7,6 +7,7 @@
 
     <com.google.android.material.textview.MaterialTextView
         style="@style/Widget.AllergyCheck.SettingsSectionTitle"
+        android:accessibilityHeading="true"
         android:text="@string/detection_settings_title" />
 
     <com.google.android.material.textview.MaterialTextView
@@ -27,11 +28,11 @@
             android:paddingBottom="8dp">
 
             <!-- Where the check runs; the options below change with it. -->
-            <com.google.android.material.button.MaterialButtonToggleGroup
+            <com.example.allergycheck.WrappingButtonToggleGroup
                 android:id="@+id/detection_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/detection_location_label"
+                android:importantForAccessibility="no"
                 android:saveEnabled="false"
                 app:selectionRequired="true"
                 app:singleSelection="true">
@@ -57,7 +58,7 @@
                     android:saveEnabled="false"
                     android:text="@string/detection_cloud"
                     android:textAllCaps="false" />
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+            </com.example.allergycheck.WrappingButtonToggleGroup>
 
             <!-- Each option carries its own two-line label, set in code. -->
             <RadioGroup
@@ -105,6 +106,7 @@
         <com.google.android.material.textview.MaterialTextView
             style="@style/Widget.AllergyCheck.SettingsSectionTitle"
             android:layout_marginTop="24dp"
+            android:accessibilityHeading="true"
             android:text="@string/detection_cloud_title" />
 
         <com.google.android.material.textview.MaterialTextView
@@ -153,6 +155,7 @@
                         android:id="@+id/food_type_model_id"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:imeOptions="flagNoExtractUi"
                         android:inputType="textVisiblePassword"
                         android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>

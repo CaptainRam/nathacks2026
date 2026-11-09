@@ -6,6 +6,10 @@ import com.example.allergycheck.analysis.ai.AiResponseFormatException;
 import com.example.allergycheck.analysis.ai.AiUnavailableException;
 import com.example.allergycheck.analysis.ai.OpenRouterAiModel;
 
+import org.json.JSONException;
+
+import java.net.SocketTimeoutException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -21,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
@@ -53,7 +58,8 @@ public final class AiAnalyzer {
                                          BooleanSupplier cancelled, ProgressListener progress)
             throws InterruptedException {
         Map<String, Check> checks = checksFor(matching);
-        progress.onProgress(0, checks.size(), report(matching, checks));
+        Failures failures = new Failures();
+        progress.onProgress(0, checks.size(), report(matching, checks, failures));
         boolean batch = model.supportsBatch();
         int completed = 0;
         int consecutiveFailures = 0;
@@ -63,7 +69,7 @@ public final class AiAnalyzer {
             }
             boolean permanent = false;
             try {
-                apply(request, evaluate(request, model, batch));
+                if (!apply(request, evaluate(request, model, batch))) failures.invalidResponse();
                 consecutiveFailures = 0;
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
@@ -72,19 +78,21 @@ public final class AiAnalyzer {
                 // The engine answered, but this ingredient's reply was unusable. Leave it
                 // unchecked without treating the model as unavailable for subsequent inputs.
                 consecutiveFailures = 0;
+                failures.record(invalidResponse);
             } catch (Exception | LinkageError failure) {
                 // Failures stay attached to the input ingredient. A failed check is never clear.
                 consecutiveFailures++;
-                permanent = isPermanent(failure);
+                failures.record(failure);
+                permanent = stopsFurtherRequests(failure);
             }
             completed += request.size();
-            progress.onProgress(completed, checks.size(), report(matching, checks));
+            progress.onProgress(completed, checks.size(), report(matching, checks, failures));
             // Avoid hammering an unavailable model or API. Remaining checks stay visibly unchecked.
             if (permanent || consecutiveFailures >= 3) {
                 break;
             }
         }
-        return report(matching, checks);
+        return report(matching, checks, failures);
     }
 
     public static AnalysisReport analyseConcurrent(AnalysisReport matching, boolean batch,
@@ -107,8 +115,9 @@ public final class AiAnalyzer {
             throw new IllegalArgumentException("Cloud concurrency and timeout must be positive");
         }
         Map<String, Check> checks = checksFor(matching);
+        Failures failures = new Failures();
         List<List<Check>> requests = requestsFor(checks, batch);
-        progress.onProgress(0, checks.size(), report(matching, checks));
+        progress.onProgress(0, checks.size(), report(matching, checks, failures));
         if (requests.isEmpty()) {
             return report(matching, checks);
         }
@@ -141,7 +150,7 @@ public final class AiAnalyzer {
                             }
                             return new RequestResult(evaluate(request.checks, model, batch), null);
                         } catch (Exception | LinkageError failure) {
-                            if (isPermanent(failure)) stopSubmitting.set(true);
+                            if (stopsFurtherRequests(failure)) stopSubmitting.set(true);
                             return new RequestResult(null, failure);
                         } finally {
                             request.release();
@@ -162,20 +171,22 @@ public final class AiAnalyzer {
                         outcome = new RequestResult(null, failure);
                     }
                     if (outcome.failure == null) {
-                        apply(finished.checks, outcome.decisions);
+                        if (!apply(finished.checks, outcome.decisions)) failures.invalidResponse();
                         consecutiveFailures = 0;
                     } else if (outcome.failure instanceof AiResponseFormatException) {
                         // As in the serial path: the service answered, only this reply was
                         // unusable. Its checks stay unchecked without stopping other requests.
                         consecutiveFailures = 0;
+                        failures.record(outcome.failure);
                     } else {
                         consecutiveFailures++;
-                        if (isPermanent(outcome.failure) || consecutiveFailures >= 3) {
+                        failures.record(outcome.failure);
+                        if (stopsFurtherRequests(outcome.failure) || consecutiveFailures >= 3) {
                             stopSubmitting.set(true);
                         }
                     }
                     completed += finished.checks.size();
-                    progress.onProgress(completed, checks.size(), report(matching, checks));
+                    progress.onProgress(completed, checks.size(), report(matching, checks, failures));
                 }
                 long now = System.nanoTime();
                 for (Map.Entry<Future<RequestResult>, CloudRequest> entry
@@ -184,14 +195,15 @@ public final class AiAnalyzer {
                             >= TimeUnit.MILLISECONDS.toNanos(requestTimeoutMs)) {
                         CloudRequest expired = active.remove(entry.getKey());
                         expired.cancel(entry.getKey());
+                        failures.record(new TimeoutException());
                         consecutiveFailures++;
                         if (consecutiveFailures >= 3) stopSubmitting.set(true);
                         completed += expired.checks.size();
-                        progress.onProgress(completed, checks.size(), report(matching, checks));
+                        progress.onProgress(completed, checks.size(), report(matching, checks, failures));
                     }
                 }
             }
-            return report(matching, checks);
+            return report(matching, checks, failures);
         } finally {
             for (Map.Entry<Future<RequestResult>, CloudRequest> entry : active.entrySet()) {
                 entry.getValue().cancel(entry.getKey());
@@ -218,18 +230,63 @@ public final class AiAnalyzer {
         return Collections.singletonList(decision);
     }
 
-    private static void apply(List<Check> request, List<AiDecision> decisions) {
+    private static boolean apply(List<Check> request, List<AiDecision> decisions) {
+        boolean complete = true;
         for (int i = 0; i < request.size(); i++) {
             // A missing verdict stays unchecked, while valid risks are retained.
             request.get(i).decision = decisions.get(i);
+            complete &= decisions.get(i) != null;
         }
+        return complete;
     }
 
     /** A failure that would repeat for every remaining request, so the run stops at once. */
-    private static boolean isPermanent(Throwable failure) {
+    private static boolean stopsFurtherRequests(Throwable failure) {
         return failure instanceof AiUnavailableException
                 || (failure instanceof OpenRouterAiModel.ApiException
-                && ((OpenRouterAiModel.ApiException) failure).permanent());
+                && ((OpenRouterAiModel.ApiException) failure).stopsFurtherRequests());
+    }
+
+    private static final class Failures {
+        AnalysisReport.AiFailure kind = AnalysisReport.AiFailure.NONE;
+        long retryAtMillis;
+
+        void invalidResponse() { record(AnalysisReport.AiFailure.INVALID_RESPONSE, 0); }
+
+        void record(Throwable failure) {
+            AnalysisReport.AiFailure candidate;
+            long retryAt = 0;
+            if (failure instanceof OpenRouterAiModel.ApiException) {
+                OpenRouterAiModel.ApiException api = (OpenRouterAiModel.ApiException) failure;
+                retryAt = api.retryAtMillis();
+                if (api.modelConfigurationError()) {
+                    record(AnalysisReport.AiFailure.MODEL, retryAt);
+                    return;
+                }
+                switch (api.status()) {
+                    case 401: candidate = AnalysisReport.AiFailure.AUTHENTICATION; break;
+                    case 402: candidate = retryAt > 0 ? AnalysisReport.AiFailure.RATE_LIMIT
+                            : AnalysisReport.AiFailure.QUOTA; break;
+                    case 404: candidate = AnalysisReport.AiFailure.MODEL; break;
+                    case 429: candidate = AnalysisReport.AiFailure.RATE_LIMIT; break;
+                    case 408: case 504: case 524:
+                        candidate = AnalysisReport.AiFailure.TIMEOUT; break;
+                    default: candidate = AnalysisReport.AiFailure.UNAVAILABLE; break;
+                }
+            } else if (failure instanceof SocketTimeoutException || failure instanceof TimeoutException) {
+                candidate = AnalysisReport.AiFailure.TIMEOUT;
+            } else if (failure instanceof AiResponseFormatException || failure instanceof JSONException) {
+                candidate = AnalysisReport.AiFailure.INVALID_RESPONSE;
+            } else {
+                candidate = AnalysisReport.AiFailure.UNAVAILABLE;
+            }
+            record(candidate, retryAt);
+        }
+
+        private void record(AnalysisReport.AiFailure candidate, long retryAt) {
+            if (candidate.priority > kind.priority) kind = candidate;
+            retryAtMillis = Math.max(retryAtMillis, retryAt);
+        }
     }
 
     private static final class RequestResult {
@@ -421,6 +478,11 @@ public final class AiAnalyzer {
         }
         return new AnalysisReport(overall, results, matching.label(), matching.lowConfidence(),
                 true, incomplete);
+    }
+
+    private static AnalysisReport report(AnalysisReport matching, Map<String, Check> checks,
+                                         Failures failures) {
+        return report(matching, checks).withAiFailure(failures.kind, failures.retryAtMillis);
     }
 
     private static final class Check {

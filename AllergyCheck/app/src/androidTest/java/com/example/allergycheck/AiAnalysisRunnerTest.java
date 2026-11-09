@@ -14,6 +14,7 @@ import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.analysis.Finding;
 import com.example.allergycheck.analysis.ai.AiDecision;
 import com.example.allergycheck.analysis.ai.AiModel;
+import com.example.allergycheck.analysis.ai.OpenRouterAiModel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -166,6 +167,7 @@ public class AiAnalysisRunnerTest {
             AnalysisReport timedOut = result.get();
             assertTrue(timedOut.aiAnalysis());
             assertTrue(timedOut.aiIncomplete());
+            assertEquals(AnalysisReport.AiFailure.TIMEOUT, timedOut.aiFailure());
             assertEquals(AnalysisReport.Status.POSSIBLE, timedOut.overall());
             assertTrue(hasFinding(timedOut, Finding.Reason.AI_RISK, "mystery protein"));
             assertTrue(hasFinding(timedOut, Finding.Reason.AI_UNAVAILABLE, "sugar"));
@@ -182,6 +184,56 @@ public class AiAnalysisRunnerTest {
             assertSame(timedOut, result.get());
         } finally {
             releaseSecond.countDown();
+            onMain(() -> { if (runner[0] != null) runner[0].close(); });
+        }
+    }
+
+    @Test
+    public void cloudAuthenticationFailureIsDeliveredAndANewCheckCanRecover() throws Exception {
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.DECISIONS);
+        AtomicBoolean recovered = new AtomicBoolean();
+        AtomicInteger requests = new AtomicInteger();
+        AtomicReference<AnalysisReport> failed = new AtomicReference<>();
+        AtomicReference<AnalysisReport> success = new AtomicReference<>();
+        CountDownLatch failureDelivered = new CountDownLatch(1);
+        CountDownLatch successDelivered = new CountDownLatch(1);
+        AiAnalysisRunner[] runner = new AiAnalysisRunner[1];
+        try {
+            onMain(() -> {
+                runner[0] = new AiAnalysisRunner(context, () -> (ingredient, allergen) -> {
+                    requests.incrementAndGet();
+                    if (!recovered.get()) throw new OpenRouterAiModel.ApiException(401);
+                    return AiDecision.of(AiDecision.Verdict.NO_EVIDENCE);
+                }, 5_000);
+                runner[0].check(matching(), new AiAnalysisRunner.Callback() {
+                    @Override public void onProgress(int completed, int total) { }
+                    @Override public void onResult(AnalysisReport report) {
+                        assertSame(Looper.getMainLooper(), Looper.myLooper());
+                        failed.set(report);
+                        failureDelivered.countDown();
+                    }
+                });
+            });
+            assertTrue(failureDelivered.await(5, TimeUnit.SECONDS));
+            assertEquals(1, requests.get());
+            assertTrue(failed.get().aiIncomplete());
+            assertEquals(AnalysisReport.AiFailure.AUTHENTICATION, failed.get().aiFailure());
+
+            recovered.set(true);
+            onMain(() -> runner[0].check(matching(), new AiAnalysisRunner.Callback() {
+                @Override public void onProgress(int completed, int total) { }
+                @Override public void onResult(AnalysisReport report) {
+                    assertSame(Looper.getMainLooper(), Looper.myLooper());
+                    success.set(report);
+                    successDelivered.countDown();
+                }
+            }));
+            assertTrue(successDelivered.await(5, TimeUnit.SECONDS));
+            assertEquals(4, requests.get());
+            assertFalse(success.get().aiIncomplete());
+            assertEquals(AnalysisReport.AiFailure.NONE, success.get().aiFailure());
+            assertEquals(0, success.get().aiRetryAtMillis());
+        } finally {
             onMain(() -> { if (runner[0] != null) runner[0].close(); });
         }
     }

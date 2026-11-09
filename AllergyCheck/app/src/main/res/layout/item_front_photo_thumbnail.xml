@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One stable front-photo button, retained through add, replace and remove. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:paddingHorizontal="6dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <com.example.allergycheck.PhotoActionCardView
+        android:id="@+id/front_thumbnail_add_card"
+        style="@style/Widget.Material3.CardView.Filled"
+        android:layout_width="112dp"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/photo_thumbnail_height"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+        app:cardElevation="0dp"
+        app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Medium"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="noHideDescendants">
+
+            <ImageView
+                android:id="@+id/thumbnail_image"
+                android:layout_width="96dp"
+                android:layout_height="@dimen/photo_thumbnail_height"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter" />
+
+            <LinearLayout
+                android:id="@+id/front_thumbnail_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/front_thumbnail_add_button"
+                    style="@style/Widget.AllergyCheck.TonalIconButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@string/crosscheck_add_photo"
+                    app:icon="@drawable/ic_add"
+                    app:iconSize="24dp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/photo_role_front"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/crosscheck_photo_optional"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+
+            <!-- Sweeps over the photo while it is being read. -->
+            <View
+                android:id="@+id/thumbnail_scan_line"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_scan_line"
+                android:importantForAccessibility="no"
+                android:visibility="invisible" />
+        </FrameLayout>
+    </com.example.allergycheck.PhotoActionCardView>
+
+    <!-- Edit badge: tells the user the photo can be changed. -->
+    <ImageView
+        android:id="@+id/front_thumbnail_edit"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="bottom|end"
+        android:background="@drawable/circle_primary"
+        android:elevation="2dp"
+        android:importantForAccessibility="no"
+        android:padding="6dp"
+        android:src="@drawable/ic_edit"
+        app:tint="?attr/colorOnPrimaryContainer" />
+</FrameLayout>

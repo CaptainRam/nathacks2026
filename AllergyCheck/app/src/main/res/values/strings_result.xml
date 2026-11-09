@@ -3,7 +3,6 @@
 <resources>
     <string name="start_analysis">Check ingredients</string>
     <string name="tap_photo_to_change">Tap a photo to change it</string>
-    <string name="thumbnail_description">Label photo %1$d</string>
     <string name="change_photo_choose">Choose another photo</string>
     <string name="change_photo_camera">Take a new photo</string>
     <string name="cancel_analysis">Cancel</string>

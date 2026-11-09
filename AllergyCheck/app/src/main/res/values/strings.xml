@@ -37,7 +37,6 @@
     <string name="no_allergens_selected">No allergens selected</string>
     <string name="allergens_title">Your allergens</string>
     <string name="allergens_hint">Choose what to flag on ingredient labels. Select all that apply.</string>
-    <string name="settings_sections">Settings section</string>
     <string name="settings_section_allergens">Allergens</string>
     <string name="settings_section_model">AI model</string>
     <string name="save">Save</string>

@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 
 import com.example.allergycheck.ocr.CaptureGate;
 import com.example.allergycheck.ocr.FrameReadability;
@@ -142,6 +143,17 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
         handler.removeCallbacks(refresh);
     }
 
+    /** The shutter has fired; this state also covers a manual shot before auto-capture arms. */
+    @MainThread
+    void beginCapture() {
+        freeze();
+        action.setEnabled(false);
+        action.setContentDescription(action.getResources().getText(R.string.take_photo));
+        ViewCompat.setStateDescription(action,
+                action.getResources().getText(R.string.a11y_camera_saving_photo));
+        setChipMessage(chipText.getResources().getString(R.string.a11y_camera_saving_photo));
+    }
+
     @Override
     @MainThread
     public void onAssessment(@NonNull FrameReadability.Assessment assessment, boolean cleanRead,
@@ -188,9 +200,9 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
             bindChip(verdict, decision.autoCaptureArmed(), decision.autoCaptureHeld());
 
             action.setEnabled(decision.captureEnabled());
-            action.setContentDescription(action.getResources().getString(
-                    decision.captureEnabled() ? R.string.take_photo
-                            : R.string.take_photo_not_ready));
+            action.setContentDescription(action.getResources().getText(R.string.take_photo));
+            ViewCompat.setStateDescription(action, decision.captureEnabled() ? null
+                    : action.getResources().getText(R.string.take_photo_not_ready));
         }
 
         if (decision.captureNow()) {
@@ -228,11 +240,13 @@ final class CaptureFeedback implements LiveLabelReader.Assessor {
             copy = R.string.camera_state_unclear;
         }
         String message = chipText.getResources().getString(copy);
-        chipText.setText(message);
-        // Announced rather than declared as a live region: the stabiliser already guarantees a
-        // minimum dwell per message, so this fires at a readable pace, and doing it explicitly
-        // avoids the duplicate announcements a live region produces alongside setText.
-        chipText.announceForAccessibility(message);
+        setChipMessage(message);
+    }
+
+    private void setChipMessage(String message) {
+        // One polite status region lets TalkBack finish the user's current speech. Gate changes
+        // can leave the displayed instruction unchanged, so do not emit another content event.
+        if (!message.contentEquals(chipText.getText())) chipText.setText(message);
     }
 
     /** Container colour, text/icon colour, and icon for one verdict. */

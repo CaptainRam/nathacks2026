@@ -13,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.allergycheck.analysis.AnalysisReport;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.LongPredicate;
 
 /**
  * The history list.
@@ -41,6 +43,7 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
 
     /** Twice the row's 64dp at xxhdpi; enough to draw sharply, small enough to hold many. */
     private static final int THUMBNAIL_PX = 256;
+    private static final Object ACCESSIBILITY_POSITION_PAYLOAD = new Object();
 
     interface Listener {
         void onScanClicked(@NonNull ScanHistoryItem item);
@@ -56,6 +59,7 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
     private final Listener listener;
     private final LruCache<Long, Bitmap> thumbnails = new LruCache<>(THUMBNAIL_CACHE_SIZE);
     private final ExecutorService decoder = Executors.newSingleThreadExecutor();
+    private LongPredicate initialFocusCandidate = id -> false;
 
     ScanHistoryAdapter(@NonNull HistorySummary summary, @NonNull ScanHistory history,
                        @NonNull Listener listener) {
@@ -63,6 +67,10 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
         this.history = history;
         this.listener = listener;
         setHasStableIds(true);
+    }
+
+    void setInitialFocusCandidate(@NonNull LongPredicate requested) {
+        initialFocusCandidate = requested;
     }
 
     @android.annotation.SuppressLint("NotifyDataSetChanged")
@@ -93,6 +101,7 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
     ScanHistoryItem removeAt(int position) {
         ScanHistoryItem removed = items.remove(position);
         notifyItemRemoved(position);
+        refreshAccessiblePositions();
         return removed;
     }
 
@@ -100,6 +109,15 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
         int at = Math.min(position, items.size());
         items.add(at, item);
         notifyItemInserted(at);
+        refreshAccessiblePositions();
+    }
+
+    private void refreshAccessiblePositions() {
+        if (!items.isEmpty()) {
+            // A swipe or undo changes every row's count, including those before the changed row.
+            // Rebind just the spoken description so cached photos need no additional work.
+            notifyItemRangeChanged(0, items.size(), ACCESSIBILITY_POSITION_PAYLOAD);
+        }
     }
 
     void shutDown() {
@@ -126,7 +144,24 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
 
     @Override
     public void onBindViewHolder(@NonNull Row holder, int position) {
-        holder.bind(items.get(position));
+        holder.bind(items.get(position), position, items.size());
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull Row holder, int position,
+                                 @NonNull List<Object> payloads) {
+        if (holder.boundItem != null && payloads.contains(ACCESSIBILITY_POSITION_PAYLOAD)) {
+            holder.bindDescription(items.get(position), position, items.size());
+        } else {
+            onBindViewHolder(holder, position);
+        }
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull Row holder) {
+        holder.boundItem = null;
+        holder.thumbnail.setTag(null);
+        super.onViewRecycled(holder);
     }
 
     final class Row extends RecyclerView.ViewHolder {
@@ -135,6 +170,7 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
         private final TextView timestamp;
         private final TextView summaryLine;
         private final View severity;
+        @Nullable private ScanHistoryItem boundItem;
 
         Row(@NonNull View view) {
             super(view);
@@ -142,27 +178,52 @@ final class ScanHistoryAdapter extends RecyclerView.Adapter<ScanHistoryAdapter.R
             timestamp = view.findViewById(R.id.scan_timestamp);
             summaryLine = view.findViewById(R.id.scan_summary);
             severity = view.findViewById(R.id.scan_severity);
+            view.setOnClickListener(clicked -> {
+                if (boundItem != null) {
+                    listener.onScanClicked(boundItem);
+                }
+            });
+            view.setOnLongClickListener(clicked -> deleteBoundItem());
+            ViewCompat.replaceAccessibilityAction(view,
+                    AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                    view.getResources().getString(R.string.a11y_history_open), null);
+            // A named action makes deletion available without a swipe or a long press. Install
+            // it once per holder and resolve its current item when invoked, including after reuse.
+            // Register before naming long-click: ViewCompat reuses any action with the same
+            // label, which would otherwise replace long-click instead of adding a custom action.
+            ViewCompat.addAccessibilityAction(view,
+                    view.getResources().getString(R.string.a11y_history_delete),
+                    (clicked, arguments) -> deleteBoundItem());
+            ViewCompat.replaceAccessibilityAction(view,
+                    AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,
+                    view.getResources().getString(R.string.a11y_history_delete), null);
+            // Resolve the current bound id when queried, including after this holder is reused.
+            InitialFocusHint.install(view, () -> boundItem != null
+                    && initialFocusCandidate.test(boundItem.id()));
         }
 
-        void bind(@NonNull ScanHistoryItem item) {
+        void bind(@NonNull ScanHistoryItem item, int position, int count) {
+            boundItem = item;
             timestamp.setText(summary.timestamp(item.createdAt()));
             summaryLine.setText(summary.line(item));
             severity.setBackgroundTintList(
                     ColorStateList.valueOf(severityColour(item.status())));
-            itemView.setContentDescription(summary.contentDescription(item));
-            itemView.setOnClickListener(view -> listener.onScanClicked(item));
-            itemView.setOnLongClickListener(view -> {
-                listener.onScanLongPressed(item);
-                return true;
-            });
-            // Swipe is unreachable by TalkBack and switch access, so delete is also an action.
-            ViewCompat.addAccessibilityAction(itemView,
-                    itemView.getResources().getString(R.string.history_delete),
-                    (view, arguments) -> {
-                        listener.onScanLongPressed(item);
-                        return true;
-                    });
+            bindDescription(item, position, count);
             bindThumbnail(item);
+        }
+
+        private void bindDescription(@NonNull ScanHistoryItem item, int position, int count) {
+            itemView.setContentDescription(itemView.getResources().getString(
+                    R.string.a11y_history_row, position + 1, count,
+                    summary.contentDescription(item)));
+        }
+
+        private boolean deleteBoundItem() {
+            if (boundItem == null) {
+                return false;
+            }
+            listener.onScanLongPressed(boundItem);
+            return true;
         }
 
         private void bindThumbnail(@NonNull ScanHistoryItem item) {

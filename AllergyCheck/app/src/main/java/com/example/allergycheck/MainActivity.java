@@ -36,6 +36,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
 
 import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AiAnalyzer;
@@ -72,6 +73,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private static final String SETTINGS_OPEN_STATE = "settings_open";
     private static final String SETTINGS_INTERRUPTED_STATE = "settings_interrupted_scan";
     private static final String HISTORY_STATE = "history_visible";
+    private static final String ALLERGEN_DIALOG_REQUEST_STATE = "allergen_dialog_request";
+    private static final String AI_RETRY_AT_STATE = "ai_retry_at";
+    private static final String AI_RETRY_FAILURE_STATE = "ai_retry_failure";
     private static final String HISTORY_FRAGMENT = "history";
     private static final int MAX_PREVIEW_SIZE = 1600;
 
@@ -122,6 +126,15 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private PopupMenu changePhotoMenu;
     private HomeMotion.Flight photoFlight;
     private ModelDownloadController modelDownloadController;
+    private boolean resultInitialFocusRequested;
+    private int allergenDialogRequest;
+    private int allergenReturnFocusGeneration;
+    private int allergenReturnFocusId = View.NO_ID;
+    private DialogCallerVisibility allergenCallerVisibility;
+    private long aiRetryAtMillis;
+    private long resultRetryAtMillis;
+    private AnalysisReport.AiFailure aiRetryFailure = AnalysisReport.AiFailure.NONE;
+    private Runnable pendingRetryAvailability;
 
     /** The extra button under a result, when the result needs one. */
     private enum ResultAction { NONE, RETRY, CHOOSE_ALLERGENS, CONFIGURE_AI }
@@ -157,7 +170,23 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                 settingsOpen = false;
                 settingsInterruptedScan = false;
                 if (result.getResultCode() == RESULT_OK) {
-                    onAllergenPreferencesSaved();
+                    if (result.getData() != null && result.getData().getBooleanExtra(
+                            SettingsActivity.EXTRA_AI_PROVIDER_CHANGED, false)) {
+                        clearAiRetryDelay();
+                    }
+                    Intent data = result.getData();
+                    boolean analysisChanged = data == null || data.getBooleanExtra(
+                            SettingsActivity.EXTRA_ANALYSIS_CONFIGURATION_CHANGED, true);
+                    boolean selectionChanged = data == null || data.getBooleanExtra(
+                            SettingsActivity.EXTRA_ALLERGEN_SELECTION_CHANGED, true);
+                    updateAllergenSummary();
+                    Snackbar.make(findViewById(R.id.main), R.string.preferences_saved,
+                            Snackbar.LENGTH_SHORT).show();
+                    if (analysisMode && (resume || analysisChanged || selectionChanged)) {
+                        rescanCurrentPhoto();
+                    } else {
+                        resultView.refreshDisplayPreferences();
+                    }
                 } else if (resume && analysisMode) {
                     rescanCurrentPhoto();
                 }
@@ -196,6 +225,17 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         settingsOpen = savedInstanceState != null && savedInstanceState.getBoolean(SETTINGS_OPEN_STATE);
         settingsInterruptedScan = savedInstanceState != null
                 && savedInstanceState.getBoolean(SETTINGS_INTERRUPTED_STATE);
+        allergenDialogRequest = savedInstanceState == null ? 0
+                : savedInstanceState.getInt(ALLERGEN_DIALOG_REQUEST_STATE);
+        if (savedInstanceState != null) {
+            aiRetryAtMillis = savedInstanceState.getLong(AI_RETRY_AT_STATE);
+            try {
+                aiRetryFailure = AnalysisReport.AiFailure.valueOf(savedInstanceState.getString(
+                        AI_RETRY_FAILURE_STATE, AnalysisReport.AiFailure.NONE.name()));
+            } catch (IllegalArgumentException ignored) {
+                clearAiRetryDelay();
+            }
+        }
         WindowCompat.enableEdgeToEdge(getWindow());
         setContentView(R.layout.activity_main);
         boolean darkTheme = (getResources().getConfiguration().uiMode
@@ -239,6 +279,16 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         analysisResult = findViewById(R.id.analysis_result);
         restartButton = findViewById(R.id.restart_button);
         resultView = new AnalysisResultView(analysisResult);
+        InitialFocusHint.install(findViewById(R.id.analysis_loading_title),
+                () -> analysisLoading.isShown() && analysisMode && !historyVisible
+                        && !settingsOpen && !isAllergenDialogOpen() && hasWindowFocus()
+                        && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED));
+        InitialFocusHint.install(analysisResult.findViewById(R.id.verdict_title),
+                () -> resultInitialFocusRequested && canOfferResultHint());
+        InitialFocusHint.install(allergensButton,
+                () -> canSuggestAllergenReturn(R.id.allergens_button));
+        InitialFocusHint.install(resultSecondaryButton,
+                () -> canSuggestAllergenReturn(R.id.result_secondary_button));
         ocrPipeline = new OcrPipeline();
         aiRunner = new AiAnalysisRunner(this);
         foodCrossCheck = new FoodCrossCheckController(this, savedInstanceState,
@@ -265,20 +315,38 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         bottomNav.setSelectedItemId(restoreHistory ? R.id.tab_history : R.id.tab_scan);
 
         getSupportFragmentManager().setFragmentResultListener(
-                AllergenPreferencesDialogFragment.RESULT_KEY, this, (key, result) ->
-                        findViewById(R.id.main).post(() -> {
-                            if (isFinishing() || isDestroyed()) {
-                                return;
-                            }
-                            if (result.getBoolean(AllergenPreferencesDialogFragment.SAVED)) {
-                                onAllergenPreferencesSaved();
-                            }
-                        }));
+                AllergenPreferencesDialogFragment.RESULT_KEY, this, (key, result) -> {
+                    final int generation = allergenReturnFocusGeneration;
+                    findViewById(R.id.main).post(() -> {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        if (generation != allergenReturnFocusGeneration
+                                || result.getInt(AllergenPreferencesDialogFragment.REQUEST_ID)
+                                != allergenDialogRequest) {
+                            return;
+                        }
+                        boolean saved = result.getBoolean(AllergenPreferencesDialogFragment.SAVED);
+                        boolean restartingCheck = saved && analysisMode;
+                        if (saved) {
+                            onAllergenPreferencesSaved();
+                        }
+                        // The dialog's native window restoration uses its original, stable
+                        // caller. Its fallback hint never schedules a later focus action.
+                        if (restartingCheck) {
+                            clearAllergenReturnHint();
+                        }
+                    });
+                });
 
         importButton.setOnClickListener(view -> openPhotoPicker());
         cameraButton.setOnClickListener(view -> takePhoto());
         replaceButton.setOnClickListener(view -> openPhotoPicker());
         photoPreview.setOnClickListener(view -> showChangePhotoMenu(view, 0));
+        setPhotoButtonRole(photoPreview);
+        ViewCompat.replaceAccessibilityAction(photoPreview,
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                getString(R.string.label_photo_menu_action), null);
         startAnalysisButton.setOnClickListener(view -> startAnalysis());
         findViewById(R.id.cancel_analysis_button).setOnClickListener(view -> cancelAnalysis());
         restartButton.setOnClickListener(view -> restart());
@@ -405,9 +473,6 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                     if (analysisMode) {
                         bindThumbnails(Collections.singletonList(bitmap), true);
                         recognizeIngredients(uri, request);
-                    } else {
-                        // Nothing is read until the user asks for it.
-                        photoPreview.announceForAccessibility(getString(R.string.photo_added));
                     }
                 });
             } catch (IOException | RuntimeException exception) {
@@ -510,6 +575,12 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                 } else if (!hasAiConfiguration(mode)) {
                     showAnalysisReport(photo, AiAnalyzer.incompleteReport(report),
                             ResultAction.CONFIGURE_AI);
+                } else if ((mode == AnalysisPreferences.Mode.OPENROUTER
+                        || mode == AnalysisPreferences.Mode.DECISIONS)
+                        && aiRetryAtMillis > System.currentTimeMillis()) {
+                    // Keep fresh label evidence while the unchanged cloud setup is waiting.
+                    showAnalysisReport(photo, AiAnalyzer.incompleteReport(report)
+                            .withAiFailure(aiRetryFailure, aiRetryAtMillis), null);
                 } else {
                     scanProgress.step(ScanProgress.Step.AI_CHECKS);
                     aiRunner.check(report, new AiAnalysisRunner.Callback() {
@@ -517,8 +588,16 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                         public void onProgress(int completed, int total) {
                             if (isCurrentImageRequest(request)) {
                                 scanProgress.aiChecks(completed, total);
-                                ((TextView) findViewById(R.id.analysis_loading_title)).setText(
-                                        R.string.ai_check_progress);
+                                TextView status = findViewById(R.id.analysis_loading_title);
+                                String title = getString(R.string.ai_check_progress);
+                                if (!title.contentEquals(status.getText())) {
+                                    status.setText(title);
+                                }
+                                // Counts are available on demand without interrupting TalkBack
+                                // for every ingredient/allergen pair that completes.
+                                TextView counts = findViewById(R.id.analysis_check_progress);
+                                counts.setText(getString(R.string.ai_checks_completed, completed, total));
+                                counts.setVisibility(View.VISIBLE);
                             }
                         }
 
@@ -551,16 +630,38 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     private void showAnalysisReport(Uri photo, AnalysisReport report, ResultAction action) {
+        ResultAction recovery = bindAnalysisReport(report);
+        showResult(action != null ? action : recovery, () -> {
+            ScanHistory.get(this).save(report, photo);
+            foodCrossCheck.onReport(report);
+        });
+
+    }
+
+    private ResultAction bindAnalysisReport(AnalysisReport report) {
         resultView.showReport(report, AllergenPreferences.showNotDetected(this));
-        showResult(action != null ? action
-                : report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED
-                ? ResultAction.CHOOSE_ALLERGENS
-                : report.aiIncomplete() || report.overall() == AnalysisReport.Status.UNREADABLE
-                ? ResultAction.RETRY : ResultAction.NONE,
-                () -> {
-                    ScanHistory.get(this).save(report, photo);
-                    foodCrossCheck.onReport(report);
-                });
+        cancelRetryAvailability();
+        resultRetryAtMillis = report.aiRetryAtMillis();
+        if (resultRetryAtMillis > System.currentTimeMillis()
+                && resultRetryAtMillis >= aiRetryAtMillis) {
+            aiRetryAtMillis = resultRetryAtMillis;
+            aiRetryFailure = report.aiFailure();
+        } else if (aiRetryAtMillis <= System.currentTimeMillis()) {
+            aiRetryAtMillis = 0;
+            aiRetryFailure = AnalysisReport.AiFailure.NONE;
+        }
+        if (report.overall() == AnalysisReport.Status.NO_ALLERGENS_SELECTED) {
+            return ResultAction.CHOOSE_ALLERGENS;
+        }
+        switch (report.aiFailure()) {
+            case AUTHENTICATION:
+            case QUOTA:
+            case MODEL:
+                return ResultAction.CONFIGURE_AI;
+            default:
+                return report.aiIncomplete() || report.overall() == AnalysisReport.Status.UNREADABLE
+                        ? ResultAction.RETRY : ResultAction.NONE;
+        }
     }
 
     /**
@@ -570,9 +671,15 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
      */
     private void showAndSaveMessage(Uri photo, String rawText, String message) {
         String title = getString(R.string.ingredient_result_title);
-        resultView.showMessage(title, message);
+        bindReadFailureMessage(title, message);
         showResult(ResultAction.RETRY,
                 () -> ScanHistory.get(this).saveFailure(rawText, title, message, photo));
+    }
+
+    private void bindReadFailureMessage(String title, String message) {
+        cancelRetryAvailability();
+        resultRetryAtMillis = 0;
+        resultView.showMessage(title, message);
     }
 
     /** Re-reads the photo already on screen, if any; a no-op when nothing is loaded. */
@@ -606,6 +713,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         if (historyVisible == show) {
             return;
         }
+        clearInitialFocusHints();
         historyVisible = show;
         if (show) {
             ensureHistoryFragment();
@@ -618,6 +726,12 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             // Drop any open detail, so returning to history lands on the list.
             getSupportFragmentManager().popBackStackImmediate(
                     null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            HistoryFragment fragment = (HistoryFragment) getSupportFragmentManager()
+                    .findFragmentByTag(HISTORY_FRAGMENT);
+            if (fragment != null) {
+                // This tab hides its container without changing the fragment's lifecycle.
+                fragment.cancelPendingRemovalFocus();
+            }
         }
         contentScroll.setVisibility(show ? View.GONE : View.VISIBLE);
         historyContainer.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -625,6 +739,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         restartButton.setVisibility(
                 show || analysisResult.getVisibility() != View.VISIBLE ? View.GONE : View.VISIBLE);
         historyBackCallback.setEnabled(show);
+        if (show) cancelRetryAvailability();
+        else updateRetryAvailability();
         if (show) {
             HomeMotion.riseIn(historyContainer, dp(24), 200);
         }
@@ -755,6 +871,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     /** Swaps the page between the home layout and the check layout, without animating. */
     private void setAnalysisMode(boolean enabled) {
+        clearInitialFocusHints();
         analysisMode = enabled;
         analysisBackCallback.setEnabled(enabled);
         boolean hasPhoto = selectedPhoto != null || photoPreview.getDrawable() != null;
@@ -765,6 +882,12 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         photoStripScroll.setVisibility(enabled ? View.VISIBLE : View.GONE);
         analysisGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
         updatePhotoLayout();
+        if (enabled) {
+            // Progress and results publish their own leaf panes. The home photo status must
+            // not remain the name of the entire active check or merge its reading targets.
+            ViewCompat.setAccessibilityPaneTitle(contentScroll, null);
+        }
+
         if (!enabled) {
             // analysisResult's own flag would otherwise stay stale at VISIBLE even though its
             // ancestor analysisGroup is now gone, which fools the history-tab restore in
@@ -772,6 +895,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             analysisResult.setVisibility(View.GONE);
             // Pinned outside the analysis group now, so it needs its own visibility toggle too.
             restartButton.setVisibility(View.GONE);
+            ViewCompat.setAccessibilityPaneTitle(contentScroll,
+                    getString(hasPhoto ? R.string.photo_added : R.string.tab_scan));
         }
         updateCrossCheckVisibility();
     }
@@ -781,39 +906,74 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
      * thumbnail card; an empty second slot offers to add the optional photo.
      */
     private void bindThumbnails(List<Bitmap> bitmaps, boolean animate) {
-        dismissChangePhotoMenu();
-        foodCrossCheck.dismissPhotoMenu();
         stopScanning();
-        photoStrip.removeAllViews();
+        if (bitmaps.isEmpty()) return;
         LayoutInflater inflater = LayoutInflater.from(this);
+        boolean created = photoStrip.getChildCount() != 2;
+        if (created) {
+            dismissChangePhotoMenu();
+            foodCrossCheck.dismissPhotoMenu();
+            photoStrip.removeAllViews();
+            photoStrip.addView(inflater.inflate(R.layout.item_photo_thumbnail, photoStrip, false));
+            photoStrip.addView(inflater.inflate(R.layout.item_front_photo_thumbnail, photoStrip, false));
+        }
         int height = getResources().getDimensionPixelSize(R.dimen.photo_thumbnail_height);
         int maxWidth = getResources().getDimensionPixelSize(R.dimen.photo_thumbnail_max_width);
         int availableWidth = contentColumn.getWidth() > 0 ? contentColumn.getWidth()
                 : getResources().getDisplayMetrics().widthPixels - Math.round(dp(40));
-        maxWidth = Math.min(maxWidth, Math.max(1, availableWidth / 2 - Math.round(dp(12))));
-        List<Bitmap> photos = new ArrayList<>(bitmaps);
+        int width = Math.min(height, Math.min(maxWidth,
+                Math.max(1, availableWidth / 2 - Math.round(dp(12)))));
         Bitmap front = foodCrossCheck.currentBitmap();
-        if (!photos.isEmpty() && front != null) photos.add(front);
-        for (int i = 0; i < photos.size(); i++) {
-            Bitmap bitmap = photos.get(i);
-            View item = inflater.inflate(R.layout.item_photo_thumbnail, photoStrip, false);
+        for (int i = 0; i < 2; i++) {
+            View item = photoStrip.getChildAt(i);
+            boolean isFront = i == 1;
+            Bitmap bitmap = isFront ? front : bitmaps.get(0);
             ImageView image = item.findViewById(R.id.thumbnail_image);
             image.setImageBitmap(bitmap);
-            // Equal cards keep the pair balanced; fitCenter preserves the complete label/photo.
-            image.getLayoutParams().width = Math.min(maxWidth, height);
-            View card = item.findViewById(R.id.thumbnail_card);
-            final int index = i;
-            card.setContentDescription(getString(i == 0
-                    ? R.string.crosscheck_label_photo_label : R.string.crosscheck_front_photo_label));
+            View card = ((ViewGroup) item).getChildAt(0);
+            card.setId(isFront && front == null ? R.id.front_thumbnail_add_card : R.id.thumbnail_card);
+            if (isFront) {
+                card.getLayoutParams().width = width;
+                card.getLayoutParams().height = front == null
+                        ? ViewGroup.LayoutParams.WRAP_CONTENT : height;
+                item.findViewById(R.id.front_thumbnail_empty).setVisibility(front == null
+                        ? View.VISIBLE : View.GONE);
+                item.findViewById(R.id.front_thumbnail_edit).setVisibility(front == null
+                        ? View.GONE : View.VISIBLE);
+                image.setVisibility(front == null ? View.GONE : View.VISIBLE);
+                View button = item.findViewById(R.id.front_thumbnail_add_button);
+                button.setEnabled(!foodCrossCheck.isPhotoLoading());
+                button.setOnClickListener(foodCrossCheck::showPhotoMenu);
+                ViewCompat.setStateDescription(card, getString(foodCrossCheck.isPhotoLoading()
+                        ? R.string.crosscheck_photo_loading : front == null
+                        ? R.string.crosscheck_photo_empty : R.string.crosscheck_photo_added));
+                if (front != null) {
+                    ViewCompat.replaceAccessibilityAction(card,
+                            AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_DISMISS,
+                            getString(R.string.crosscheck_remove_photo), (view, arguments) -> {
+                                foodCrossCheck.removePhoto();
+                                return true;
+                            });
+                } else {
+                    ViewCompat.removeAccessibilityAction(card,
+                            AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_DISMISS.getId());
+                }
+            }
+            image.getLayoutParams().width = width;
+            card.setEnabled(!isFront || !foodCrossCheck.isPhotoLoading());
+            card.setContentDescription(getString(isFront ? R.string.crosscheck_photo_accessibility_label
+                    : R.string.crosscheck_label_photo_label));
+            card.setOnClickListener(view -> {
+                clearInitialFocusHints();
+                if (isFront) foodCrossCheck.showPhotoMenu(view);
+                else showChangePhotoMenu(view, 0);
+            });
             ViewCompat.replaceAccessibilityAction(card,
                     AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
-                    getString(R.string.replace_photo), null);
-            card.setOnClickListener(view -> {
-                if (index == 0) showChangePhotoMenu(view, 0);
-                else foodCrossCheck.showPhotoMenu(view);
-            });
-            photoStrip.addView(item);
-            if (animate) {
+                    getString(isFront ? (front == null ? R.string.crosscheck_add_photo
+                            : R.string.crosscheck_change_photo) : R.string.label_photo_menu_action), null);
+            card.requestLayout();
+            if (animate && created) {
                 item.setScaleX(0.9f);
                 item.setScaleY(0.9f);
                 item.setAlpha(0f);
@@ -821,18 +981,16 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                         .setInterpolator(HomeMotion.EMPHASIZED).start();
             }
         }
-        if (!photos.isEmpty() && front == null) {
-            View item = inflater.inflate(R.layout.item_add_front_photo, photoStrip, false);
-            View card = item.findViewById(R.id.front_thumbnail_add_card);
-            card.getLayoutParams().width = Math.min(maxWidth, height);
-            View button = item.findViewById(R.id.front_thumbnail_add_button);
-            card.setContentDescription(getString(R.string.crosscheck_add_photo));
-            card.setEnabled(!foodCrossCheck.isPhotoLoading());
-            button.setEnabled(!foodCrossCheck.isPhotoLoading());
-            card.setOnClickListener(foodCrossCheck::showPhotoMenu);
-            button.setOnClickListener(foodCrossCheck::showPhotoMenu);
-            photoStrip.addView(item);
-        }
+    }
+
+    private static void setPhotoButtonRole(View target) {
+        ViewCompat.setAccessibilityDelegate(target, new androidx.core.view.AccessibilityDelegateCompat() {
+            @Override
+            public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfoCompat info) {
+                super.onInitializeAccessibilityNodeInfo(host, info);
+                info.setClassName(android.widget.Button.class.getName());
+            }
+        });
     }
 
     private void onFrontPhotoChanged() {
@@ -848,6 +1006,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     /** Offers to swap the photo at {@code index} for another one from the library or camera. */
     private void showChangePhotoMenu(View anchor, int index) {
+        clearInitialFocusHints();
         // Only one photo for now; the index is where a multi-photo check will route the change.
         dismissChangePhotoMenu();
         PopupMenu menu = new PopupMenu(this, anchor);
@@ -880,8 +1039,16 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     private void showAnalysisLoading() {
+        clearInitialFocusHints();
+        cancelRetryAvailability();
+        resultRetryAtMillis = 0;
         resultAction = ResultAction.NONE;
-        ((TextView) findViewById(R.id.analysis_loading_title)).setText(R.string.reading_ingredients);
+        TextView status = findViewById(R.id.analysis_loading_title);
+        String reading = getString(R.string.reading_ingredients);
+        if (!reading.contentEquals(status.getText())) {
+            status.setText(reading);
+        }
+        findViewById(R.id.analysis_check_progress).setVisibility(View.GONE);
         if (analysisLoading.getVisibility() != View.VISIBLE) {
             TransitionManager.beginDelayedTransition(contentColumn,
                     HomeMotion.pageTransition(photoCard, photoStripScroll));
@@ -890,6 +1057,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         }
         analysisResult.setVisibility(View.GONE);
         restartButton.setVisibility(View.GONE);
+        ViewCompat.setAccessibilityPaneTitle(status, getString(R.string.scan_in_progress));
         analysisLoading.setVisibility(View.VISIBLE);
         updateCrossCheckVisibility();
         startScanning();
@@ -926,6 +1094,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     private void revealResult(ResultAction action) {
+        clearInitialFocusHints();
         // A fade still running from the last page change would otherwise hide the result again.
         TransitionManager.endTransitions(contentColumn);
         stopScanning();
@@ -938,10 +1107,18 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                     ? R.string.choose_allergens_action : action == ResultAction.CONFIGURE_AI
                     ? R.string.configure_ai_action : R.string.try_again);
         }
+        View previousReadingTarget = accessibilityFocusedView(root);
+        resultInitialFocusRequested = canSuggestResultFrom(previousReadingTarget);
+        TextView resultTitle = analysisResult.findViewById(R.id.verdict_title);
+        // A leaf pane announces the new result without turning its whole content into one stop.
+        // TalkBack decides whether to keep a new reading position or use the initial hint.
+        ViewCompat.setAccessibilityPaneTitle(resultTitle,
+                getString(R.string.result_ready, resultView.title()));
         analysisLoading.setVisibility(View.GONE);
         analysisResult.setVisibility(View.VISIBLE);
         updateCrossCheckVisibility();
         restartButton.setVisibility(historyVisible ? View.GONE : View.VISIBLE);
+        updateRetryAvailability();
         if (historyVisible) {
             return;
         }
@@ -950,18 +1127,114 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             HomeMotion.popIn(resultView.verdictIcon(), 120);
             HomeMotion.riseIn(restartButton, dp(16), 360);
         }
-        analysisResult.announceForAccessibility(
-                getString(R.string.result_ready, resultView.title()));
+    }
+
+    private boolean canSuggestResultFrom(View previousReadingTarget) {
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)
+                || !hasWindowFocus() || historyVisible || settingsOpen
+                || isAllergenDialogOpen() || changePhotoMenu != null
+                || foodCrossCheck.isPhotoInteractionOpen()) return false;
+        // Completion may replace the progress the reader was on. It must not override a
+        // deliberate reading position on a thumbnail, toolbar, navigation bar or another view.
+        if (previousReadingTarget == null) return true;
+        for (View node = previousReadingTarget; node != null;
+             node = node.getParent() instanceof View ? (View) node.getParent() : null) {
+            if (node == analysisLoading) return true;
+        }
+        return false;
+    }
+
+    private static View accessibilityFocusedView(View view) {
+        if (view.isAccessibilityFocused() && view.isShown()) return view;
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View focused = accessibilityFocusedView(group.getChildAt(i));
+                if (focused != null) return focused;
+            }
+        }
+        return null;
+    }
+
+    private boolean canOfferResultHint() {
+        return !isFinishing() && !isDestroyed()
+                && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)
+                && hasWindowFocus() && analysisMode && !historyVisible && !settingsOpen
+                && !isAllergenDialogOpen() && changePhotoMenu == null
+                && !foodCrossCheck.isPhotoInteractionOpen() && analysisResult.isShown()
+                && !hasOtherReadingPosition(analysisResult.findViewById(R.id.verdict_title));
+    }
+
+    private boolean hasOtherReadingPosition(View candidate) {
+        View current = accessibilityFocusedView(root);
+        return current != null && current != candidate;
+    }
+
+    private void clearInitialFocusHints() {
+        resultInitialFocusRequested = false;
+        clearAllergenReturnHint();
     }
 
     private void onResultAction() {
         if (resultAction == ResultAction.CHOOSE_ALLERGENS) {
-            openAllergenPreferences();
+            openAllergenPreferences(resultSecondaryButton);
         } else if (resultAction == ResultAction.CONFIGURE_AI) {
             openSettings(true);
         } else if (resultAction == ResultAction.RETRY) {
+            if (resultRetryAtMillis > System.currentTimeMillis()) {
+                updateRetryAvailability();
+                return;
+            }
             rescanCurrentPhoto();
         }
+    }
+
+    private void updateRetryAvailability() {
+        cancelRetryAvailability();
+        if (resultSecondaryButton == null || resultAction == ResultAction.NONE) return;
+        if (resultAction != ResultAction.RETRY) {
+            resultSecondaryButton.setEnabled(true);
+            ViewCompat.setStateDescription(resultSecondaryButton, null);
+            return;
+        }
+        long remaining = resultRetryAtMillis - System.currentTimeMillis();
+        boolean waiting = remaining > 0;
+        resultSecondaryButton.setEnabled(!waiting);
+        resultSecondaryButton.setText(waiting ? getString(R.string.ai_retry_at, retryTime(resultRetryAtMillis))
+                : getString(R.string.try_again));
+        ViewCompat.setStateDescription(resultSecondaryButton,
+                waiting ? getString(R.string.ai_retry_wait_state) : null);
+        if (!waiting || !analysisMode || historyVisible || !analysisResult.isShown()
+                || !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) return;
+        final int request = imageRequest;
+        final long deadline = resultRetryAtMillis;
+        pendingRetryAvailability = () -> {
+            pendingRetryAvailability = null;
+            if (request == imageRequest && deadline == resultRetryAtMillis
+                    && resultAction == ResultAction.RETRY) updateRetryAvailability();
+        };
+        contentScroll.postDelayed(pendingRetryAvailability, remaining);
+    }
+
+    private String retryTime(long atMillis) {
+        java.util.Locale locale = getResources().getConfiguration().getLocales().get(0);
+        String skeleton = android.text.format.DateFormat.is24HourFormat(this) ? "Hms" : "hms";
+        String pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton);
+        return new java.text.SimpleDateFormat(pattern, locale).format(new java.util.Date(atMillis));
+    }
+
+    private void cancelRetryAvailability() {
+        if (pendingRetryAvailability != null && contentScroll != null) {
+            contentScroll.removeCallbacks(pendingRetryAvailability);
+        }
+        pendingRetryAvailability = null;
+    }
+
+    private void clearAiRetryDelay() {
+        cancelRetryAvailability();
+        aiRetryAtMillis = 0;
+        resultRetryAtMillis = 0;
+        aiRetryFailure = AnalysisReport.AiFailure.NONE;
     }
 
     private void startScanning() {
@@ -997,6 +1270,19 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         replaceButton.setEnabled(!loading);
         startAnalysisButton.setEnabled(!loading);
         updateCrossCheckVisibility();
+        findViewById(R.id.remove_button).setEnabled(!loading);
+        // The loading surface replaces the photo, so its covered content must not remain
+        // reachable by explore-by-touch or linear TalkBack navigation.
+        int importance = loading ? View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                : View.IMPORTANT_FOR_ACCESSIBILITY_AUTO;
+        findViewById(R.id.empty_state).setImportantForAccessibility(importance);
+        findViewById(R.id.preview_state).setImportantForAccessibility(importance);
+        if (!analysisMode) {
+            ViewCompat.setAccessibilityPaneTitle(contentScroll, getString(loading
+                    ? R.string.loading_photo : selectedPhoto != null
+                    ? R.string.photo_added : R.string.tab_scan));
+        }
+
     }
 
     private void updateCrossCheckVisibility() {
@@ -1025,6 +1311,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void updateCameraButton() {
         cameraButton.setEnabled(loadingOverlay.getVisibility() != View.VISIBLE
                 && pendingCameraPhoto == null);
+
     }
 
     private void showPhotoState(boolean hasPhoto) {
@@ -1127,6 +1414,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     /** Always through the launcher, so a save from either section refreshes this screen. */
     private void openSettings(boolean showModel) {
+        clearInitialFocusHints();
         settingsOpen = true;
         foodCrossCheck.suspend();
         if (analysisMode && analysisLoading.getVisibility() == View.VISIBLE) {
@@ -1140,10 +1428,61 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     private void openAllergenPreferences() {
+        openAllergenPreferences(allergensButton);
+    }
+
+    private void openAllergenPreferences(View source) {
+        clearInitialFocusHints();
         if (!getSupportFragmentManager().isStateSaved() && !isAllergenDialogOpen()) {
-            new AllergenPreferencesDialogFragment().showNow(getSupportFragmentManager(),
+            allergenReturnFocusId = source.getId();
+            AllergenPreferencesDialogFragment.of(source.getId(), ++allergenDialogRequest)
+                    .showNow(getSupportFragmentManager(),
                     AllergenPreferencesDialogFragment.TAG);
+            keepAllergenCallerVisible(source.getId(), allergenDialogRequest);
         }
+    }
+
+    private void keepAllergenCallerVisible(int sourceId, int request) {
+        closeAllergenCallerVisibility();
+        View caller = findViewById(sourceId);
+        if (caller == null || request != allergenDialogRequest) return;
+        final int generation = allergenReturnFocusGeneration;
+        allergenCallerVisibility = DialogCallerVisibility.start(contentColumn, caller,
+                () -> request == allergenDialogRequest
+                        && generation == allergenReturnFocusGeneration
+                        && !isFinishing() && !isDestroyed() && !settingsOpen && !historyVisible
+                        && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)
+                        && isAllergenDialogOpen());
+    }
+
+    void onAllergenDialogDismissed(int request) {
+        if (request == allergenDialogRequest) closeAllergenCallerVisibility();
+    }
+
+    private void closeAllergenCallerVisibility() {
+        if (allergenCallerVisibility != null) {
+            allergenCallerVisibility.close();
+            allergenCallerVisibility = null;
+        }
+    }
+
+    private boolean canSuggestAllergenReturn(int sourceViewId) {
+        View source = findViewById(sourceViewId);
+        return allergenReturnFocusId == sourceViewId && !isFinishing() && !isDestroyed()
+                && !settingsOpen && !historyVisible
+                && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)
+                && hasWindowFocus() && source != null && source.isShown()
+                && !hasOtherReadingPosition(source);
+    }
+
+    private void clearAllergenReturnHint() {
+        ++allergenReturnFocusGeneration;
+        allergenReturnFocusId = View.NO_ID;
+        closeAllergenCallerVisibility();
+    }
+
+    int allergenDialogFocusGeneration() {
+        return allergenReturnFocusGeneration;
     }
 
     private boolean isAllergenDialogOpen() {
@@ -1171,6 +1510,15 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         int count = saved.size();
         allergensButton.setText(count == 0 ? getString(R.string.set_allergens)
                 : getResources().getQuantityString(R.plurals.allergens_selected, count, count));
+        List<String> names = new ArrayList<>();
+        for (Allergen allergen : saved) {
+            names.add(allergen.label());
+        }
+        // The visible tags are read as part of the editor button, rather than as small,
+        // non-interactive chips that TalkBack can mistake for separate controls.
+        allergensButton.setContentDescription(count == 0 ? getString(R.string.set_allergens)
+                : getString(R.string.selected_allergens_action, allergensButton.getText(),
+                        android.text.TextUtils.join(", ", names)));
 
         allergenChips.removeAllViews();
         // Already in dictionary order, which is the order the pickers list them in.
@@ -1195,6 +1543,8 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             allergenChips.addView(chip);
         }
         allergenChips.setVisibility(count == 0 ? View.GONE : View.VISIBLE);
+        // ChipGroup sets its own importance during construction, overriding the XML value.
+        allergenChips.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
     }
 
     private float dp(int value) {
@@ -1214,11 +1564,32 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     @Override
+    protected void onPause() {
+        clearInitialFocusHints();
+        cancelRetryAvailability();
+        super.onPause();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         // Safety net: returning to this screen always leaves a usable camera button, whatever route
         // was taken back. Cheap, and it means even a dropped activity result cannot strand it.
         updateCameraButton();
+        updateRetryAvailability();
+        AllergenPreferencesDialogFragment openDialog = (AllergenPreferencesDialogFragment)
+                getSupportFragmentManager().findFragmentByTag(AllergenPreferencesDialogFragment.TAG);
+        if (openDialog != null && openDialog.getArguments() != null) {
+            // Recreated dialogs keep their actual caller, including while the dialog has the
+            // window focus. This remains a native fallback hint, never a queued focus action.
+            int source = openDialog.getArguments().getInt(
+                    AllergenPreferencesDialogFragment.SOURCE_VIEW_ID, View.NO_ID);
+            if (source == R.id.allergens_button || source == R.id.result_secondary_button) {
+                allergenReturnFocusId = source;
+                keepAllergenCallerVisible(source, allergenDialogRequest);
+            }
+        }
+
         if (!analysisMode && !historyVisible && !isAllergenDialogOpen()) {
             modelDownloadController.offerIntroduction();
         }
@@ -1240,11 +1611,16 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         outState.putBoolean(SETTINGS_OPEN_STATE, settingsOpen);
         outState.putBoolean(SETTINGS_INTERRUPTED_STATE, settingsInterruptedScan);
         outState.putBoolean(HISTORY_STATE, historyVisible);
+        outState.putInt(ALLERGEN_DIALOG_REQUEST_STATE, allergenDialogRequest);
+        outState.putLong(AI_RETRY_AT_STATE, aiRetryAtMillis);
+        outState.putString(AI_RETRY_FAILURE_STATE, aiRetryFailure.name());
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onDestroy() {
+        clearInitialFocusHints();
+        cancelRetryAvailability();
         ++imageRequest;
         dismissChangePhotoMenu();
         endPhotoFlight();

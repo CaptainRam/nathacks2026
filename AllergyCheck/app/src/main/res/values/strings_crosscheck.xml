@@ -2,17 +2,13 @@
 <resources>
     <string name="photo_role_ingredients">Ingredient label</string>
     <string name="photo_role_front">Front photo</string>
-    <string name="crosscheck_front_photo_label">Front photo</string>
     <string name="crosscheck_label_photo_label">Ingredient label</string>
-    <string name="crosscheck_photo_menu_remove">Remove front photo</string>
-    <string name="crosscheck_add_menu_title">Front photo</string>
     <string name="crosscheck_photo_optional">Optional</string>
     <string name="crosscheck_photo_hint">Optional front photos are sent to the cloud for food-type reminders. Allergen results still come from the ingredient label.</string>
     <string name="crosscheck_change_photo">Change front photo</string>
     <string name="crosscheck_title">Optional food-type cross-check</string>
     <string name="crosscheck_description">Adding a front photo of the same food starts an optional cloud cross-check once ingredient analysis is ready. The photo is sent to an AI model to estimate the food type and its common allergens. Reminders do not confirm or add allergens; your results still come from the ingredient label.</string>
     <string name="crosscheck_add_photo">Add front photo</string>
-    <string name="crosscheck_camera">Take front photo</string>
     <string name="crosscheck_photo_description">Front photo for the optional food-type cross-check</string>
     <string name="crosscheck_remove_photo">Remove front photo</string>
     <string name="crosscheck_run">Run cross-check</string>

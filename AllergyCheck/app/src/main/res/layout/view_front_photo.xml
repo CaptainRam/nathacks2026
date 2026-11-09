@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A second photo of the same product, paired with the ingredient-label card. -->
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.example.allergycheck.PhotoActionCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/front_photo_card"
     style="@style/Widget.Material3.CardView.Filled"
@@ -9,8 +9,9 @@
     android:layout_marginStart="12dp"
     android:layout_weight="1"
     android:clickable="true"
-    android:contentDescription="@string/crosscheck_add_photo"
+    android:contentDescription="@string/crosscheck_photo_accessibility_label"
     android:focusable="true"
+    android:screenReaderFocusable="true"
     android:visibility="gone"
     app:cardBackgroundColor="@android:color/transparent"
     app:cardElevation="0dp"
@@ -20,7 +21,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/colorSurfaceContainer">
+        android:background="?attr/colorSurfaceContainer"
+        android:importantForAccessibility="noHideDescendants">
 
         <LinearLayout
             android:id="@+id/front_photo_empty"
@@ -103,8 +105,8 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/front_photo_remove"
             style="@style/Widget.AllergyCheck.TonalIconButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="top|end"
             android:layout_margin="12dp"
             android:contentDescription="@string/crosscheck_remove_photo"
@@ -118,7 +120,8 @@
             android:layout_height="match_parent"
             android:background="?attr/colorSurfaceContainerLow"
             android:clickable="true"
-            android:focusable="true"
+            android:focusable="false"
+            android:importantForAccessibility="noHideDescendants"
             android:visibility="gone">
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
@@ -130,4 +133,4 @@
                 app:indicatorSize="40dp" />
         </FrameLayout>
     </FrameLayout>
-</com.google.android.material.card.MaterialCardView>
+</com.example.allergycheck.PhotoActionCardView>

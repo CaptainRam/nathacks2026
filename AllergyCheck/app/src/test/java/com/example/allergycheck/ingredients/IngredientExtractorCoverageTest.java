@@ -58,9 +58,12 @@ public class IngredientExtractorCoverageTest {
 
     @Test
     public void uncertainHyphenCompoundsAndFreeClaimsKeepTheirOriginalBoundary() {
-        assertEquals(Arrays.asList("TREE- NUT", "MILK- FAT", "MILK- CHOCOLATE", "gluten- free"),
-                IngredientExtractor.extract("Ingredients: TREE-\nNUT, MILK-\nFAT, "
+        assertEquals(Arrays.asList("TREE- NUT", "MYSTERY- COMPOUND", "MILK- CHOCOLATE", "gluten- free"),
+                IngredientExtractor.extract("Ingredients: TREE-\nNUT, MYSTERY-\nCOMPOUND, "
                         + "MILK-\nCHOCOLATE, gluten-\nfree"));
+        // Main now ships "milkfat" as a known one-word spelling, unlike those compounds.
+        assertEquals(Arrays.asList("MILKFAT"),
+                IngredientExtractor.extract("Ingredients: MILK-\nFAT"));
     }
 
     @Test

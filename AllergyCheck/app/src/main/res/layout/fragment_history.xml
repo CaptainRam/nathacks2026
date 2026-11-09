@@ -7,7 +7,7 @@
     android:id="@+id/history_page"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:importantForAccessibility="no"
     android:orientation="vertical">
 
     <LinearLayout
@@ -21,11 +21,14 @@
         android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/history_load_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:accessibilityHeading="true"
-            android:text="@string/history_title"
+            android:accessibilityLiveRegion="polite"
+            android:accessibilityPaneTitle="@string/history_title"
+            android:text="@string/history_loading"
             android:textAppearance="?attr/textAppearanceHeadlineSmall"
             android:textColor="?attr/colorOnSurface" />
 
@@ -52,6 +55,7 @@
         android:paddingHorizontal="20dp"
         android:paddingTop="8dp"
         android:paddingBottom="16dp"
+        android:visibility="gone"
         tools:itemCount="3"
         tools:listitem="@layout/item_scan_history" />
 
@@ -78,6 +82,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:accessibilityHeading="true"
             android:text="@string/history_empty_title"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnSurface" />
@@ -99,6 +104,52 @@
             android:layout_marginTop="20dp"
             android:text="@string/history_empty_action" />
     </LinearLayout>
+
+    <!-- Loading and read failures are separate from a successfully loaded empty history. -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/history_load_state"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:importantForAccessibility="no">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="24dp">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/history_loading_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                android:indeterminate="true" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/history_load_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="@string/history_load_failed_message"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/history_load_retry"
+                style="@style/Widget.AllergyCheck.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/history_load_retry"
+                android:visibility="gone" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/history_retention_note"

@@ -51,6 +51,15 @@ public final class ScanHistory {
         void onItems(@NonNull List<ScanHistoryItem> items);
     }
 
+    /** A failed query is distinct from a successful query containing no saved scans. */
+    public interface LoadCallback {
+        @MainThread
+        void onLoaded(@NonNull List<ScanHistoryItem> items);
+
+        @MainThread
+        void onFailure();
+    }
+
     public interface DetailCallback {
         @MainThread
         void onDetail(@Nullable ScanHistoryDetail detail);
@@ -144,16 +153,30 @@ public final class ScanHistory {
 
     @MainThread
     public void load(int limit, @NonNull ItemsCallback callback) {
+        // Keep the existing callback contract for callers that do not display read errors.
+        loadWithStatus(limit, new LoadCallback() {
+            @Override
+            public void onLoaded(@NonNull List<ScanHistoryItem> items) {
+                callback.onItems(items);
+            }
+
+            @Override
+            public void onFailure() {
+                callback.onItems(Collections.emptyList());
+            }
+        });
+    }
+
+    @MainThread
+    public void loadWithStatus(int limit, @NonNull LoadCallback callback) {
         worker.execute(() -> {
-            List<ScanHistoryItem> items;
             try {
-                items = store.recent(limit);
+                List<ScanHistoryItem> items = store.recent(limit);
+                main.post(() -> callback.onLoaded(items));
             } catch (RuntimeException e) {
                 Log.w(TAG, "Could not read history", e);
-                items = Collections.emptyList();
+                main.post(callback::onFailure);
             }
-            List<ScanHistoryItem> result = items;
-            main.post(() -> callback.onItems(result));
         });
     }
 

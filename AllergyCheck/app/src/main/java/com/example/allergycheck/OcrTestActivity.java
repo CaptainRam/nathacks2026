@@ -1,5 +1,6 @@
 package com.example.allergycheck;
 
+import android.app.Application;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -13,11 +14,14 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.allergycheck.ingredients.LlmIngredientReader;
 import com.example.allergycheck.ingredients.LocalModelManager;
@@ -34,6 +38,7 @@ import com.google.android.material.progressindicator.CircularProgressIndicator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,6 +59,11 @@ import java.util.List;
  * real label-capture screen exists. The {@code ocr} package is the part meant to survive.
  */
 public class OcrTestActivity extends AppCompatActivity {
+    private static final String STATE_IMAGE = "ocr_image";
+    private static final String STATE_ENHANCE = "ocr_enhance";
+    private static final String STATE_BUSY = "ocr_busy";
+    private static final String STATE_PENDING_TEXT = "ocr_pending_text";
+    private static final String STATE_MODEL_GENERATION = "ocr_model_generation";
 
     private OcrPipeline ocrPipeline;
     private ActivityResultLauncher<PickVisualMediaRequest> pickImage;
@@ -65,14 +75,95 @@ public class OcrTestActivity extends AppCompatActivity {
     private CircularProgressIndicator progress;
     private TextView ocrStats;
     private TextView ocrOutput;
+    private TextView ocrStatus;
     private MaterialSwitch enhanceSwitch;
     private LlmIngredientReader ingredientReader;
+    private ModelReadState modelReads;
+    @Nullable private LlmIngredientReader.Callback modelCallback;
+    private int modelGeneration;
     private ModelDownloadController modelDownloadController;
     private String pendingOcrText;
     private int pendingModelRequest;
+    @Nullable private Uri selectedImage;
+    private boolean busy;
+    private boolean resumeOcrOnStart;
 
     /** Incremented per image so a slow, superseded OCR or model result is ignored. */
     private int requestId;
+
+    /**
+     * Native generation cannot be interrupted by close(). Keep its reader and answer through
+     * recreation so rotation neither starts a second engine nor retains a destroyed screen.
+     */
+    public static final class ModelReadState extends AndroidViewModel {
+        private final LlmIngredientReader reader;
+        private int generation;
+        @Nullable private String input;
+        @Nullable private List<String> ingredients;
+        @Nullable private Exception error;
+        private boolean completed;
+        @Nullable private LlmIngredientReader.Callback observer;
+
+        public ModelReadState(@NonNull Application application) {
+            super(application);
+            reader = new LlmIngredientReader(application);
+        }
+
+        int start(String text) {
+            int current = ++generation;
+            input = text;
+            ingredients = null;
+            error = null;
+            completed = false;
+            observer = null;
+            reader.read(text, new LlmIngredientReader.Callback() {
+                @Override public void onSuccess(@NonNull List<String> result) {
+                    complete(current, result, null);
+                }
+
+                @Override public void onFailure(@NonNull Exception failure) {
+                    complete(current, null, failure);
+                }
+            });
+            return current;
+        }
+
+        boolean isCurrent(int candidate) {
+            return candidate > 0 && candidate == generation && input != null;
+        }
+
+        void observe(int candidate, LlmIngredientReader.Callback callback) {
+            if (isCurrent(candidate)) {
+                observer = callback;
+                deliver();
+            }
+        }
+
+        void detach(@Nullable LlmIngredientReader.Callback callback) {
+            if (observer == callback) observer = null;
+        }
+
+        private void complete(int current, @Nullable List<String> result,
+                              @Nullable Exception failure) {
+            if (current != generation) return;
+            ingredients = result == null ? null : new ArrayList<>(result);
+            error = failure;
+            completed = true;
+            deliver();
+        }
+
+        private void deliver() {
+            LlmIngredientReader.Callback callback = observer;
+            if (completed && callback != null) {
+                if (error != null) callback.onFailure(error);
+                else if (ingredients != null) callback.onSuccess(ingredients);
+            }
+        }
+
+        @Override protected void onCleared() {
+            reader.close();
+        }
+    }
 
     private final LocalModelManager.Listener modelListener = status -> {
         if (status.isInstalled() && pendingOcrText != null && pendingModelRequest == requestId) {
@@ -97,13 +188,21 @@ public class OcrTestActivity extends AppCompatActivity {
         progress = findViewById(R.id.progress);
         ocrStats = findViewById(R.id.ocr_stats);
         ocrOutput = findViewById(R.id.ocr_output);
+        ocrStatus = findViewById(R.id.ocr_status);
         enhanceSwitch = findViewById(R.id.enhance_switch);
+        // Restore this before building either preparer. The view hierarchy must not later
+        // restore the switch and close a pipeline whose resumed request is already in flight.
+        enhanceSwitch.setSaveEnabled(false);
+        if (savedInstanceState != null) {
+            enhanceSwitch.setChecked(savedInstanceState.getBoolean(STATE_ENHANCE, true));
+        }
 
         // Swap PassThroughFilter for new IngredientListFilter() (same package) to restrict output
         // to the ingredients declaration — nothing else in this class needs to change.
         rebuildPipeline();
         enhanceSwitch.setOnCheckedChangeListener((button, checked) -> rebuildPipeline());
-        ingredientReader = new LlmIngredientReader(this);
+        modelReads = new ViewModelProvider(this).get(ModelReadState.class);
+        ingredientReader = modelReads.reader;
         // The OCR harness ignores allergen changes, so it needs no result back from Settings.
         modelDownloadController = new ModelDownloadController(this, () -> startActivity(
                 new Intent(this, SettingsActivity.class)
@@ -124,6 +223,27 @@ public class OcrTestActivity extends AppCompatActivity {
                 pickImage.launch(new PickVisualMediaRequest.Builder()
                         .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                         .build()));
+
+        if (savedInstanceState != null) {
+            restoreText(savedInstanceState, "output", ocrOutput);
+            restoreText(savedInstanceState, "status", ocrStatus);
+            restoreText(savedInstanceState, "stats", ocrStats);
+            String image = savedInstanceState.getString(STATE_IMAGE);
+            selectedImage = image == null ? null : Uri.parse(image);
+            pendingOcrText = savedInstanceState.getString(STATE_PENDING_TEXT);
+            boolean restoringBusy = savedInstanceState.getBoolean(STATE_BUSY) && selectedImage != null;
+            int retained = savedInstanceState.getInt(STATE_MODEL_GENERATION);
+            if (restoringBusy && modelReads.isCurrent(retained)) modelGeneration = retained;
+            // Only the cheap OCR stage is restarted. Native model work is retained above; after
+            // process death its ViewModel is gone, so rerunning the photo is the safe fallback.
+            resumeOcrOnStart = restoringBusy && modelGeneration == 0;
+            setBusy(restoringBusy);
+            if (selectedImage != null && !resumeOcrOnStart) {
+                // Completed results only need their preview reloaded, not a second model run.
+                showPreview(selectedImage, ++requestId);
+            }
+            pendingModelRequest = requestId;
+        }
     }
 
     /** Points the pipeline at whichever preparer the switch currently selects. */
@@ -139,16 +259,20 @@ public class OcrTestActivity extends AppCompatActivity {
     }
 
     private void runOcr(@NonNull Uri imageUri) {
+        // Preview, OCR and model callbacks all belong to the same selected-image request.
+        final int thisRequest = ++requestId;
+        selectedImage = imageUri;
+        resumeOcrOnStart = false;
+        clearModelObservation();
         pendingOcrText = null;
-        showPreview(imageUri);
+        showPreview(imageUri, thisRequest);
         setBusy(true);
         ocrStats.setVisibility(View.GONE);
         ocrOutput.setText("");
+        showStatus(R.string.ocr_reading_label);
 
         // OCR and the model both answer asynchronously; results for an image the user has since
         // replaced must not overwrite the newer one.
-        final int thisRequest = ++requestId;
-
         long startedAt = SystemClock.elapsedRealtime();
         ocrPipeline.recognize(this, imageUri, new OcrPipeline.Callback() {
             @Override
@@ -163,6 +287,7 @@ public class OcrTestActivity extends AppCompatActivity {
                 if (result.isEmpty()) {
                     setBusy(false);
                     ocrOutput.setText(R.string.ocr_empty_result);
+                    showStatus(R.string.ocr_output_empty);
                 } else {
                     readIngredients(result.fullText(), thisRequest);
                 }
@@ -175,6 +300,7 @@ public class OcrTestActivity extends AppCompatActivity {
                 }
                 setBusy(false);
                 ocrOutput.setText(getString(R.string.ocr_error, messageOf(error)));
+                showStatus(R.string.ocr_output_failed);
             }
         });
     }
@@ -186,36 +312,59 @@ public class OcrTestActivity extends AppCompatActivity {
             pendingModelRequest = thisRequest;
             setBusy(false);
             ocrOutput.setText(R.string.model_download_unavailable);
+            showStatus(R.string.ocr_waiting_for_model);
             return;
         }
         setBusy(true);
         ocrOutput.setText(R.string.reading_ingredients);
-        ingredientReader.read(ocrText, new LlmIngredientReader.Callback() {
+        showStatus(R.string.reading_ingredients);
+        modelGeneration = modelReads.start(ocrText);
+        observeModelRead(modelGeneration, thisRequest);
+    }
+
+    private void observeModelRead(int generation, int thisRequest) {
+        String ocrText = modelReads.input;
+        modelReads.detach(modelCallback);
+        modelCallback = new LlmIngredientReader.Callback() {
             @Override
             public void onSuccess(@NonNull List<String> ingredients) {
-                if (thisRequest != requestId) {
-                    return;
-                }
+                if (!isCurrentModelRead(generation, thisRequest)) return;
+                clearModelObservation();
                 setBusy(false);
                 ocrOutput.setText(formatIngredients(ingredients, ocrText));
+                showStatus(ingredients.isEmpty()
+                        ? R.string.ocr_output_no_ingredients : R.string.ocr_output_ready);
             }
 
             @Override
             public void onFailure(@NonNull Exception error) {
-                if (thisRequest != requestId) {
-                    return;
-                }
+                if (!isCurrentModelRead(generation, thisRequest)) return;
+                clearModelObservation();
                 setBusy(false);
                 if (error instanceof LlmIngredientReader.ModelNotFoundException) {
                     pendingOcrText = ocrText;
                     pendingModelRequest = thisRequest;
-                    LocalModelManager.get(OcrTestActivity.this).refresh();
                     ocrOutput.setText(R.string.model_download_unavailable);
+                    showStatus(R.string.ocr_waiting_for_model);
+                    LocalModelManager.get(OcrTestActivity.this).refresh();
                 } else {
                     ocrOutput.setText(getString(R.string.ingredients_error, messageOf(error)));
+                    showStatus(R.string.ocr_output_failed);
                 }
             }
-        });
+        };
+        modelReads.observe(generation, modelCallback);
+    }
+
+    private boolean isCurrentModelRead(int generation, int request) {
+        return generation == modelGeneration && request == requestId
+                && !isDestroyed() && !isFinishing();
+    }
+
+    private void clearModelObservation() {
+        modelReads.detach(modelCallback);
+        modelCallback = null;
+        modelGeneration = 0;
     }
 
     /**
@@ -243,14 +392,28 @@ public class OcrTestActivity extends AppCompatActivity {
      * waiting on, and the callback would never arrive.
      */
     private void setBusy(boolean busy) {
+        this.busy = busy;
         progress.setVisibility(busy ? View.VISIBLE : View.GONE);
         enhanceSwitch.setEnabled(!busy);
     }
 
+    private void showStatus(int message) {
+        ocrStatus.setText(message);
+        ocrStatus.setVisibility(View.VISIBLE);
+    }
+
     /** Lines, characters and elapsed time — enough to tell whether a change helped. */
     private void showStats(@NonNull OcrResult result, long elapsedMillis) {
+        int lines = result.lines().size();
+        int characters = result.fullText().length();
         ocrStats.setText(getString(R.string.ocr_stats,
-                result.lines().size(), result.fullText().length(), elapsedMillis));
+                lines, characters, elapsedMillis));
+        ocrStats.setContentDescription(getString(R.string.ocr_stats_accessibility,
+                getResources().getQuantityString(R.plurals.ocr_stats_lines, lines, lines),
+                getResources().getQuantityString(R.plurals.ocr_stats_characters,
+                        characters, characters),
+                getResources().getQuantityString(R.plurals.ocr_stats_milliseconds,
+                        (int) Math.min(elapsedMillis, Integer.MAX_VALUE), elapsedMillis)));
         ocrStats.setVisibility(View.VISIBLE);
     }
 
@@ -262,7 +425,7 @@ public class OcrTestActivity extends AppCompatActivity {
      * capture screen — but widening {@link OcrPipeline}'s API to hand back a debug bitmap would be
      * worse, and this harness is slated for deletion either way.
      */
-    private void showPreview(@NonNull Uri imageUri) {
+    private void showPreview(@NonNull Uri imageUri, int thisRequest) {
         imagePreview.setVisibility(View.VISIBLE);
 
         ImagePreparer preparer = currentPreparer();
@@ -283,7 +446,7 @@ public class OcrTestActivity extends AppCompatActivity {
                 return;
             }
             runOnUiThread(() -> {
-                if (isDestroyed() || isFinishing()) {
+                if (thisRequest != requestId || isDestroyed() || isFinishing()) {
                     prepared.recycle();
                     return;
                 }
@@ -296,7 +459,41 @@ public class OcrTestActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         modelDownloadController.start();
+        if (resumeOcrOnStart && selectedImage != null) {
+            // The old instance closes its OCR pipeline and invalidates its callbacks. Restart
+            // that stage once; a new picker result also clears this flag in runOcr.
+            runOcr(selectedImage);
+        } else if (modelGeneration != 0) {
+            observeModelRead(modelGeneration, requestId);
+        }
         LocalModelManager.get(this).addListener(modelListener);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle state) {
+        state.putString(STATE_IMAGE, selectedImage == null ? null : selectedImage.toString());
+        state.putBoolean(STATE_ENHANCE, enhanceSwitch.isChecked());
+        state.putBoolean(STATE_BUSY, busy);
+        state.putString(STATE_PENDING_TEXT, pendingOcrText);
+        state.putInt(STATE_MODEL_GENERATION, modelGeneration);
+        saveText(state, "output", ocrOutput);
+        saveText(state, "status", ocrStatus);
+        saveText(state, "stats", ocrStats);
+        super.onSaveInstanceState(state);
+    }
+
+    private static void saveText(Bundle state, String key, TextView view) {
+        state.putString(key + "_text", view.getText().toString());
+        CharSequence description = view.getContentDescription();
+        state.putString(key + "_description", description == null ? null : description.toString());
+        state.putInt(key + "_visibility", view.getVisibility());
+    }
+
+    private static void restoreText(Bundle state, String key, TextView view) {
+        if (!state.containsKey(key + "_text")) return;
+        view.setText(state.getString(key + "_text"));
+        view.setContentDescription(state.getString(key + "_description"));
+        view.setVisibility(state.getInt(key + "_visibility", view.getVisibility()));
     }
 
     @Override
@@ -307,6 +504,7 @@ public class OcrTestActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
+        modelReads.detach(modelCallback);
         LocalModelManager.get(this).removeListener(modelListener);
         modelDownloadController.stop();
         super.onStop();
@@ -317,7 +515,7 @@ public class OcrTestActivity extends AppCompatActivity {
         requestId++;
         previewExecutor.shutdown();
         ocrPipeline.close();
-        ingredientReader.close();
+        modelReads.detach(modelCallback);
         super.onDestroy();
     }
 }

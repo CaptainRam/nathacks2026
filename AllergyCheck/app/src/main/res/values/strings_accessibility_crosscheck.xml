@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="crosscheck_photo_accessibility_label">Front photo, optional</string>
+    <string name="crosscheck_photo_added">Photo added</string>
+    <string name="crosscheck_photo_empty">No photo added</string>
+    <string name="crosscheck_photo_camera_open">Camera open for the front photo</string>
+</resources>

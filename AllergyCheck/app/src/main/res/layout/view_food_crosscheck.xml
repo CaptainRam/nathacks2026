@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:contentDescription="@string/crosscheck_running"
+            android:importantForAccessibility="no"
             android:indeterminate="true"
             android:visibility="gone" />
 

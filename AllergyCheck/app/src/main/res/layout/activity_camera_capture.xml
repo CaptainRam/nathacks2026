@@ -10,7 +10,6 @@
     android:id="@+id/camera_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
     android:orientation="vertical"
     tools:context=".CameraCaptureActivity">
 
@@ -40,8 +39,6 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:accessibilityHeading="true"
-            android:ellipsize="end"
-            android:maxLines="1"
             android:text="@string/camera_title"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnSurface"
@@ -78,10 +75,18 @@
             app:iconTint="@color/camera_toggle_icon" />
     </LinearLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/camera_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:fillViewport="true"
+        android:clipToPadding="false">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/camera_content_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:paddingHorizontal="20dp"
         android:paddingTop="8dp"
         android:paddingBottom="24dp">
@@ -89,7 +94,7 @@
         <LinearLayout
             android:id="@+id/camera_column"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -110,9 +115,8 @@
                 android:id="@+id/camera_card"
                 style="@style/Widget.Material3.CardView.Filled"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="280dp"
                 android:layout_marginTop="16dp"
-                android:layout_weight="1"
                 app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
                 app:cardElevation="0dp"
                 app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Large"
@@ -125,7 +129,8 @@
                     <androidx.camera.view.PreviewView
                         android:id="@+id/camera_preview"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                        android:layout_height="match_parent"
+                        android:importantForAccessibility="noHideDescendants" />
 
                     <!-- Must stay the same size and position as the PreviewView: the overlay reports
                          its guide window in view coordinates and the analysis maps recognised text
@@ -141,6 +146,7 @@
                          and a labelLarge caption. Tinted per verdict in CaptureFeedback. -->
                     <LinearLayout
                         android:id="@+id/capture_status"
+                        android:accessibilityLiveRegion="polite"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom|start"
@@ -186,5 +192,6 @@
                 app:iconGravity="textStart" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

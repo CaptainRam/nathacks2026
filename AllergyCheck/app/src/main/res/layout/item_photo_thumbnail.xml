@@ -9,7 +9,7 @@
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
 
-    <com.google.android.material.card.MaterialCardView
+    <com.example.allergycheck.PhotoActionCardView
         android:id="@+id/thumbnail_card"
         style="@style/Widget.Material3.CardView.Filled"
         android:layout_width="wrap_content"
@@ -42,7 +42,7 @@
                 android:importantForAccessibility="no"
                 android:visibility="invisible" />
         </FrameLayout>
-    </com.google.android.material.card.MaterialCardView>
+    </com.example.allergycheck.PhotoActionCardView>
 
     <!-- Edit badge: tells the user the photo can be changed. -->
     <ImageView

@@ -220,9 +220,16 @@ public class SettingsLayoutUiTest {
                 assertSection(activity, true);
                 assertEquals(View.VISIBLE, activity.findViewById(R.id.model_save_note).getVisibility());
                 assertEquals(View.GONE, activity.findViewById(R.id.selection_summary).getVisibility());
+            });
+            scenario.recreate();
+            scenario.onActivity(activity -> {
+                assertSection(activity, true);
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.model_save_note).getVisibility());
                 activity.findViewById(R.id.save_preferences_button).performClick();
             });
             assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
+            assertTrue(scenario.getResult().getResultData().getBooleanExtra(
+                    SettingsActivity.EXTRA_ALLERGEN_SELECTION_CHANGED, false));
         }
         String firstId = AllergenDictionaryProvider.get(context).allergens().iterator().next().id();
         assertEquals(Collections.singleton(firstId), AllergenPreferences.selectedAllergenIds(

@@ -109,7 +109,8 @@ final class AiAnalysisRunner {
                     Thread.currentThread().interrupt();
                 }
                 // Never log label text, model replies, or credentials. Keep the best partial result.
-                main.post(() -> job.finish(job.latest));
+                main.post(() -> job.finish(job.latest.withAiFailure(
+                        AnalysisReport.AiFailure.UNAVAILABLE, 0)));
             } finally {
                 if (model != null) {
                     try {
@@ -160,7 +161,8 @@ final class AiAnalysisRunner {
                 if (timedOut) cancelled = true;
                 answered = true;
                 main.removeCallbacks(timeout);
-                callback.onResult(report);
+                callback.onResult(timedOut
+                        ? report.withAiFailure(AnalysisReport.AiFailure.TIMEOUT, 0) : report);
             }
         }
     }

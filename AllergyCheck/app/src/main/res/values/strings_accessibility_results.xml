@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="a11y_history_open">Open saved scan</string>
+    <string name="a11y_history_delete">Delete saved scan</string>
+    <string name="a11y_history_row">Saved scan %1$d of %2$d. %3$s</string>
+    <string name="a11y_history_detail_pane">Saved scan. %1$s. %2$s</string>
+    <string name="history_loading">Loading scan history</string>
+    <string name="history_load_failed_title">Couldn’t load scan history</string>
+    <string name="history_load_failed_message">Your saved scans are unavailable right now. Try loading them again.</string>
+    <string name="history_load_retry">Retry loading history</string>
+    <string name="history_restored_title">Scan restored</string>
+    <string name="a11y_history_state_pane">History. %1$s</string>
+</resources>
