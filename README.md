@@ -259,7 +259,7 @@ The main scan uses shared on-device OCR, deterministic ingredient structuring, a
 | --- | --- |
 | Dictionary matching (Matching mode) | Local rules and the built-in dictionary; the default local detection method. |
 | Local AI | On-device Gemma 3 1B through MediaPipe. Download the model in Settings before use. |
-| OpenRouter LLM | Cloud chat completions analyze the complete structured ingredient list for one selected allergen per request. Save an OpenRouter API key and a chat model ID in `provider/model` format. |
+| OpenRouter LLM | Cloud chat completions batch the structured ingredients still needing AI checks for one selected allergen per request. Save an OpenRouter API key and a chat model ID in `provider/model` format. |
 | Decisions model | OpenRouter's native `/api/alpha/decisions` API. Save a compatible Decisions model ID and a threshold from 0 to 1 (default 0.5). This is a separate model setting from the chat model. |
 
 ### Set up Local AI (optional)
@@ -281,13 +281,13 @@ The same downloaded model is used by the separate **OCR Test** AI ingredient rea
 
 Cloud fields apply only after **Save**, while selecting the detection method applies immediately. No `.env` file, build-time secret, or server deployment is required. API keys are stored in app-private preferences and excluded from Android backup and device transfer. Re-enter the key on a new installation/device; keep it out of Git, screenshots, and logs.
 
-**Every ingredient-list AI request targets only one selected allergen.** Local AI checks **one ingredient per request** to reduce hallucinations, using a fresh session for each ingredient/allergen pair. Decisions also scores **one ingredient per request** so each flag can be attributed to its original ingredient. The OpenRouter cloud LLM receives the **complete structured ingredient list in one request per selected allergen** and returns findings associated with the supplied ingredients. Parent ingredient names and bracketed sub-ingredients stay separately identifiable. Other selected allergens, the raw full label, and photos are not included in ingredient-classification requests. Label statements such as “contains” and “may contain” remain distinct and are checked locally. The separate OCR Test screen's LLM ingredient reader is not used for classification.
+**Every ingredient-list AI request targets only one selected allergen.** Ingredient/allergen pairs already flagged by the dictionary skip AI. Local AI checks **one remaining ingredient per request** to reduce hallucinations, using a fresh session for each ingredient/allergen pair. Decisions also scores **one ingredient per request** so each flag can be attributed to its original ingredient. The OpenRouter cloud LLM receives the **remaining structured ingredients in one batch per selected allergen** and returns findings associated with the supplied ingredients. Parent ingredient names and bracketed sub-ingredients stay separately identifiable. Other selected allergens, the raw full label, and photos are not included in ingredient-classification requests. Label statements such as “contains” and “may contain” remain distinct and are checked locally. The separate OCR Test screen's LLM ingredient reader is not used for classification.
 
 AI replies contain only a validated verdict or Decisions score, never generated ingredient names. The report attaches every risk, uncertain result, and unchecked item to its original ingredient text. Existing matching positives cannot be removed by AI. AI findings are shown as possible sources, and Decisions scores at or above the configured threshold are flagged; these scores are model predictions, not calibrated probabilities or proof of presence. Even when “show not detected” is off, flagged or unchecked ingredients remain visible.
 
 Missing configuration offers a link to AI settings. Request failures, malformed answers, and 90-second model timeouts preserve the best partial report, mark unprocessed ingredients for manual review, and offer retry. Empty/unreadable input remains inconclusive; no ingredients are invented to fill an empty result. Headingless and short text are checked as far as the extracted evidence permits.
 
-Cloud LLM mode sends the complete structured ingredient list and one selected allergen to OpenRouter over HTTPS; Decisions sends one ingredient and one selected allergen per request. API keys are stored in app-private preferences and excluded from Android backup and device transfer. Model IDs are deliberately left empty until configured; there is no bundled key. See the official [OpenRouter API documentation](https://openrouter.ai/docs/api_reference/overview) and [Decisions guide](https://openrouter.ai/docs/guides/community/multimodal-decisions).
+Cloud LLM mode sends the structured ingredients still needing AI checks and one selected allergen to OpenRouter over HTTPS; Decisions sends one such ingredient and one selected allergen per request. API keys are stored in app-private preferences and excluded from Android backup and device transfer. Model IDs are deliberately left empty until configured; there is no bundled key. See the official [OpenRouter API documentation](https://openrouter.ai/docs/api_reference/overview) and [Decisions guide](https://openrouter.ai/docs/guides/community/multimodal-decisions).
 
 ## Optional food-type cross-check
 
@@ -301,9 +301,9 @@ Without a front photo, the ingredient scan proceeds normally. An unreadable food
 
 ## Workflow
 
-![Planned architecture with ingredient-allergen Decisions scores and an independent optional cloud photo check after the label report.](docs/workflow-updated.drawio.svg)
+![Current workflow: local OCR, rule-based extraction, dictionary matching, optional AI checks, and an independent cloud photo check after the label report.](docs/workflow-updated.drawio.svg)
 
-[Open the updated diagram](docs/workflow-updated.drawio.svg) · [PNG preview](docs/workflow-updated.png) · [Original diagram](docs/workflow.drawio.svg). Both SVGs contain editable diagrams.net / draw.io data. The updated version revises Decisions scoring and the optional photo-check branch; the remaining diagram retains the planned architecture. The [MoSCoW Scope](#moscow-scope) defines MVP commitments.
+[Open the updated diagram](docs/workflow-updated.drawio.svg) · [PNG preview](docs/workflow-updated.png) · [Original diagram](docs/workflow.drawio.svg). Both SVGs contain editable diagrams.net / draw.io data. The updated diagram follows the current implementation: all modes share local extraction and dictionary matching; the default path reports directly, while optional AI checks only pending ingredients. The original planned diagram is preserved. The [MoSCoW Scope](#moscow-scope) defines MVP commitments.
 
 ### MVP path (Must Have)
 
@@ -311,20 +311,20 @@ Without a front photo, the ingredient scan proceeds normally. An unreadable food
 2. **Image input:** take or upload an ingredient-list photo containing any visible allergen statements.
 3. **OCR:** extract the ingredient list and visible "contains" or "may contain" text. Report unreadable input or processing failures and let users upload another image or retry.
 4. **Ingredient extraction:** organize OCR text into structured ingredients, retaining the original text and allergen statements for evidence. The main scan structures ingredients deterministically and expands bracketed sub-ingredients; a separate OCR Test screen also provides a local LLM ingredient reader.
-5. **Normalization and local analysis:** map ingredient synonyms and derivatives to allergen groups, then use Matching mode or check each ingredient against each selected allergen in separate local AI requests. Label statements retain local matching evidence. Report insufficient evidence or inconclusive findings explicitly.
+5. **Normalization and local analysis:** map ingredient synonyms and derivatives to allergen groups in every mode. Matching mode reports these findings directly; optional local AI checks remaining ingredient/allergen pairs. Label statements retain local matching evidence. Report insufficient evidence or inconclusive findings explicitly.
 6. **Report:** show the extracted ingredients and a separate finding for each selected allergen, along with supporting ingredients or label text where available and any uncertainty. Keep precautionary warnings distinct from ingredient evidence and model inferences.
 
 ### Extensions
 
-- **Cloud analysis (Should Have):** send the complete structured ingredient list from the shared OCR process to an OpenRouter cloud LLM, one selected allergen per request, and return findings tied to the original ingredients as an alternative to local AI.
+- **Cloud analysis (Should Have):** batch the structured ingredients still needing AI checks for an OpenRouter cloud LLM, one selected allergen per request, and return findings tied to the original ingredients as an alternative to local AI.
 - **Front-photo cross-check (Should Have):** estimate the food type from an optional front photo of the same product, use model knowledge to estimate common allergens, and compare those estimates with the ingredient-list findings for the selected allergens. Add review reminders for common allergens not identified in the label analysis. Without a front photo, proceed directly to the report.
 - **Scan history (Should Have):** let users revisit previous scans, extracted ingredients, and analysis results.
-- **Additional models (Could Have):** offer the Decisions model as an additional cloud option, producing per-allergen scores and flags at a configured threshold. Scores are model predictions, not confirmed ingredient presence.
+- **Additional models (Could Have):** offer the Decisions model as an additional cloud option, producing ingredient/allergen scores and flags at a configured threshold. Scores are model predictions, not confirmed ingredient presence.
 - **Image preparation and unpackaged-food exploration (Could Have):** add cropping or rotation, and separately explore food-type recognition without an ingredient label. Unpackaged-food exploration does not replace the required label input in the MVP path.
 
 ### Processing location
 
-Settings selects Local (Matching mode or Local AI) or Cloud (OpenRouter LLM or Decisions). OCR and main-scan ingredient structuring run on-device in every mode. Cloud LLM classification sends the complete structured ingredient list and one selected allergen per request; Decisions sends only one ingredient and one selected allergen per request. Local AI also checks one ingredient and one selected allergen per request using the downloaded Gemma model; download requires internet, and subsequent local inference runs offline.
+Settings selects Local (Matching mode or Local AI) or Cloud (OpenRouter LLM or Decisions). OCR, main-scan ingredient structuring, and dictionary matching run on-device in every mode. AI skips ingredient/allergen pairs already flagged by the dictionary. Cloud LLM classification batches the remaining structured ingredients for one selected allergen per request; Decisions sends one remaining ingredient and one selected allergen per request. Local AI also checks one remaining ingredient and one selected allergen per request using the downloaded Gemma model; download requires internet, and subsequent local inference runs offline.
 
 ## Tech stack
 
@@ -339,7 +339,7 @@ The current implementation uses the following components. Dependency versions ar
 | Allergen normalization and matching | Must | Built-in JSON dictionary of ingredient synonyms, derivatives, ambiguous terms, and exclusions |
 | Local allergen-analysis LLM | Must, optional mode | Gemma 3 1B via MediaPipe Tasks GenAI **0.10.35**; one ingredient/allergen pair at a time, with local label-statement evidence retained |
 | Scan history | Should | Android SQLite with app-private label images and **7-day** retention |
-| Cloud LLM | Should | OpenRouter HTTPS chat completions; complete structured ingredient list for one selected allergen per request |
+| Cloud LLM | Should | OpenRouter HTTPS chat completions; pending structured ingredients batched for one selected allergen per request |
 | Optional food-type cross-check | Should | Separate OpenRouter vision model; front-photo estimates produce review reminders only |
 | Image preparation tools | Could | User-facing cropping and rotation tools are not implemented |
 | Cloud Decisions model | Could, implemented | Native OpenRouter Decisions endpoint; ingredient/allergen scores with configurable model ID and threshold |
