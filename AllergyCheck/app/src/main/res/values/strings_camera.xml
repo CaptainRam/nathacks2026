@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Live feedback on the capture screen. Kept in their own file, like strings_analysis.xml, so the
+     capture copy merges cleanly with the home-screen strings.xml.
+
+     Each line is one instruction, phrased as the single action that will fix the frame. They are
+     shown one at a time: a frame that is too far away and off-centre and tilted is the common case,
+     and listing all three is how a user ends up fixing none of them. -->
+<resources>
+
+    <!-- Nothing text-like in frame yet. -->
+    <string name="camera_state_searching">Point at the ingredient list</string>
+    <string name="camera_state_too_far">Move closer to the label</string>
+    <!-- Readable text that is not an ingredient list — usually the nutrition panel next to it. The
+         heading is named because the analysis after capture needs it to find the list at all. -->
+    <string name="camera_state_wrong_panel">Find the ingredient list — include its heading</string>
+    <!-- The heading is in frame but the list under it is not fully captured. -->
+    <string name="camera_state_partial">Fit the whole list in the frame</string>
+    <string name="camera_state_ready">Ingredient list in focus</string>
+    <!-- Auto-capture is counting down. Shown so the shot is never a surprise and there is still a
+         moment to pull away. -->
+    <string name="camera_state_capturing">Holding steady — taking the photo</string>
+    <!-- The framing is right but the text is coming back with words broken up, so auto-capture is
+         withholding the shot. Phrased as the action that fixes it. The button stays live throughout:
+         this is the app declining to shoot on its own, never refusing the user a photo. -->
+    <string name="camera_state_unclear">Hold steady — the text is not reading clearly</string>
+
+    <!-- Screen title and standing hint, in the same voice as the home screen's heading pair. -->
+    <string name="camera_title">Scan ingredient list</string>
+    <string name="camera_subtitle">Line the ingredient list up inside the frame.</string>
+
+    <!-- Spoken for the action button while it is gated, so a screen-reader user learns why it is
+         disabled rather than just finding a dead button. -->
+    <string name="take_photo_not_ready">Take a photo, not ready yet</string>
+
+    <!-- Torch toggle in the capture screen's top bar. Always starts off: a light that came on by
+         itself in a shop or a restaurant is startling, and the user is the one who knows whether
+         they need it. -->
+    <string name="camera_flashlight">Flashlight</string>
+    <string name="camera_flashlight_hint">Light up the label</string>
+    <string name="camera_flashlight_on">Flashlight on</string>
+    <string name="camera_flashlight_off">Flashlight off</string>
+    <!-- The camera refused the torch request. Says what happened and nothing more: the common cause
+         is a thermal throttle the user can do nothing about, and it clears by itself. -->
+    <string name="camera_flashlight_unavailable">The camera could not turn the flashlight on</string>
+
+    <!-- Shown when the CAMERA permission is refused, rather than closing the screen in silence.
+         Both messages name the alternative, because the gallery picker needs no permission at all
+         and a user who does not want to grant one still has a working way to scan a label. -->
+    <string name="camera_permission_title">Camera access needed</string>
+    <string name="camera_permission_message">AllergyCheck needs the camera to scan a label. You can
+        also pick a photo you have already taken instead.</string>
+    <string name="camera_permission_message_blocked">Camera access is turned off for AllergyCheck.
+        Turn it on in Settings to scan a label, or pick a photo you have already taken
+        instead.</string>
+    <string name="camera_permission_retry">Allow camera</string>
+    <string name="camera_permission_settings">Open settings</string>
+
+    <!-- Auto-capture toggle in the capture screen's top bar. -->
+    <string name="camera_auto_capture">Auto-capture</string>
+    <string name="camera_auto_capture_hint">Take the photo automatically once the list reads</string>
+    <string name="camera_auto_capture_on">Auto-capture on</string>
+    <string name="camera_auto_capture_off">Auto-capture off</string>
+
+</resources>

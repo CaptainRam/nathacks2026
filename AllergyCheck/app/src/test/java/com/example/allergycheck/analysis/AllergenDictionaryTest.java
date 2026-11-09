@@ -27,7 +27,7 @@ public class AllergenDictionaryTest {
             "MUSTARD");
 
     private static final List<String> EXPECTED_LABELS = Arrays.asList(
-            "Milk", "Eggs", "Peanuts", "Tree nuts", "Soy", "Wheat", "Sesame", "Fish", "Shellfish",
+            "Milk", "Eggs", "Peanuts", "Tree nuts", "Soy", "Wheat/Gluten", "Sesame", "Fish", "Shellfish",
             "Mustard");
 
     private static String dictionary(String allergens) {

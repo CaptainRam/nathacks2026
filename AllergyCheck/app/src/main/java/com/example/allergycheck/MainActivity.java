@@ -166,19 +166,23 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
                 }
             });
 
-    private final ActivityResultLauncher<Uri> photoCapture =
-            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+    private final ActivityResultLauncher<Intent> photoCapture =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 Uri capturedPhoto = pendingCameraPhoto;
                 pendingCameraPhoto = null;
-                if (capturedPhoto == null) {
+                if (result.getResultCode() == RESULT_OK && capturedPhoto != null) {
+                    loadPhoto(capturedPhoto);
                     return;
                 }
-                if (success) {
-                    loadPhoto(capturedPhoto);
-                } else {
+                // Cancelled, or a capture that never produced a file. The placeholder goes, and the
+                // camera button is handed back unconditionally: the previous version returned early
+                // when there was no pending URI, which left the button disabled with nothing able to
+                // re-enable it, so backing out of the camera locked the camera out for the rest of
+                // the session.
+                if (capturedPhoto != null) {
                     deleteCameraPhoto(capturedPhoto);
-                    cameraButton.setEnabled(loadingOverlay.getVisibility() != View.VISIBLE);
                 }
+                updateCameraButton();
             });
 
     @Override
@@ -325,7 +329,10 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             pendingCameraPhoto = FileProvider.getUriForFile(this,
                     getPackageName() + ".fileprovider", photoFile);
             cameraButton.setEnabled(false);
-            photoCapture.launch(pendingCameraPhoto);
+            Intent captureIntent = new Intent(this, CameraCaptureActivity.class);
+            captureIntent.putExtra(CameraCaptureActivity.EXTRA_OUTPUT_FILE_PATH,
+                    photoFile.getAbsolutePath());
+            photoCapture.launch(captureIntent);
         } catch (ActivityNotFoundException | IOException | SecurityException
                  | IllegalArgumentException exception) {
             pendingCameraPhoto = null;
@@ -926,9 +933,21 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void setLoading(boolean loading) {
         loadingOverlay.setVisibility(loading ? View.VISIBLE : View.GONE);
         importButton.setEnabled(!loading);
-        cameraButton.setEnabled(!loading && pendingCameraPhoto == null);
+        updateCameraButton();
         replaceButton.setEnabled(!loading);
         startAnalysisButton.setEnabled(!loading);
+    }
+
+    /**
+     * The camera button is usable unless a capture is already outstanding or the screen is busy.
+     *
+     * <p>Decided in one place rather than at each call site, so no path can leave the button
+     * disabled with nothing left to re-enable it. That is the failure that used to strand the
+     * camera for the rest of the session after backing out of the capture screen.
+     */
+    private void updateCameraButton() {
+        cameraButton.setEnabled(loadingOverlay.getVisibility() != View.VISIBLE
+                && pendingCameraPhoto == null);
     }
 
     private void showPhotoState(boolean hasPhoto) {
@@ -1117,6 +1136,9 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     @Override
     protected void onResume() {
         super.onResume();
+        // Safety net: returning to this screen always leaves a usable camera button, whatever route
+        // was taken back. Cheap, and it means even a dropped activity result cannot strand it.
+        updateCameraButton();
         if (!analysisMode && !historyVisible && !isAllergenDialogOpen()) {
             modelDownloadController.offerIntroduction();
         }
