@@ -70,14 +70,16 @@ public class ExtractedIngredientsAnalysisTest {
 
     @Test
     public void keepsSubIngredientsFromBracketedItems() {
-        String label = "INGREDIENTS: Sugar, chocolate (cocoa butter, soy lecithin).";
+        String label = "INGREDIENTS: Sugar, nougat (cocoa butter, soy lecithin).";
         AnalysisReport report = analyseExtracted(label, a("SOY"));
 
         assertEquals(AnalysisReport.Status.CONTAINS, report.overall());
         assertEquals("soy lecithin",
                 report.results().get(0).findings().get(0).evidence().toLowerCase());
-        // "cocoa butter" is an exclusion, so dairy is never asserted; "chocolate" is ambiguous,
-        // which is only ever a "possible".
+        // "cocoa butter" is an exclusion, so dairy is never asserted; "nougat" is ambiguous,
+        // which is only ever a "possible". The parent used to be "chocolate", which the dictionary
+        // no longer treats as ambiguous for milk: milk must be declared by name even inside a
+        // compound ingredient, so flagging every chocolate-bearing label was pure noise.
         AnalysisReport milk = analyseExtracted(label, a("MILK"));
         assertEquals(AnalysisReport.Status.POSSIBLE, milk.overall());
         assertEquals(Finding.Reason.AMBIGUOUS_INGREDIENT,

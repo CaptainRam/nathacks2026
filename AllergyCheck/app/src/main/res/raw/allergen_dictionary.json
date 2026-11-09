@@ -5,7 +5,7 @@
     {
       "id": "MILK",
       "label": "Milk",
-      "notes": "Specific phrases come before the bare word they contain, because the first match wins and is the term shown as evidence: \"ice cream\" must precede \"cream\", and the qualified milks precede \"milk\". Cheeses are named individually: matching is by word token, so \"cheese\" cannot catch \"mozzarella\". The exclusions carry the plant-based analogues, which is what keeps bare \"milk\", \"cream\", \"butter\", \"curd\" and \"dairy\" safe to list as definite terms. \"mustard\" is excluded for the same reason as under EGGS: it is one edit away from \"custard\".",
+      "notes": "Specific phrases come before the bare word they contain, because the first match wins and is the term shown as evidence: \"ice cream\" must precede \"cream\", and the qualified milks precede \"milk\". Cheeses are named individually: matching is by word token, so \"cheese\" cannot catch \"mozzarella\". The exclusions carry the plant-based analogues, which is what keeps bare \"milk\", \"cream\", \"butter\", \"curd\" and \"dairy\" safe to list as definite terms. \"mustard\" is excluded for the same reason as under EGGS: it is one edit away from \"custard\". \"natural flavour\" is deliberately absent, here and under EGGS, SOY and FISH: Canada's 2012 allergen labelling amendments (Food and Drug Regulations B.01.010.1-.3) require a priority allergen to be declared even when it is a component of a flavouring, which is precisely the gap they closed, so a bare \"natural flavour\" on a compliant label is not concealing one. It also appears on so much of the grocery shelf that listing it put four POSSIBLE warnings on a plain soda and a fish warning on strawberry jam - the same objection, and the same conclusion, as PEANUTS and \"vegetable oil\".",
       "terms": [
         "skim milk", "whole milk", "milk powder", "milk solid", "milk protein", "milk fat",
         "milkfat", "milk", "buttermilk", "butterfat", "butter", "ice cream", "cream", "creme",
@@ -17,7 +17,7 @@
         "ghee", "curd", "custard", "bechamel", "alfredo", "dairy"
       ],
       "ambiguous": [
-        "natural flavour", "natural flavor", "margarine", "nougat", "caramel", "chocolate"
+        "margarine", "nougat"
       ],
       "exclusions": [
         "cocoa butter", "shea butter", "peanut butter", "almond butter", "cashew butter",
@@ -33,7 +33,7 @@
     {
       "id": "EGGS",
       "label": "Eggs",
-      "notes": "\"custard\" is listed here as well as under MILK: it is both. The egg-prefixed phrases precede bare \"egg\" so the evidence quoted is the specific one. \"mustard\" is excluded because it is one edit away from \"custard\", which the fuzzy near-miss pass would otherwise read as a possible egg on every mustard label.",
+      "notes": "\"custard\" is listed here as well as under MILK: it is both. The egg-prefixed phrases precede bare \"egg\" so the evidence quoted is the specific one. \"mustard\" is excluded because it is one edit away from \"custard\", which the fuzzy near-miss pass would otherwise read as a possible egg on every mustard label. \"natural flavour\" is absent for the reason set out under MILK.",
       "terms": [
         "egg white", "egg yolk", "egg albumin", "egg lecithin", "dried egg", "egg", "albumin",
         "albumen", "ovalbumin", "ovomucoid", "ovomucin", "ovovitellin", "ovotransferrin",
@@ -41,7 +41,7 @@
         "hollandaise", "meringue", "custard", "frittata", "quiche", "eggnog"
       ],
       "ambiguous": [
-        "natural flavour", "natural flavor", "lecithin", "pasta", "marshmallow", "nougat",
+        "pasta", "marshmallow", "nougat",
         "caesar", "surimi", "batter", "breading", "royal icing", "mousse", "macaron", "tempura"
       ],
       "exclusions": ["egg free", "eggplant", "mustard"]
@@ -81,7 +81,7 @@
     {
       "id": "SOY",
       "label": "Soy",
-      "notes": "\"textured vegetable protein\" is a definite term, not an ambiguous one: TVP is soy protein by definition. \"vegetable oil\" does belong here as ambiguous, unlike under PEANUTS, because soybean oil is the commonest generic vegetable oil.",
+      "notes": "\"textured vegetable protein\" is a definite term, not an ambiguous one: TVP is soy protein by definition. \"vegetable oil\" does belong here as ambiguous, unlike under PEANUTS, because soybean oil is the commonest generic vegetable oil. \"natural flavour\" is absent for the reason set out under MILK.",
       "terms": [
         "soy sauce", "soy protein", "soy flour", "soy lecithin", "soy milk", "soy oil",
         "textured soy", "soybean curd", "soybean", "soya", "soy",
@@ -91,8 +91,7 @@
       ],
       "ambiguous": [
         "hydrolyzed vegetable protein", "hydrolysed vegetable protein", "vegetable protein",
-        "vegetable oil", "vegetable broth", "lecithin", "worcestershire", "tocopherol",
-        "vitamin e", "bouillon", "margarine", "natural flavour", "natural flavor"
+        "vegetable oil", "lecithin", "worcestershire", "margarine"
       ],
       "exclusions": [
         "sunflower lecithin", "egg lecithin", "canola lecithin", "rapeseed lecithin", "soy free",
@@ -102,18 +101,17 @@
     {
       "id": "WHEAT",
       "label": "Wheat",
-      "notes": "Bare \"flour\", \"starch\", \"bran\" and \"noodle\" are ambiguous, so every common non-wheat flour, starch, bran and noodle is listed as an exclusion to stop them firing; the list is maintained, not exhaustive, so add to it when a new one shows up. \"sans gluten\" is kept as a false-positive guard: \"gluten\" is an English term, and French negates before the noun so the trailing-\"free\" rule cannot catch it. Barley, rye and oats are absent by design - Canada declares them as gluten sources separately from wheat, and they would need an allergen of their own.",
+      "notes": "Bare \"flour\" is a definite term, not an ambiguous one, and it is the only bare word here that is: under Division 13 of the Food and Drug Regulations (B.13.001) \"flour\", \"white flour\", \"enriched flour\" and \"plain flour\" are standardised names for the product of milling wheat, so unqualified \"flour\" on a Canadian label is wheat by law rather than by likelihood. That makes the exclusion list load-bearing in a way it was not before: every common non-wheat flour must be listed there or it now produces a firm CONTAINS rather than a soft warning, so add to it when a new one shows up. Promoting the term caught \"mustard flour\" claiming wheat on the spot, which is how the list came to cover the nut, legume, seed and rye-and-barley flours as well; it still cannot be exhaustive, and the accepted cost is that a flour nobody has listed yet over-warns. That is the tolerable direction - a wheat-avoidant user skips a safe food - and the direction that matters, missing wheat that is present, is unaffected, since \"wheat\" and \"wheat flour\" are definite terms in their own right. The same list also guards bare \"bran\" and \"noodle\", which stay ambiguous because they have no such standard of identity. \"starch\", \"modified starch\", \"modified food starch\", \"malt extract\" and \"dextrin\" were removed for the reason given under MUSTARD: wheat is both a priority allergen and a gluten source, so a wheat-derived starch or dextrin must be declared as wheat, and those terms fired on most packaged savoury food without finding anything. \"sans gluten\" is kept as a false-positive guard: \"gluten\" is an English term, and French negates before the noun so the trailing-\"free\" rule cannot catch it. Barley, rye and oats are absent by design - Canada declares them as gluten sources separately from wheat, and they would need an allergen of their own.",
       "terms": [
         "wheat flour", "wheat starch", "wheat germ", "wheat bran", "wheat protein", "wheat",
         "semolina", "spelt", "durum", "kamut", "khorasan", "farina", "couscous", "bulgur",
         "seitan", "triticale", "gluten", "einkorn", "emmer", "farro", "graham", "orzo",
         "macaroni", "spaghetti", "freekeh", "matzo", "matzah", "panko", "udon", "atta", "maida",
-        "phyllo", "filo", "wonton", "crouton", "cracker meal"
+        "phyllo", "filo", "wonton", "crouton", "cracker meal", "flour"
       ],
       "ambiguous": [
-        "modified food starch", "modified starch", "starch", "flour", "malt extract", "malted",
-        "malt", "bran", "breadcrumb", "bread crumb", "bread", "rusk", "pasta", "noodle",
-        "vermicelli", "soba", "dextrin"
+        "malted", "malt", "bran", "breadcrumb", "bread crumb", "bread", "rusk", "pasta",
+        "noodle", "vermicelli", "soba"
       ],
       "exclusions": [
         "gluten free", "wheat free", "sans gluten", "corn gluten", "buckwheat",
@@ -121,7 +119,13 @@
         "tapioca flour", "almond flour", "coconut flour", "chickpea flour", "oat flour",
         "cassava flour", "sorghum flour", "quinoa flour", "millet flour", "teff flour",
         "amaranth flour", "arrowroot flour", "pea flour", "soy flour", "banana flour",
-        "plantain flour", "corn starch", "maize starch", "potato starch", "tapioca starch",
+        "plantain flour", "mustard flour", "rye flour", "barley flour", "lupin flour",
+        "lupine flour", "fava flour", "faba flour", "bean flour", "lentil flour",
+        "garbanzo flour", "hazelnut flour", "peanut flour", "chestnut flour", "walnut flour",
+        "pecan flour", "flax flour", "flaxseed flour", "hemp flour", "sunflower flour",
+        "sesame flour", "carob flour", "acorn flour", "chia flour", "tigernut flour",
+        "cricket flour", "yam flour", "sago flour", "breadfruit flour",
+        "corn starch", "maize starch", "potato starch", "tapioca starch",
         "rice starch", "arrowroot starch", "cassava starch", "pea starch",
         "modified corn starch", "modified tapioca starch", "modified potato starch",
         "modified maize starch", "modified rice starch", "oat bran", "rice bran", "corn bran",
@@ -131,21 +135,21 @@
     {
       "id": "SESAME",
       "label": "Sesame",
+      "notes": "\"spice\", \"spice blend\" and \"seasoning\" were removed for the reason given under MUSTARD: sesame is a priority allergen and must be declared by name even inside a class-name ingredient, so those three could only ever fire on savoury products without finding anything. What is left is the \"is it, maybe\" case - dishes that are substantially sesame rather than dishes sesame might hide in. \"bagel\" and \"bun\" are a judgement about toppings, not about hidden components: the seeds are on the outside and often absent from the ingredient list altogether.",
       "terms": [
         "sesame seed", "sesame oil", "sesame", "sesamum", "sesamol", "sesamin", "tahini",
         "tahina", "halvah", "halva", "gomasio", "gomashio", "benne", "gingelly", "zaatar",
         "za atar", "simsim"
       ],
       "ambiguous": [
-        "spice blend", "spice", "seasoning", "hummus", "falafel", "baba ganoush", "dukkah",
-        "furikake", "bagel", "bun"
+        "hummus", "falafel", "baba ganoush", "dukkah", "furikake", "bagel", "bun"
       ],
       "exclusions": ["sesame free"]
     },
     {
       "id": "FISH",
       "label": "Fish",
-      "notes": "Species whose name ends in \"fish\" are each listed: matching is by word token, so the term \"fish\" does not catch \"monkfish\". \"swedish fish\" is excluded because the candy contains none.",
+      "notes": "Species whose name ends in \"fish\" are each listed: matching is by word token, so the term \"fish\" does not catch \"monkfish\". \"swedish fish\" is excluded because the candy contains none. \"natural flavour\" is absent for the reason set out under MILK; the fish-derived flavourings worth naming are named, as \"worcestershire\" and \"caesar\".",
       "terms": [
         "fish sauce", "fish oil", "fish gelatin", "fish broth", "fish stock", "fish extract",
         "fish protein", "fish paste", "fish meal", "fish", "anchovy", "bass", "catfish", "cod",
@@ -157,8 +161,7 @@
         "nuoc mam", "surimi", "isinglass"
       ],
       "ambiguous": [
-        "worcestershire", "omega 3", "caesar", "seafood", "gelatin", "kimchi", "bouillabaisse",
-        "natural flavour", "natural flavor"
+        "worcestershire", "omega 3", "caesar", "seafood", "kimchi", "bouillabaisse"
       ],
       "exclusions": ["fish free", "swedish fish"]
     },
@@ -181,14 +184,12 @@
     {
       "id": "MUSTARD",
       "label": "Mustard",
+      "notes": "The ambiguous list is empty on purpose, and should stay empty. It held thirteen terms - \"curry powder\", \"curry\", \"spice\", \"seasoning\", \"vinaigrette\", \"relish\", \"pickle\", \"chutney\", \"remoulade\", \"barbecue sauce\", \"bbq sauce\", \"salad dressing\", \"marinade\" - and every one of them was the same mistake as \"natural flavour\" under MILK: each names a compound ingredient that might contain mustard as an undeclared component, and under Canada's 2012 amendments there is no such thing. Mustard became a priority allergen through those very amendments, so it must be declared by name wherever it occurs, including inside a class-name ingredient such as \"spices\" or \"seasoning\". The list therefore could not catch anything a compliant label hides, while firing on most condiments and savoury snacks on the shelf: it put a mustard warning on plain salad dressing, barbecue chips and instant noodles. A term earns a place here only if it is a generic name for mustard itself - the \"is it, maybe\" case that \"mixed nuts\" is for PEANUTS - not if it is a food that mustard might be hiding inside.",
       "terms": [
         "mustard seed", "mustard flour", "mustard oil", "mustard powder", "prepared mustard",
         "mustard", "dijon", "sinapis"
       ],
-      "ambiguous": [
-        "curry powder", "curry", "spice", "seasoning", "vinaigrette", "relish", "pickle",
-        "chutney", "remoulade", "barbecue sauce", "bbq sauce", "salad dressing", "marinade"
-      ],
+      "ambiguous": [],
       "exclusions": ["mustard free"]
     }
   ]

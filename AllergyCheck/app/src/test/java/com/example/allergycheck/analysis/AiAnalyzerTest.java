@@ -34,7 +34,7 @@ public class AiAnalyzerTest {
 
     @Test
     public void individualModelsCheckOneIngredientAndOneSelectedAllergenPerRequest() throws Exception {
-        AnalysisReport base = matching("Ingredients: chocolate (sugar, cocoa butter), salt.", "MILK", "SOY");
+        AnalysisReport base = matching("Ingredients: nougat (sugar, cocoa butter), salt.", "MILK", "SOY");
         List<String> calls = new ArrayList<>();
         AnalysisReport report = AiAnalyzer.analyse(base, (ingredient, allergen) -> {
             assertFalse(ingredient.contains(","));
@@ -42,10 +42,12 @@ public class AiAnalyzerTest {
             calls.add(allergen.id() + ":" + ingredient);
             return AiDecision.of(AiDecision.Verdict.NO_EVIDENCE);
         });
-        // "chocolate" is already a dictionary match for milk, so only soy asks the model about it.
+        // "nougat" is already a dictionary match for milk, so only soy asks the model about it.
+        // It has to be an ingredient that is ambiguous for exactly one of the two selected
+        // allergens, which rules out "margarine" — the dictionary lists that under both.
         assertEquals(7, calls.size());
-        assertFalse(calls.contains("MILK:chocolate"));
-        assertTrue(calls.contains("SOY:chocolate"));
+        assertFalse(calls.contains("MILK:nougat"));
+        assertTrue(calls.contains("SOY:nougat"));
         assertTrue(calls.contains("SOY:cocoa butter"));
         assertTrue(report.aiAnalysis());
         assertFalse(report.aiIncomplete());
@@ -277,11 +279,11 @@ public class AiAnalyzerTest {
     @Test
     public void cloudLlmChecksCompleteIngredientListOnceForEachSelectedAllergen() throws Exception {
         List<String> calls = new ArrayList<>();
-        // The dictionary already flags "chocolate" for milk, so that batch omits it.
-        List<String> all = Arrays.asList("chocolate", "sugar", "mystery protein", "salt");
+        // The dictionary already flags "nougat" for milk, so that batch omits it.
+        List<String> all = Arrays.asList("nougat", "sugar", "mystery protein", "salt");
         List<String> unmatchedForMilk = Arrays.asList("sugar", "mystery protein", "salt");
         AnalysisReport report = AiAnalyzer.analyse(matching(
-                "Ingredients: chocolate (sugar, mystery protein), salt.", "MILK", "SOY"),
+                "Ingredients: nougat (sugar, mystery protein), salt.", "MILK", "SOY"),
                 new BatchModel() {
                     @Override
                     public List<AiDecision> evaluateBatch(List<String> ingredients, Allergen allergen) {
