@@ -247,8 +247,22 @@ public class DetailAccessibilityTest {
                     assertSame(originalHeading[0], activity.findViewById(R.id.detail_timestamp));
                     int expectedId = focusLoading && !moveToBack
                             ? R.id.detail_timestamp : R.id.detail_back_button;
-                    assertTrue("Completing the detail read must preserve the user's reading node",
-                            activity.findViewById(expectedId).isAccessibilityFocused());
+                    boolean focused = activity.findViewById(expectedId).isAccessibilityFocused();
+                    String diagnostic = "";
+                    if (!focused) {
+                        AccessibilityServiceInfo currentService = automation.getServiceInfo();
+                        View original = originalHeading[0];
+                        diagnostic = ". " + detailDiagnostic(activity)
+                                + ", testServiceFlags=" + (currentService == null
+                                        ? "unavailable" : currentService.flags)
+                                + ", touchExploration=" + manager.isTouchExplorationEnabled()
+                                + ", originalHeading=" + describeFocusedView(original, false)
+                                + ", originalHeadingShown=" + (original != null && original.isShown())
+                                + ", originalHeadingWindowFocus="
+                                        + (original != null && original.hasWindowFocus());
+                    }
+                    assertTrue("Completing the detail read must preserve the user's reading node"
+                            + diagnostic, focused);
                 });
             }
         } finally {

@@ -5,7 +5,6 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
@@ -160,138 +159,135 @@
                         app:shapeAppearance="@style/ShapeAppearance.AllergyCheck.Large"
                         app:strokeWidth="0dp">
 
-                        <FrameLayout
+                        <!-- MaterialCardView already provides the stacking FrameLayout. -->
+
+                        <LinearLayout
+                            android:id="@+id/empty_state"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_dropzone"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="24dp"
+                            android:paddingTop="32dp"
+                            android:paddingBottom="28dp">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/camera_button"
+                                style="@style/Widget.AllergyCheck.PhotoActionButton"
+                                android:layout_width="72dp"
+                                android:layout_height="72dp"
+                                android:contentDescription="@string/take_photo"
+                                app:backgroundTint="?attr/colorPrimary"
+                                app:cornerRadius="36dp"
+                                app:icon="@drawable/ic_camera"
+                                app:iconSize="32dp"
+                                app:iconTint="?attr/colorOnPrimary" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:accessibilityHeading="true"
+                                android:gravity="center"
+                                android:text="@string/add_label_title"
+                                android:textAppearance="?attr/textAppearanceTitleMedium"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:gravity="center"
+                                android:text="@string/add_label_description"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/import_button"
+                                style="@style/Widget.AllergyCheck.PrimaryButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="20dp"
+                                android:paddingHorizontal="28dp"
+                                android:text="@string/import_photo"
+                                app:icon="@drawable/ic_upload"
+                                app:iconGravity="textStart" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:id="@+id/preview_state"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/colorSurfaceContainer"
+                            android:visibility="gone"
+                            tools:visibility="gone">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/photo_preview"
+                                android:layout_width="match_parent"
+                                android:layout_height="320dp"
+                                android:contentDescription="@string/photo_preview_description"
+                                android:scaleType="fitCenter" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/remove_button"
+                                style="@style/Widget.AllergyCheck.TonalIconButton"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:layout_gravity="top|end"
+                                android:layout_margin="12dp"
+                                android:contentDescription="@string/remove_photo"
+                                app:icon="@drawable/ic_close"
+                                app:iconSize="20dp" />
 
                             <LinearLayout
-                                android:id="@+id/empty_state"
-                                android:layout_width="match_parent"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@drawable/bg_dropzone"
-                                android:gravity="center"
-                                android:orientation="vertical"
-                                android:paddingHorizontal="24dp"
-                                android:paddingTop="32dp"
-                                android:paddingBottom="28dp">
+                                android:layout_gravity="bottom|start"
+                                android:layout_margin="12dp"
+                                android:background="@drawable/bg_pill"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingStart="10dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="14dp"
+                                android:paddingBottom="6dp">
 
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/camera_button"
-                                    style="@style/Widget.AllergyCheck.PhotoActionButton"
-                                    android:layout_width="72dp"
-                                    android:layout_height="72dp"
-                                    android:contentDescription="@string/take_photo"
-                                    app:backgroundTint="?attr/colorPrimary"
-                                    app:cornerRadius="36dp"
-                                    app:icon="@drawable/ic_camera"
-                                    app:iconSize="32dp"
-                                    app:iconTint="?attr/colorOnPrimary" />
-
-                                <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="16dp"
-                                    android:accessibilityHeading="true"
-                                    android:gravity="center"
-                                    android:text="@string/add_label_title"
-                                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                                    android:textColor="?attr/colorOnSurface" />
-
-                                <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="4dp"
-                                    android:gravity="center"
-                                    android:text="@string/add_label_description"
-                                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/import_button"
-                                    style="@style/Widget.AllergyCheck.PrimaryButton"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="20dp"
-                                    android:paddingHorizontal="28dp"
-                                    android:text="@string/import_photo"
-                                    app:icon="@drawable/ic_upload"
-                                    app:iconGravity="textStart" />
-                            </LinearLayout>
-
-                            <FrameLayout
-                                android:id="@+id/preview_state"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="?attr/colorSurfaceContainer"
-                                android:visibility="gone"
-                                tools:visibility="gone">
-
-                                <com.google.android.material.imageview.ShapeableImageView
-                                    android:id="@+id/photo_preview"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="320dp"
-                                    android:contentDescription="@string/photo_preview_description"
-                                    android:scaleType="fitCenter" />
-
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/remove_button"
-                                    style="@style/Widget.AllergyCheck.TonalIconButton"
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:layout_gravity="top|end"
-                                    android:layout_margin="12dp"
-                                    android:contentDescription="@string/remove_photo"
-                                    app:icon="@drawable/ic_close"
-                                    app:iconSize="20dp" />
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="bottom|start"
-                                    android:layout_margin="12dp"
-                                    android:background="@drawable/bg_pill"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal"
-                                    android:paddingStart="10dp"
-                                    android:paddingTop="6dp"
-                                    android:paddingEnd="14dp"
-                                    android:paddingBottom="6dp">
-
-                                    <ImageView
-                                        android:layout_width="18dp"
-                                        android:layout_height="18dp"
-                                        android:importantForAccessibility="no"
-                                        android:src="@drawable/ic_check"
-                                        app:tint="?attr/colorOnPrimaryContainer" />
-
-                                    <com.google.android.material.textview.MaterialTextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="6dp"
-                                        android:text="@string/photo_added"
-                                        android:textAppearance="?attr/textAppearanceLabelLarge"
-                                        android:textColor="?attr/colorOnPrimaryContainer" />
-                                </LinearLayout>
-                            </FrameLayout>
-
-                            <FrameLayout
-                                android:id="@+id/loading_overlay"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="?attr/colorSurfaceContainerLow"
-                                android:contentDescription="@string/loading_photo"
-                                android:importantForAccessibility="yes"
-                                android:screenReaderFocusable="true"
-                                android:visibility="gone">
-
-                                <com.google.android.material.progressindicator.CircularProgressIndicator
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
-                                    android:layout_gravity="center"
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
                                     android:importantForAccessibility="no"
-                                    android:indeterminate="true"
-                                    app:indicatorSize="40dp" />
-                            </FrameLayout>
+                                    android:src="@drawable/ic_check"
+                                    app:tint="?attr/colorOnPrimaryContainer" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:text="@string/photo_added"
+                                    android:textAppearance="?attr/textAppearanceLabelLarge"
+                                    android:textColor="?attr/colorOnPrimaryContainer" />
+                            </LinearLayout>
+                        </FrameLayout>
+
+                        <FrameLayout
+                            android:id="@+id/loading_overlay"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="?attr/colorSurfaceContainerLow"
+                            android:contentDescription="@string/loading_photo"
+                            android:importantForAccessibility="yes"
+                            android:screenReaderFocusable="true"
+                            android:visibility="gone">
+
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:layout_gravity="center"
+                                android:importantForAccessibility="no"
+                                android:indeterminate="true"
+                                app:indicatorSize="40dp" />
                         </FrameLayout>
                     </com.google.android.material.card.MaterialCardView>
 

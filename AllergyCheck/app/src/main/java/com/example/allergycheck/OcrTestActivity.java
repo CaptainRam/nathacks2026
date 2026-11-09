@@ -404,10 +404,16 @@ public class OcrTestActivity extends AppCompatActivity {
 
     /** Lines, characters and elapsed time — enough to tell whether a change helped. */
     private void showStats(@NonNull OcrResult result, long elapsedMillis) {
+        int lines = result.lines().size();
+        int characters = result.fullText().length();
         ocrStats.setText(getString(R.string.ocr_stats,
-                result.lines().size(), result.fullText().length(), elapsedMillis));
+                lines, characters, elapsedMillis));
         ocrStats.setContentDescription(getString(R.string.ocr_stats_accessibility,
-                result.lines().size(), result.fullText().length(), elapsedMillis));
+                getResources().getQuantityString(R.plurals.ocr_stats_lines, lines, lines),
+                getResources().getQuantityString(R.plurals.ocr_stats_characters,
+                        characters, characters),
+                getResources().getQuantityString(R.plurals.ocr_stats_milliseconds,
+                        (int) Math.min(elapsedMillis, Integer.MAX_VALUE), elapsedMillis)));
         ocrStats.setVisibility(View.VISIBLE);
     }
 

@@ -22,6 +22,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.android.material.materialswitch.MaterialSwitch;
+import com.example.allergycheck.ocr.OcrLine;
+import com.example.allergycheck.ocr.OcrResult;
 
 import org.junit.After;
 import org.junit.Before;
@@ -33,12 +35,14 @@ import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/** A real OCR completion may precede the duplicate enhanced-preview preparation. */
+/** OCR completion must preserve the latest preview and expose accurate spoken statistics. */
 @RunWith(AndroidJUnit4.class)
 public class OcrPreviewRaceTest {
     private Context context;
@@ -112,6 +116,42 @@ public class OcrPreviewRaceTest {
             screen.onActivity(OcrPreviewRaceTest::assertGreenPreview);
         } finally {
             releasePreview.countDown();
+        }
+    }
+
+    @Test
+    public void statisticsUseIndependentSingularAndPluralUnits() {
+        try (ActivityScenario<OcrTestActivity> screen = ActivityScenario.launch(
+                new Intent(context, OcrTestActivity.class))) {
+            screen.onActivity(activity -> {
+                assertSpokenStats(activity, OcrResult.empty(), 0,
+                        "0 lines, 0 characters, 0 milliseconds.");
+                assertSpokenStats(activity, OcrResult.of(Collections.singletonList(
+                        new OcrLine("x", null, 0, 0, 0))), 1,
+                        "1 line, 1 character, 1 millisecond.");
+                assertSpokenStats(activity, OcrResult.of(Collections.singletonList(
+                        new OcrLine("xy", null, 0, 0, 0))), 2,
+                        "1 line, 2 characters, 2 milliseconds.");
+                assertSpokenStats(activity, OcrResult.of(Arrays.asList(
+                        new OcrLine("x", null, 0, 0, 0),
+                        new OcrLine("y", null, 0, 1, 0))), 1,
+                        "2 lines, 3 characters, 1 millisecond.");
+            });
+        }
+    }
+
+    private static void assertSpokenStats(OcrTestActivity activity, OcrResult result,
+                                          long elapsedMillis, String expected) {
+        try {
+            Method method = OcrTestActivity.class.getDeclaredMethod(
+                    "showStats", OcrResult.class, long.class);
+            method.setAccessible(true);
+            method.invoke(activity, result, elapsedMillis);
+            TextView stats = activity.findViewById(R.id.ocr_stats);
+            assertTrue(stats.isShown());
+            assertEquals(expected, stats.getContentDescription().toString());
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError(exception);
         }
     }
 

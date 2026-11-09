@@ -6,5 +6,17 @@
     <string name="ocr_output_empty">No text found. Review the message below.</string>
     <string name="ocr_output_failed">Ingredient extraction failed. Review the message below.</string>
     <string name="ocr_waiting_for_model">Ingredient extraction is waiting for the AI model.</string>
-    <string name="ocr_stats_accessibility">%1$d lines, %2$d characters, %3$d milliseconds.</string>
+    <string name="ocr_stats_accessibility">%1$s, %2$s, %3$s.</string>
+    <plurals name="ocr_stats_lines">
+        <item quantity="one">%1$d line</item>
+        <item quantity="other">%1$d lines</item>
+    </plurals>
+    <plurals name="ocr_stats_characters">
+        <item quantity="one">%1$d character</item>
+        <item quantity="other">%1$d characters</item>
+    </plurals>
+    <plurals name="ocr_stats_milliseconds">
+        <item quantity="one">%1$d millisecond</item>
+        <item quantity="other">%1$d milliseconds</item>
+    </plurals>
 </resources>

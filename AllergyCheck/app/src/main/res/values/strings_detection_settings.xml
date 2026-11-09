@@ -2,7 +2,6 @@
 <resources>
     <string name="detection_settings_title">Detection method</string>
     <string name="detection_location_hint">Choose how ingredients are checked. Your choice applies right away.</string>
-    <string name="detection_location_label">Where ingredients are checked</string>
     <string name="detection_local">On device</string>
     <string name="detection_cloud">Cloud</string>
     <string name="detection_matching">Dictionary matching</string>
