@@ -221,7 +221,7 @@
                         android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Saved / needs-a-key state, read before the button. -->
+                <!-- Needs-a-key warning; the page-wide Save bar stores these fields. -->
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/detection_cloud_save_status"
                     android:layout_width="match_parent"
@@ -232,15 +232,6 @@
                     android:gravity="center_vertical"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:visibility="gone" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/detection_save_cloud"
-                    style="@style/Widget.AllergyCheck.PrimaryButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:minHeight="48dp"
-                    android:text="@string/detection_save_cloud" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

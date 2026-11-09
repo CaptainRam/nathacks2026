@@ -102,18 +102,24 @@ public class DetectionSettingsTest {
                 input(activity, R.id.detection_api_key).setText("test-settings-key");
                 input(activity, R.id.detection_decisions_model_id).setText("typesafe/example");
                 input(activity, R.id.detection_threshold).setText("1.1");
-                activity.findViewById(R.id.detection_save_cloud).performClick();
+                save(activity);
                 assertNotNull(((TextInputLayout) activity.findViewById(R.id.detection_threshold_layout)).getError());
+                assertFalse(activity.isFinishing());
                 assertEquals("", AnalysisPreferences.openRouterApiKey(context));
                 assertEquals("", AnalysisPreferences.decisionsModel(context));
                 input(activity, R.id.detection_threshold).setText("0.65");
-                activity.findViewById(R.id.detection_save_cloud).performClick();
+                save(activity);
                 assertNull(((TextInputLayout) activity.findViewById(R.id.detection_threshold_layout)).getError());
+                assertTrue(activity.isFinishing());
                 assertEquals("test-settings-key", AnalysisPreferences.openRouterApiKey(context));
                 assertEquals("typesafe/example", AnalysisPreferences.decisionsModel(context));
                 assertEquals(0.65, AnalysisPreferences.decisionsThreshold(context), 0.000001);
+            });
+        }
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
                 input(activity, R.id.detection_threshold).setText("0");
-                activity.findViewById(R.id.detection_save_cloud).performClick();
+                save(activity);
                 assertNull(((TextInputLayout) activity.findViewById(R.id.detection_threshold_layout)).getError());
                 assertEquals(0, AnalysisPreferences.decisionsThreshold(context), 0);
             });
@@ -147,12 +153,55 @@ public class DetectionSettingsTest {
                 assertEquals("test-draft-key", input(activity, R.id.detection_api_key).getText().toString());
                 assertEquals("example/model", input(activity, R.id.detection_model_id).getText().toString());
                 assertEquals("", AnalysisPreferences.openRouterApiKey(context));
-                activity.findViewById(R.id.detection_save_cloud).performClick();
+                save(activity);
             });
-            scenario.recreate();
-            scenario.onActivity(activity -> activity.getOnBackPressedDispatcher().onBackPressed());
             assertEquals(Activity.RESULT_OK, scenario.getResult().getResultCode());
             assertEquals("test-draft-key", AnalysisPreferences.openRouterApiKey(context));
+        }
+        // The stored key, not a leftover draft, is what a fresh screen shows.
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                assertEquals("test-draft-key", input(activity, R.id.detection_api_key).getText().toString());
+                assertEquals("example/model", input(activity, R.id.detection_model_id).getText().toString());
+            });
+        }
+    }
+
+    @Test
+    public void hiddenInvalidConcurrencyDoesNotBlockSave() {
+        // A non-default value, so keeping it is distinguishable from resetting it.
+        AnalysisPreferences.saveCloudConcurrency(context, 8);
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
+            scenario.onActivity(activity -> {
+                // Typed while in cloud mode, then hidden by switching back to on-device.
+                activity.findViewById(R.id.detection_location_cloud).performClick();
+                input(activity, R.id.detection_concurrency).setText("0");
+                activity.findViewById(R.id.detection_location_local).performClick();
+                assertEquals(View.GONE, activity.findViewById(R.id.detection_cloud_configuration).getVisibility());
+                save(activity);
+                assertTrue(activity.isFinishing());
+                assertNull(((TextInputLayout) activity.findViewById(
+                        R.id.detection_concurrency_layout)).getError());
+            });
+        }
+        assertEquals(8, AnalysisPreferences.cloudConcurrency(context));
+    }
+
+    @Test
+    public void invalidCloudFieldSavedFromAllergensOpensTheModelSection() {
+        AnalysisPreferences.saveMode(context, AnalysisPreferences.Mode.OPENROUTER);
+        try (ActivityScenario<SettingsActivity> scenario =
+                     ActivityScenario.launch(new Intent(context, SettingsActivity.class))) {
+            scenario.onActivity(activity -> {
+                input(activity, R.id.detection_api_key).setText("test-redirect-key");
+                input(activity, R.id.detection_model_id).setText("not-a-model-id");
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.allergen_section).getVisibility());
+                save(activity);
+                assertFalse(activity.isFinishing());
+                assertEquals(View.VISIBLE, activity.findViewById(R.id.model_section).getVisibility());
+                assertNotNull(((TextInputLayout) activity.findViewById(R.id.detection_model_layout)).getError());
+                assertEquals("", AnalysisPreferences.openRouterApiKey(context));
+            });
         }
     }
 
@@ -165,7 +214,8 @@ public class DetectionSettingsTest {
                 input(activity, R.id.detection_model_id).setText("example/model");
                 for (String invalid : new String[] {"0", "2.5", "", "2147483648"}) {
                     input(activity, R.id.detection_concurrency).setText(invalid);
-                    activity.findViewById(R.id.detection_save_cloud).performClick();
+                    save(activity);
+                    assertFalse(activity.isFinishing());
                     assertNotNull(((TextInputLayout) activity.findViewById(
                             R.id.detection_concurrency_layout)).getError());
                     assertEquals(1, AnalysisPreferences.cloudConcurrency(context));
@@ -192,13 +242,14 @@ public class DetectionSettingsTest {
             scenario.onActivity(activity -> {
                 assertEquals("16", input(activity, R.id.detection_concurrency).getText().toString());
                 assertTrue(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
-                activity.findViewById(R.id.detection_save_cloud).performClick();
+                save(activity);
                 assertNull(((TextInputLayout) activity.findViewById(
                         R.id.detection_concurrency_layout)).getError());
                 assertEquals(16, AnalysisPreferences.cloudConcurrency(context));
                 assertFalse(activity.getOnBackPressedDispatcher().hasEnabledCallbacks());
             });
-            scenario.recreate();
+        }
+        try (ActivityScenario<SettingsActivity> scenario = ActivityScenario.launch(settingsIntent())) {
             scenario.onActivity(activity -> assertEquals("16",
                     input(activity, R.id.detection_concurrency).getText().toString()));
         }
@@ -228,6 +279,11 @@ public class DetectionSettingsTest {
         assertThrows(NumberFormatException.class, () -> SettingsActivity.parseConcurrency("-1"));
         assertThrows(NumberFormatException.class, () -> SettingsActivity.parseConcurrency("2.5"));
         assertThrows(NumberFormatException.class, () -> SettingsActivity.parseConcurrency("2147483648"));
+    }
+
+    /** The page-wide Save, which also closes settings once everything is valid and stored. */
+    private static void save(SettingsActivity activity) {
+        activity.findViewById(R.id.save_preferences_button).performClick();
     }
 
     private static EditText input(SettingsActivity activity, int id) {
