@@ -202,11 +202,84 @@ public class DictionaryNoiseTest {
     }
 
     @Test
+    public void brewedSaucesArePossibleGluten() {
+        // Deliberately stricter than the regulation, and the one place in this entry that is. The
+        // MUSTARD reasoning would drop these, since a compliant label must declare the wheat. They
+        // stay because the ambiguity is in the *name*, which is the "hummus under SESAME" case:
+        // "soy sauce" denotes a category with a wheat-brewed form and a gluten-free one, koikuchi
+        // and tamari, and the name alone does not say which is in the bottle.
+        //
+        // POSSIBLE rather than CONTAINS because the gluten-free forms are real and common.
+        String[] sauces = {
+            "soy sauce", "soya sauce", "shoyu", "tamari", "hoisin sauce", "teriyaki sauce",
+            "ponzu", "oyster sauce", "black bean sauce", "worcestershire sauce", "miso paste",
+            "doenjang", "gochujang",
+        };
+        for (String sauce : sauces) {
+            assertStatus("Ingredients: water, " + sauce + ", sugar.", "WHEAT",
+                    AnalysisReport.Status.POSSIBLE);
+        }
+    }
+
+    @Test
+    public void saucesLabelledGlutenFreeAreNotFlagged() {
+        // Only works while the claim qualifies the ingredient name itself; see the note on
+        // aFreeFromClaimInASeparateSentenceDoesNotReachTheIngredient.
+        String[] fine = {
+            "gluten free soy sauce", "gluten free tamari", "wheat free soy sauce",
+            "wheat free tamari",
+        };
+        for (String sauce : fine) {
+            assertStatus("Ingredients: water, " + sauce + ", sugar.", "WHEAT",
+                    AnalysisReport.Status.NOT_DETECTED);
+        }
+    }
+
+    @Test
+    public void stocksAndBouillonAreNotFlagged() {
+        // The other side of the line the sauces sit on: wheat in a stock cube is an undeclared
+        // component, not part of what the name denotes, so it falls under the MUSTARD reasoning.
+        assertStatus("Ingredients: water, bouillon, salt, sugar.", "WHEAT",
+                AnalysisReport.Status.NOT_DETECTED);
+        assertStatus("Ingredients: water, chicken stock, salt.", "WHEAT",
+                AnalysisReport.Status.NOT_DETECTED);
+    }
+
+    @Test
     public void certifiedGlutenFreeOatsAreNotFlagged() {
         // A real product, and the trailing-"free" rule cannot catch it: that rule looks for
         // "<term> free", and nobody writes "oats free".
         assertStatus("Ingredients: gluten free oats, sugar, salt.", "WHEAT",
                 AnalysisReport.Status.NOT_DETECTED);
+    }
+
+    /**
+     * Characterises a known gap rather than endorsing it. If the matcher learns to read a
+     * label-wide free-from claim, this test should be the one that changes.
+     *
+     * <p>Exclusions are adjacent-phrase only, so "gluten free oats" as an ingredient name is caught
+     * while the same claim in its own sentence is not. For wheat and barley a contradiction between
+     * the claim and the ingredient is better reported than believed, so CONTAINS is the right
+     * answer there. Oats are the problem: they are the one gluten source routinely sold in a
+     * certified gluten-free form, so "Ingredients: oats. Gluten free." is an ordinary product that
+     * this reports as a firm CONTAINS.
+     */
+    @Test
+    public void aFreeFromClaimInASeparateSentenceDoesNotReachTheIngredient() {
+        // Caught: the claim qualifies the ingredient name.
+        assertStatus("Ingredients: gluten free oats, sugar.", "WHEAT",
+                AnalysisReport.Status.NOT_DETECTED);
+        assertStatus("Ingredients: certified gluten free oats, sugar.", "WHEAT",
+                AnalysisReport.Status.NOT_DETECTED);
+
+        // Not caught: the claim is its own sentence. The first of these is the false positive.
+        assertStatus("Ingredients: oats, sugar. Gluten free.", "WHEAT",
+                AnalysisReport.Status.CONTAINS);
+        // These two are contradictions, where reporting the ingredient is the safe answer.
+        assertStatus("Ingredients: wheat flour, water. Gluten free.", "WHEAT",
+                AnalysisReport.Status.CONTAINS);
+        assertStatus("Ingredients: barley malt, sugar. Gluten free.", "WHEAT",
+                AnalysisReport.Status.CONTAINS);
     }
 
     @Test
