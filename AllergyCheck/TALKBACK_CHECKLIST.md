@@ -24,16 +24,19 @@ Current checks:
 | Release APK with shrinking | Built successfully |
 | JVM tests | 455 passed, no failures/errors/skips |
 | Debug and release Lint | 0 errors, 4 warnings each; 0 AccessibilityFocus warnings |
-| Focused final emulator regression | 16 tests passed in one run (Front Photo, Settings report/history isolation, Main result focus) |
+| Integrated emulator regression | 135 unique methods passed across 19 classes in the 55 / 54 / 26 phases described below |
+| Additional focused rerun | 16 tests passed in one run; these methods are already included in the 135 unique total |
 | Resource XML and whitespace | All 84 resource XML files parsed; git diff --check passed |
+
+The 135-method result is a union of passing methods across phases, not one uninterrupted 135-method run. The first eight classes completed 55 methods without a failing assertion, then the runner was intentionally stopped at the next SettingsLayout class boundary so the remaining 80 methods could run in parallel on independent cold-boot instances. That partial runner log ends with `Process crashed` because of the explicit stop; it is not a completed all-green runner result. The two remaining batches completed normally with `OK (54 tests)` and `OK (26 tests)`. All phases used the same final app and test APKs. The separate 16-method focused run is not added again.
 
 The four retained Lint warnings cover the capture activity's existing portrait restriction (LockedOrientationActivity and DiscouragedApi) and the two launcher icons' missing monochrome layers. Safely removing the capture restriction would also require preserving an in-flight capture through rotation; that behavior was not added merely to silence Lint.
 
 The integration emulator tests use Android 17/API 37 and framework accessibility nodes/actions with component touch exploration. They do not constitute a new native TalkBack speech/gesture acceptance round, a physical-camera run, a real cloud request, or a real model-inference run. The historical native TalkBack/cloud/model records below remain attributable to their original source versions.
 
-Preliminary failures were corrected with native attached test hosts, stable photo-card role implementation, proper native switch activation and complete Material input-hint expectations; assertions for focus, findings and persistence were retained. One preliminary front-photo readiness wait timed out before test-controller injection on the snapshot-started instance. Its unchanged ten-second condition passed in the subsequent isolated cold-boot focused run; no root cause is claimed for that transient timeout. The slow preliminary instance was discarded without saving its data.
+Preliminary failures were corrected with native attached test hosts, stable photo-card role implementation, proper native switch activation and complete Material input-hint expectations; assertions for focus, findings and persistence were retained. One preliminary front-photo readiness wait timed out before test-controller injection on the snapshot-started instance. Its unchanged ten-second condition passed in both the subsequent isolated cold-boot focused run and integrated regression phase; no root cause is claimed for that transient timeout. The slow preliminary instance was discarded without saving its data.
 
-Local validation logs, Lint XML, JVM result XML and paired-photo native screenshots are preserved under `/Users/lcwhhh/.codex/visualizations/2026/11/09/01a1bea4-6b2f-7f11-b000-e95583100e41/pr-integration/`. The focused result is `nathacks-integration-ui-5584.log`; these files are local evidence, not GitHub-hosted attachments.
+Local validation logs, Lint XML, JVM result XML and paired-photo native screenshots are preserved under `/Users/lcwhhh/.codex/visualizations/2026/11/09/01a1bea4-6b2f-7f11-b000-e95583100e41/pr-integration/`. The phase logs are `nathacks-integration-ui-acceptance.log` (55 passing methods before the intentional stop), `nathacks-integration-ui-functional.log` (54), and `nathacks-integration-ui-settings-detail.log` (26). The focused result is `nathacks-integration-ui-5584.log`; `apk-sha256.json` identifies the tested artifacts. These files are local evidence, not GitHub-hosted attachments.
 
 ## Earlier automated verification (historical record)
 
