@@ -71,6 +71,7 @@ import static org.junit.Assume.assumeTrue;
  */
 @RunWith(AndroidJUnit4.class)
 public class RealPhotoUiTest {
+    private FoodTypeCrossCheck lastCompletedAdvice;
     private Context context;
     private File artifacts;
 
@@ -237,13 +238,42 @@ public class RealPhotoUiTest {
                              boolean withFront) throws Exception {
         await(scan, activity -> pairReady(activity, withFront));
         AtomicReference<JSONObject> data = new AtomicReference<>();
+        AtomicReference<FoodTypeCrossCheck> completedAdvice = new AtomicReference<>();
         scan.onActivity(activity -> {
             AnalysisReport after = (AnalysisReport) field(controller(activity), "report");
             assertSame("Front-photo changes must retain the original report", before.report, after);
             assertArrayEquals(before.bytes, bytes(after));
             assertEquals(before.labelUri, field(activity, "selectedPhoto"));
             assertSame(before.labelBitmap, bitmap(activity.findViewById(R.id.photo_preview)));
-            assertEquals(before.rendered, visibleText(activity.findViewById(R.id.analysis_result)));
+            FoodTypeEstimate currentEstimate = (FoodTypeEstimate) field(controller(activity), "estimate");
+            FoodTypeCrossCheck currentAdvice = currentEstimate == null ? null
+                    : FoodTypeCrossCheck.compare(after, currentEstimate);
+            completedAdvice.set(currentAdvice);
+            boolean hasReminders = withFront && currentAdvice != null && !currentAdvice.missingAllergens().isEmpty();
+            if (!hasReminders) {
+                assertEquals("Removing the photo or finding no mismatch must restore the label presentation",
+                        before.rendered, visibleText(activity.findViewById(R.id.analysis_result)));
+            } else {
+                String mainSummary = ((TextView) activity.findViewById(R.id.verdict_message)).getText().toString();
+                assertTrue(mainSummary.contains(currentAdvice.foodType()));
+                assertTrue(mainSummary.contains("does not confirm"));
+                String expectedTitle = after.overall() == AnalysisReport.Status.NOT_DETECTED
+                        ? activity.getString(R.string.crosscheck_review_title)
+                        : new AnalysisMessage(activity.getResources()).title(after);
+                assertEquals(expectedTitle,
+                        ((TextView) activity.findViewById(R.id.verdict_title)).getText().toString());
+                ViewGroup rows = activity.findViewById(R.id.allergen_rows);
+                for (com.example.allergycheck.analysis.Allergen allergen : currentAdvice.missingAllergens()) {
+                    assertTrue(mainSummary.contains(allergen.label()));
+                    View reviewRow = null;
+                    for (int i = 0; i < rows.getChildCount(); i++) {
+                        if (allergen.id().equals(rows.getChildAt(i).getTag(R.id.allergen_name))) reviewRow = rows.getChildAt(i);
+                    }
+                    assertNotNull("Missing allergens must appear in the main result", reviewRow);
+                    assertEquals(activity.getString(R.string.crosscheck_review_status),
+                            ((TextView) reviewRow.findViewById(R.id.allergen_status)).getText().toString());
+                }
+            }
             ViewGroup strip = activity.findViewById(R.id.photo_strip);
             assertEquals(2, strip.getChildCount());
             MaterialCardView labelCard = strip.getChildAt(0).findViewById(R.id.thumbnail_card);
@@ -266,7 +296,8 @@ public class RealPhotoUiTest {
             }
             JSONObject snapshot = json("pair", geometry, "report_same_instance", true,
                     "report_bytes_unchanged", true, "label_uri_unchanged", true,
-                    "label_bitmap_unchanged", true, "rendered_ingredient_result_unchanged", true,
+                    "label_bitmap_unchanged", true, "main_result_shows_photo_reminders", hasReminders,
+                    "main_result_restored_without_reminders", !hasReminders,
                     "thumbnail_bitmap_bindings_match", true, "cloud_executed", false);
             if (withFront) {
                 Uri photo = (Uri) field(controller(activity), "photo");
@@ -289,12 +320,16 @@ public class RealPhotoUiTest {
             }
             data.set(snapshot);
         });
+        if (completedAdvice.get() != null) lastCompletedAdvice = completedAdvice.get();
+        awaitStoredAdvice(store, id, lastCompletedAdvice);
         HistorySnapshot after = history(database, id);
         assertArrayEquals(saved.report, after.report);
         assertEquals(saved.columns, after.columns);
         assertEquals(savedIds, store.liveIds());
         return data.get().put("report_sha256", sha256(before.bytes)).put("history_report_sha256", sha256(after.report))
-                .put("history_columns_unchanged", true).put("history_rows_unchanged", true)
+                .put("history_label_columns_unchanged", true).put("history_rows_unchanged", true)
+                .put("history_photo_reminders_saved", lastCompletedAdvice != null
+                        && !lastCompletedAdvice.missingAllergens().isEmpty())
                 .put("history_row_count", store.liveIds().size()).put("ingredient_report", reportJson(before.report));
     }
 
@@ -441,11 +476,26 @@ public class RealPhotoUiTest {
             byte[] bytes = row.getBlob(row.getColumnIndexOrThrow("report_blob"));
             assertNotNull(bytes);
             StringBuilder columns = new StringBuilder();
-            for (int i = 0; i < row.getColumnCount(); i++) if (!"report_blob".equals(row.getColumnName(i))) {
+            for (int i = 0; i < row.getColumnCount(); i++) if (!"report_blob".equals(row.getColumnName(i))
+                    && !"food_type_crosscheck".equals(row.getColumnName(i))) {
                 columns.append(row.getColumnName(i)).append('=').append(row.isNull(i) ? "<null>" : row.getString(i)).append('\u001f');
             }
             return new HistorySnapshot(bytes, columns.toString());
         }
+    }
+
+    private static void awaitStoredAdvice(ScanHistoryStore store, long id, FoodTypeCrossCheck expected) {
+        long deadline = SystemClock.uptimeMillis() + 10_000;
+        do {
+            ScanHistoryDetail detail = store.detail(id);
+            FoodTypeCrossCheck saved = detail == null ? null : detail.foodTypeCrossCheck();
+            if ((expected == null || expected.missingAllergens().isEmpty()) && saved == null) return;
+            if (expected != null && saved != null && expected.foodType().equals(saved.foodType())
+                    && expected.commonAllergens().equals(saved.commonAllergens())
+                    && expected.missingAllergens().equals(saved.missingAllergens())) return;
+            SystemClock.sleep(25);
+        } while (SystemClock.uptimeMillis() < deadline);
+        throw new AssertionError("The latest completed photo reminder was not retained in history");
     }
     private static final class HistorySnapshot {
         final byte[] report; final String columns;

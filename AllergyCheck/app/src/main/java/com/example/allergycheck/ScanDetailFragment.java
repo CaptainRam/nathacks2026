@@ -14,12 +14,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 
+import com.example.allergycheck.analysis.AnalysisReport;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
 import com.example.allergycheck.history.ScanHistory;
 import com.example.allergycheck.history.ScanHistoryDetail;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.function.LongConsumer;
 
 /**
  * One saved scan, expanded into the result it produced.
@@ -39,9 +43,17 @@ public class ScanDetailFragment extends Fragment {
     private int detailRequest;
     private boolean hasBoundDetail;
     @Nullable private ScanHistoryDetail boundDetail;
+    @Nullable private AnalysisReport boundReport;
     private boolean boundShowNotDetected;
     private boolean boundRedWarning;
     private boolean boundDebugLabel;
+    private final LongConsumer onCrossCheckChanged = id -> {
+        if (isAdded() && getView() != null
+                && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)
+                && requireArguments().getLong(ARG_ID) == id) {
+            loadDetail();
+        }
+    };
 
     static ScanDetailFragment of(long id) {
         ScanDetailFragment fragment = new ScanDetailFragment();
@@ -63,6 +75,7 @@ public class ScanDetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         hasBoundDetail = false;
         boundDetail = null;
+        boundReport = null;
         history = ScanHistory.get(requireContext());
         // Scoped to this fragment's own root: the scan page has a copy of these ids too.
         resultRoot = view.findViewById(R.id.history_result);
@@ -74,6 +87,18 @@ public class ScanDetailFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        history.addOnCrossCheckChangedListener(onCrossCheckChanged);
+        loadDetail();
+    }
+
+    @Override
+    public void onStop() {
+        history.removeOnCrossCheckChangedListener(onCrossCheckChanged);
+        ++detailRequest;
+        super.onStop();
+    }
+
+    private void loadDetail() {
         final View view = requireView();
         // Rebind saved results after returning from Settings with new display preferences.
         long id = requireArguments().getLong(ARG_ID);
@@ -99,18 +124,35 @@ public class ScanDetailFragment extends Fragment {
         });
     }
 
-    /** Stored reports are immutable; only attaching an image or removing the row changes them. */
+    /** Reports are immutable, but a later photo check can update the saved review reminders. */
     private static boolean sameSavedDetail(@Nullable ScanHistoryDetail first,
                                            @Nullable ScanHistoryDetail second) {
         if (first == null || second == null) return first == second;
+        return sameSavedContent(first, second)
+                && sameAdvice(first.foodTypeCrossCheck(), second.foodTypeCrossCheck());
+    }
+
+    private static boolean sameSavedContent(@NonNull ScanHistoryDetail first,
+                                             @NonNull ScanHistoryDetail second) {
         return first.item().id() == second.item().id()
-                && Objects.equals(first.item().imageName(), second.item().imageName());
+                && Objects.equals(first.item().imageName(), second.item().imageName())
+                && (first.report() != null) == (second.report() != null);
+    }
+
+    private static boolean sameAdvice(@Nullable FoodTypeCrossCheck first,
+                                      @Nullable FoodTypeCrossCheck second) {
+        if (first == second) return true;
+        return first != null && second != null
+                && first.foodType().equals(second.foodType())
+                && first.commonAllergens().equals(second.commonAllergens())
+                && first.missingAllergens().equals(second.missingAllergens());
     }
 
     @Override
     public void onDestroyView() {
         ++detailRequest;
         boundDetail = null;
+        boundReport = null;
         hasBoundDetail = false;
         resultView = null;
         resultRoot = null;
@@ -124,6 +166,7 @@ public class ScanDetailFragment extends Fragment {
         // place preserves a reader on that heading without taking focus from Back or another item.
 
         if (detail == null) {
+            boundReport = null;
             // The row went away under us, e.g. pruned while this was opening.
             setTextIfChanged(timestamp, getString(R.string.history_report_unavailable_title));
             ImageView photo = view.findViewById(R.id.detail_photo);
@@ -143,19 +186,28 @@ public class ScanDetailFragment extends Fragment {
         resultRoot.setVisibility(View.VISIBLE);
 
         if (detail.report() != null) {
-            resultView.showReport(detail.report(),
+            // Reading the same row creates a new deserialised report. Keep the renderer's
+            // existing instance across display/reminder changes so expanded rows stay open.
+            if (boundReport == null || boundDetail == null
+                    || boundDetail.item().id() != detail.item().id()) {
+                boundReport = detail.report();
+            }
+            resultView.showReport(boundReport,
                     AllergenPreferences.showNotDetected(requireContext()));
+            resultView.showFoodTypeCrossCheck(detail.foodTypeCrossCheck());
         } else if (detail.item().messageTitle() != null) {
+            boundReport = null;
             // A scan that reached the user as a message: show them the same thing again.
             resultView.showMessage(detail.item().messageTitle(),
                     detail.messageBody() == null ? "" : detail.messageBody());
         } else {
+            boundReport = null;
             // A report that this build cannot read. The summary and the text are still here.
             resultView.showMessage(getString(R.string.history_report_unavailable_title),
                     getString(R.string.history_report_unavailable_message));
         }
 
-        if (!hasBoundDetail || !sameSavedDetail(boundDetail, detail)) {
+        if (!hasBoundDetail || boundDetail == null || !sameSavedContent(boundDetail, detail)) {
             bindPhoto(view, detail);
             bindRawText(view, detail);
         }

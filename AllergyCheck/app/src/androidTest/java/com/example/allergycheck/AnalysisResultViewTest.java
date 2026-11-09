@@ -17,17 +17,26 @@ import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.analysis.AiAnalyzer;
 import com.example.allergycheck.analysis.ai.AiDecision;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
+import com.example.allergycheck.crosscheck.FoodTypeEstimate;
+import com.google.android.material.card.MaterialCardView;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.io.IOException;
 
@@ -165,6 +174,215 @@ public class AnalysisResultViewTest {
                 ((TextView) root.findViewById(R.id.allergen_status)).getText().toString());
         assertEquals(context.getString(R.string.ai_analysis_note),
                 ((TextView) root.findViewById(R.id.low_confidence_note)).getText().toString());
+    }
+
+    @Test
+    public void photoMismatchShowsWarningAndHiddenAllergenWithoutChangingLabelReport() throws Exception {
+        AnalysisReport report = Analyzer.analyse("Ingredients: sugar, salt, cocoa.", dictionary,
+                Collections.singletonList(milk));
+        byte[] original = serialized(report);
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cookies", Collections.singletonList(milk)));
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            ViewGroup root = inflateResult();
+            AnalysisResultView view = new AnalysisResultView(root);
+            view.showReport(report, false);
+            assertEquals(0, rowNames(root).size());
+
+            view.showFoodTypeCrossCheck(advice);
+
+            assertEquals(context.getString(R.string.crosscheck_review_title),
+                    text(root, R.id.verdict_title));
+            assertTrue(text(root, R.id.verdict_message).contains("cookies"));
+            assertTrue(text(root, R.id.verdict_message).contains(milk.label()));
+            assertEquals(Collections.singletonList(milk.label()), rowNames(root));
+            View row = rowFor(root, milk);
+            assertEquals(context.getString(R.string.crosscheck_review_status),
+                    text(row, R.id.allergen_status));
+            assertEquals(context.getColor(R.color.status_warning_container),
+                    ((MaterialCardView) root.findViewById(R.id.verdict_card))
+                            .getCardBackgroundColor().getDefaultColor());
+            TextView status = row.findViewById(R.id.allergen_status);
+            assertEquals(context.getColor(R.color.status_warning_container),
+                    status.getBackgroundTintList().getDefaultColor());
+            String evidence = text(row, R.id.allergen_evidence);
+            assertTrue(evidence.contains("Ingredient label: Not detected."));
+            assertTrue(evidence.contains("cookies"));
+            assertTrue(evidence.contains("unconfirmed"));
+            assertEquals(View.GONE, row.findViewById(R.id.allergen_evidence).getVisibility());
+            assertTrue(row.performClick());
+            assertEquals(View.VISIBLE, row.findViewById(R.id.allergen_evidence).getVisibility());
+        });
+
+        assertArrayEquals("Photo advice must not create ingredient findings", original, serialized(report));
+        assertEquals(AnalysisReport.Status.NOT_DETECTED, report.overall());
+        assertEquals(AnalysisReport.Status.NOT_DETECTED, report.results().get(0).status());
+        assertTrue(report.results().get(0).findings().isEmpty());
+    }
+
+    @Test
+    public void photoMismatchPreservesContainsVerdictAndExistingLabelEvidence() {
+        AnalysisReport report = Analyzer.analyse(LABEL, dictionary, Arrays.asList(milk, eggs));
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cookies", Arrays.asList(milk, eggs)));
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            ViewGroup root = inflateResult();
+            AnalysisResultView view = new AnalysisResultView(root);
+            view.showReport(report, false);
+            View milkRow = rowFor(root, milk);
+            String milkEvidence = text(milkRow, R.id.allergen_evidence);
+            String labelSummary = text(root, R.id.verdict_message);
+
+            view.showFoodTypeCrossCheck(advice);
+
+            assertEquals(context.getString(R.string.status_contains_title),
+                    text(root, R.id.verdict_title));
+            String summary = text(root, R.id.verdict_message);
+            assertTrue(summary.contains(labelSummary));
+            assertTrue(summary.contains("cookies"));
+            assertTrue(summary.contains(eggs.label()));
+            assertSame(milkRow, rowFor(root, milk));
+            assertEquals(milkEvidence, text(milkRow, R.id.allergen_evidence));
+            assertEquals(context.getString(R.string.result_contains),
+                    text(milkRow, R.id.allergen_status));
+            assertEquals(context.getString(R.string.crosscheck_review_status),
+                    text(rowFor(root, eggs), R.id.allergen_status));
+        });
+    }
+
+    @Test
+    public void displayRefreshKeepsMismatchRowAndExpandedExplanation() {
+        AnalysisReport report = Analyzer.analyse("Ingredients: sugar, salt, cocoa.", dictionary,
+                Arrays.asList(milk, eggs));
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cookies", Collections.singletonList(milk)));
+        boolean previous = AllergenPreferences.showNotDetected(context);
+        AllergenPreferences.saveShowNotDetected(context, false);
+        try {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+                ViewGroup root = inflateResult();
+                AnalysisResultView view = new AnalysisResultView(root);
+                view.showReport(report, false);
+                view.showFoodTypeCrossCheck(advice);
+                View row = rowFor(root, milk);
+                row.performClick();
+                String summary = text(root, R.id.verdict_message);
+
+                view.refreshDisplayPreferences();
+
+                assertEquals(Collections.singletonList(milk.label()), rowNames(root));
+                assertSame(row, rowFor(root, milk));
+                assertEquals(View.VISIBLE, row.findViewById(R.id.allergen_evidence).getVisibility());
+                assertEquals(summary, text(root, R.id.verdict_message));
+                assertEquals(context.getString(R.string.crosscheck_review_status),
+                        text(row, R.id.allergen_status));
+            });
+        } finally {
+            AllergenPreferences.saveShowNotDetected(context, previous);
+        }
+    }
+
+    @Test
+    public void clearingAdviceOrFindingNoMismatchRestoresLabelPresentation() {
+        AnalysisReport report = Analyzer.analyse("Ingredients: sugar, salt, cocoa.", dictionary,
+                Collections.singletonList(milk));
+        FoodTypeCrossCheck mismatch = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cookies", Collections.singletonList(milk)));
+        FoodTypeCrossCheck noMismatch = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cocoa", Collections.emptyList()));
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            ViewGroup root = inflateResult();
+            AnalysisResultView view = new AnalysisResultView(root);
+            view.showReport(report, false);
+            String title = text(root, R.id.verdict_title);
+            String summary = text(root, R.id.verdict_message);
+
+            view.showFoodTypeCrossCheck(mismatch);
+            view.showFoodTypeCrossCheck(null);
+            assertEquals(title, text(root, R.id.verdict_title));
+            assertEquals(summary, text(root, R.id.verdict_message));
+            assertEquals(0, rowNames(root).size());
+
+            view.showFoodTypeCrossCheck(mismatch);
+            view.showFoodTypeCrossCheck(noMismatch);
+            assertEquals(title, text(root, R.id.verdict_title));
+            assertEquals(summary, text(root, R.id.verdict_message));
+            assertEquals(0, rowNames(root).size());
+
+            view.showReport(report, true);
+            view.showFoodTypeCrossCheck(mismatch);
+            view.showFoodTypeCrossCheck(null);
+            View row = rowFor(root, milk);
+            assertEquals(context.getString(R.string.result_not_detected),
+                    text(row, R.id.allergen_status));
+            assertEquals("", text(row, R.id.allergen_evidence));
+            assertFalse(row.isClickable());
+        });
+    }
+
+    @Test
+    public void newReportAndMessageDiscardPreviousPhotoAdvice() {
+        AnalysisReport clear = Analyzer.analyse("Ingredients: sugar, salt, cocoa.", dictionary,
+                Collections.singletonList(milk));
+        AnalysisReport contains = Analyzer.analyse(LABEL, dictionary, Collections.singletonList(milk));
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(clear,
+                new FoodTypeEstimate("cookies", Collections.singletonList(milk)));
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            ViewGroup root = inflateResult();
+            AnalysisResultView view = new AnalysisResultView(root);
+            view.showReport(clear, false);
+            view.showFoodTypeCrossCheck(advice);
+
+            view.showReport(contains, false);
+            assertEquals(context.getString(R.string.status_contains_title),
+                    text(root, R.id.verdict_title));
+            assertFalse(text(root, R.id.verdict_message).contains("cookies"));
+            assertEquals(context.getString(R.string.result_contains),
+                    text(rowFor(root, milk), R.id.allergen_status));
+
+            view.showReport(clear, false);
+            view.showFoodTypeCrossCheck(advice);
+            view.showMessage("No label", "Choose another ingredient label.");
+            assertEquals("No label", text(root, R.id.verdict_title));
+            assertEquals("Choose another ingredient label.", text(root, R.id.verdict_message));
+            assertEquals(0, rowNames(root).size());
+
+            view.showReport(clear, false);
+            assertEquals(context.getString(R.string.status_not_detected_title),
+                    text(root, R.id.verdict_title));
+            assertFalse(text(root, R.id.verdict_message).contains("cookies"));
+            assertEquals(0, rowNames(root).size());
+        });
+    }
+
+    private ViewGroup inflateResult() {
+        return (ViewGroup) LayoutInflater.from(context)
+                .inflate(R.layout.view_analysis, new FrameLayout(context), false);
+    }
+
+    private static String text(View root, int id) {
+        return ((TextView) root.findViewById(id)).getText().toString();
+    }
+
+    private static View rowFor(ViewGroup root, Allergen allergen) {
+        ViewGroup rows = root.findViewById(R.id.allergen_rows);
+        for (int index = 0; index < rows.getChildCount(); index++) {
+            View row = rows.getChildAt(index);
+            if (text(row, R.id.allergen_name).equals(allergen.label())) return row;
+        }
+        throw new AssertionError("Missing allergen row: " + allergen.label());
+    }
+
+    private static byte[] serialized(AnalysisReport report) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ObjectOutputStream output = new ObjectOutputStream(bytes)) {
+            output.writeObject(report);
+        }
+        return bytes.toByteArray();
     }
 
     private ViewGroup render(AnalysisReport report, boolean showNotDetected) {

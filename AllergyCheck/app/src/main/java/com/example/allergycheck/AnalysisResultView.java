@@ -19,8 +19,10 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
+import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenResult;
 import com.example.allergycheck.analysis.AnalysisReport;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
 
@@ -56,6 +58,8 @@ final class AnalysisResultView {
     /** Stable reading nodes: display preference changes update the summary and existing rows. */
     private final Map<String, View> rowsByAllergen = new HashMap<>();
     @Nullable private AnalysisReport displayedReport;
+    @Nullable private FoodTypeCrossCheck foodTypeCrossCheck;
+    private boolean displayedShowNotDetected;
 
     AnalysisResultView(@NonNull ViewGroup root) {
         this.root = root;
@@ -80,13 +84,39 @@ final class AnalysisResultView {
 
     /**
      * Shows a full analysis. Allergens that were not detected are listed only when
-     * {@code showNotDetected} is set; the verdict still covers every selected allergen.
+     * {@code showNotDetected} is set or a photo mismatch needs review; the verdict still covers
+     * every selected allergen.
      */
     void showReport(@NonNull AnalysisReport report, boolean showNotDetected) {
         boolean newReport = report != displayedReport;
+        if (newReport) foodTypeCrossCheck = null;
         displayedReport = report;
-        bindVerdict(report.overall(), message.title(report), message.verdict(report,
-                AllergenPreferences.mayContainRedWarning(root.getContext())));
+        displayedShowNotDetected = showNotDetected;
+        Set<String> reviewIds = new HashSet<>();
+        List<String> reviewNames = new ArrayList<>();
+        if (foodTypeCrossCheck != null) {
+            for (Allergen allergen : foodTypeCrossCheck.missingAllergens()) {
+                reviewIds.add(allergen.id());
+                reviewNames.add(allergen.label());
+            }
+        }
+        AnalysisReport.Status verdictStatus = report.overall();
+        String title = message.title(report);
+        String body = message.verdict(report,
+                AllergenPreferences.mayContainRedWarning(root.getContext()));
+        if (!reviewIds.isEmpty()) {
+            String review = root.getResources().getString(R.string.crosscheck_review_summary,
+                    foodTypeCrossCheck.foodType(), String.join(", ", reviewNames));
+            if (verdictStatus == AnalysisReport.Status.NOT_DETECTED) {
+                // The presentation calls for review without creating an ingredient finding.
+                verdictStatus = AnalysisReport.Status.POSSIBLE;
+                title = root.getResources().getString(R.string.crosscheck_review_title);
+                body = review + "\n\n" + body;
+            } else {
+                body += "\n\n" + review;
+            }
+        }
+        bindVerdict(verdictStatus, title, body);
         String reportNote = message.reportNote(report);
         setTextIfChanged(lowConfidenceNote, reportNote);
         lowConfidenceNote.setVisibility(reportNote.isEmpty() ? View.GONE : View.VISIBLE);
@@ -94,7 +124,8 @@ final class AnalysisResultView {
         List<AllergenResult> displayed = new ArrayList<>();
         Set<String> displayedIds = new HashSet<>();
         for (AllergenResult result : report.results()) {
-            if (showNotDetected || result.status() != AnalysisReport.Status.NOT_DETECTED) {
+            if (showNotDetected || result.status() != AnalysisReport.Status.NOT_DETECTED
+                    || reviewIds.contains(result.allergen().id())) {
                 displayed.add(result);
                 displayedIds.add(result.allergen().id());
             }
@@ -121,14 +152,21 @@ final class AnalysisResultView {
                 row.setTag(R.id.allergen_evidence, null);
             }
             setTextIfChanged(row.findViewById(R.id.allergen_name), result.allergen().label());
+            boolean needsReview = reviewIds.contains(id);
             TextView status = row.findViewById(R.id.allergen_status);
-            setTextIfChanged(status, message.statusWord(result.status()));
-            Tone tone = tone(result.status());
+            setTextIfChanged(status, needsReview
+                    ? root.getResources().getString(R.string.crosscheck_review_status)
+                    : message.statusWord(result.status()));
+            Tone tone = tone(needsReview ? AnalysisReport.Status.POSSIBLE : result.status());
             status.setBackgroundTintList(ColorStateList.valueOf(tone.container));
             status.setTextColor(tone.onContainer);
             bindStatusIcon(status, tone);
             TextView evidence = row.findViewById(R.id.allergen_evidence);
-            setTextIfChanged(evidence, message.evidence(result));
+            setTextIfChanged(evidence, needsReview
+                    ? root.getResources().getString(R.string.crosscheck_review_evidence,
+                            message.statusWord(result.status()), foodTypeCrossCheck.foodType(),
+                            result.allergen().label())
+                    : message.evidence(result));
             bindExpansion(row, false);
             if (row.getParent() == null) {
                 allergenRows.addView(row, shown);
@@ -154,6 +192,7 @@ final class AnalysisResultView {
     /** Shows a result that is only a headline and a message, e.g. when no text was found. */
     void showMessage(@NonNull String title, @NonNull String body) {
         displayedReport = null;
+        foodTypeCrossCheck = null;
         bindVerdict(AnalysisReport.Status.UNREADABLE, title, body);
         lowConfidenceNote.setVisibility(View.GONE);
         allergenRows.removeAllViews();
@@ -162,6 +201,13 @@ final class AnalysisResultView {
         allergenRows.setVisibility(View.GONE);
         ingredientsTitle.setVisibility(View.GONE);
         ingredientsCard.setVisibility(View.GONE);
+    }
+
+    /** Projects photo reminders into the main result, leaving the label report unchanged. */
+    void showFoodTypeCrossCheck(@Nullable FoodTypeCrossCheck advice) {
+        if (displayedReport == null) return;
+        foodTypeCrossCheck = advice;
+        showReport(displayedReport, displayedShowNotDetected);
     }
 
     /** Refresh the summary, colors and filtering without rerunning or saving the analysis. */
@@ -186,6 +232,15 @@ final class AnalysisResultView {
         Tone tone = tone(status);
         verdictCard.setCardBackgroundColor(tone.container);
         setTextIfChanged(verdictTitle, title);
+        // MainActivity installs this pane when the result is revealed. Keep its spoken headline
+        // current when a later photo check changes it, without moving the reading position.
+        CharSequence paneTitle = ViewCompat.getAccessibilityPaneTitle(verdictTitle);
+        if (paneTitle != null) {
+            String announcement = root.getResources().getString(R.string.result_ready, title);
+            if (!TextUtils.equals(paneTitle, announcement)) {
+                ViewCompat.setAccessibilityPaneTitle(verdictTitle, announcement);
+            }
+        }
         verdictTitle.setTextColor(tone.onContainer);
         setTextIfChanged(verdictMessage, body);
         verdictMessage.setTextColor(tone.onContainer);

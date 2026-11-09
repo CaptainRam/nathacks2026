@@ -66,12 +66,16 @@ public class MainActivityOcrIntegrationTest {
     private Context context;
     private SharedPreferences preferences;
     private String previousPhoto;
+    private boolean previousDebugLabelText;
 
     @Before
     public void setUp() {
         context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         preferences = AllergenPreferences.preferences(context);
         previousPhoto = preferences.getString(PHOTO_STATE, null);
+        previousDebugLabelText = AllergenPreferences.debugLabelText(context);
+        // OCR assertions inspect the recognized ingredients, which are hidden by default.
+        AllergenPreferences.saveDebugLabelText(context, true);
         assertTrue(preferences.edit().remove(PHOTO_STATE).commit());
     }
 
@@ -84,6 +88,7 @@ public class MainActivityOcrIntegrationTest {
             editor.putString(PHOTO_STATE, previousPhoto);
         }
         assertTrue(editor.commit());
+        AllergenPreferences.saveDebugLabelText(context, previousDebugLabelText);
         for (File photo : photos) {
             photo.delete();
         }

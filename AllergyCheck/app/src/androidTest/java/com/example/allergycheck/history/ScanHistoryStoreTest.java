@@ -9,15 +9,20 @@ import static org.junit.Assert.assertTrue;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.Cursor;
+import android.os.Looper;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AiAnalyzer;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
 import com.example.allergycheck.analysis.Allergen;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
+import com.example.allergycheck.crosscheck.FoodTypeEstimate;
 
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +43,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongConsumer;
 
 /**
  * The persistence layer, exercised on a device because {@code SQLiteOpenHelper} is only a stub on
@@ -249,7 +259,7 @@ public class ScanHistoryStoreTest {
         }
 
         // Opening through the current helper must perform the additive migration.
-        assertEquals(2, database.getReadableDatabase().getVersion());
+        assertEquals(3, database.getReadableDatabase().getVersion());
         assertEquals(2, store.count());
         List<ScanHistoryItem> items = store.recent(10);
         assertEquals(failureId, items.get(0).id());
@@ -263,6 +273,7 @@ public class ScanHistoryStoreTest {
         assertEquals(original.label().rawText(), restored.rawText());
         assertEquals("scan_saved.jpg", restored.item().imageName());
         assertEquals(Collections.singletonList("Milk"), restored.item().allergenLabels());
+        assertNull(restored.foodTypeCrossCheck());
         ScanHistoryDetail failure = store.detail(failureId);
         assertNotNull(failure);
         assertTrue(failure.item().isFailure());
@@ -313,6 +324,8 @@ public class ScanHistoryStoreTest {
     @Test
     public void aCorruptedBlobReadsAsNoReportRatherThanThrowing() {
         long id = store.insert(NOW, analyse("Ingredients: milk."));
+        assertTrue(store.updateFoodTypeCrossCheck(id, FoodTypeCrossCheck.compare(store.detail(id).report(),
+                new FoodTypeEstimate("milk drink", Collections.singletonList(dictionary.byId("MILK"))))));
         ContentValues values = new ContentValues();
         values.put("report_blob", new byte[]{1, 2, 3, 4, 5});
         database.getWritableDatabase().update("scans", values, "_id = ?",
@@ -321,6 +334,7 @@ public class ScanHistoryStoreTest {
         ScanHistoryDetail detail = store.detail(id);
         assertNotNull(detail);
         assertNull(detail.report());
+        assertNull(detail.foodTypeCrossCheck());
         // The denormalised verdict is still there, which is the point of storing it.
         assertEquals(AnalysisReport.Status.CONTAINS, detail.item().status());
     }
@@ -355,6 +369,199 @@ public class ScanHistoryStoreTest {
     @Test
     public void detailOfAMissingRowIsNull() {
         assertNull(store.detail(4242));
+    }
+
+    @Test
+    public void completedFoodTypeAdviceSurvivesReopeningWithoutChangingLabelColumns() {
+        AnalysisReport report = analyse("Ingredients: sugar, salt, cocoa.");
+        Allergen milk = dictionary.byId("MILK");
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("chocolate cookies", Collections.singletonList(milk)));
+        long id = store.insert(NOW, report);
+        store.attachImage(id, "scan_saved.jpg");
+        String before = labelColumns(id);
+
+        assertTrue(store.updateFoodTypeCrossCheck(id, advice));
+        database.close();
+        ScanHistoryDetail restored = store.detail(id);
+
+        assertNotNull(restored);
+        assertNotNull(restored.foodTypeCrossCheck());
+        assertEquals("chocolate cookies", restored.foodTypeCrossCheck().foodType());
+        assertEquals(Collections.singletonList(milk), restored.foodTypeCrossCheck().commonAllergens());
+        assertEquals(Collections.singletonList(milk), restored.foodTypeCrossCheck().missingAllergens());
+        assertEquals(before, labelColumns(id));
+        assertEquals(AnalysisReport.Status.NOT_DETECTED, restored.report().overall());
+        assertTrue(restored.report().results().stream()
+                .allMatch(result -> result.findings().isEmpty()));
+    }
+
+    @Test
+    public void successfulNoMismatchReplacesSavedReminderAndNullClearsOnlyAdvice() {
+        AnalysisReport report = analyse("Ingredients: sugar, salt, cocoa.");
+        FoodTypeCrossCheck mismatch = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cookies", Collections.singletonList(dictionary.byId("MILK"))));
+        FoodTypeCrossCheck noMismatch = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cocoa", Collections.emptyList()));
+        long id = store.insert(NOW, report);
+        String before = labelColumns(id);
+
+        assertTrue(store.updateFoodTypeCrossCheck(id, mismatch));
+        assertFalse(store.detail(id).foodTypeCrossCheck().missingAllergens().isEmpty());
+        assertTrue(store.updateFoodTypeCrossCheck(id, noMismatch));
+        assertEquals("cocoa", store.detail(id).foodTypeCrossCheck().foodType());
+        assertTrue(store.detail(id).foodTypeCrossCheck().missingAllergens().isEmpty());
+        assertTrue(store.updateFoodTypeCrossCheck(id, null));
+        assertNull(store.detail(id).foodTypeCrossCheck());
+        assertEquals(before, labelColumns(id));
+    }
+
+    @Test
+    public void adviceCannotAttachToFailureUnreadableDeletedOrDifferentSelectionRows() {
+        Allergen milk = dictionary.byId("MILK");
+        AnalysisReport milkReport = Analyzer.analyse("Ingredients: sugar, salt, cocoa.", dictionary,
+                Collections.singleton(milk));
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(milkReport,
+                new FoodTypeEstimate("cookies", Collections.singletonList(milk)));
+        long good = store.insert(NOW, milkReport);
+        long failure = store.insertFailure(NOW, "blur", "No label", "Retake the label.");
+        long unreadable = store.insert(NOW, analyse(""));
+        AnalysisReport eggsReport = Analyzer.analyse("Ingredients: sugar, salt, cocoa.", dictionary,
+                Collections.singleton(dictionary.byId("EGGS")));
+        long different = store.insert(NOW, eggsReport);
+
+        assertFalse(store.updateFoodTypeCrossCheck(failure, advice));
+        assertFalse(store.updateFoodTypeCrossCheck(unreadable, advice));
+        assertFalse(store.updateFoodTypeCrossCheck(different, advice));
+        assertNull(store.detail(failure).foodTypeCrossCheck());
+        assertNull(store.detail(unreadable).foodTypeCrossCheck());
+        assertNull(store.detail(different).foodTypeCrossCheck());
+        store.delete(good);
+        assertFalse(store.updateFoodTypeCrossCheck(good, advice));
+        assertFalse(store.updateFoodTypeCrossCheck(4242, advice));
+        assertNull(store.detail(good));
+        assertEquals(3, store.count());
+    }
+
+    @Test
+    public void invalidAdvisoryDataNeverPreventsTheSavedReportOpening() {
+        long id = store.insert(NOW, analyse("Ingredients: sugar, salt, cocoa."));
+        String before = labelColumns(id);
+        String[] invalid = {
+                "not json", "{}",
+                "{\"version\":99,\"food_type\":\"cookies\",\"common_allergen_ids\":[\"MILK\"]}",
+                "{\"version\":1,\"food_type\":\"cookies\",\"common_allergen_ids\":[\"UNKNOWN\"]}",
+                "{\"version\":1,\"food_type\":\"cookies\",\"common_allergen_ids\":[\"MILK\",\"MILK\"]}",
+                "{\"version\":1,\"food_type\":\"\",\"common_allergen_ids\":[\"MILK\"]}"
+        };
+        for (String value : invalid) {
+            ContentValues values = new ContentValues();
+            values.put(ScanHistoryDatabase.FOOD_TYPE_CROSSCHECK, value);
+            database.getWritableDatabase().update("scans", values, "_id=?",
+                    new String[]{Long.toString(id)});
+            ScanHistoryDetail detail = store.detail(id);
+            assertNotNull(detail);
+            assertNotNull(detail.report());
+            assertNull(detail.foodTypeCrossCheck());
+            assertEquals(before, labelColumns(id));
+        }
+    }
+
+    @Test
+    public void versionTwoUpgradeAddsAdviceWithoutChangingExistingRows() {
+        AnalysisReport original = analyse("Ingredients: milk powder, sugar, water.");
+        long id = store.insert(NOW, original);
+        store.attachImage(id, "scan_saved.jpg");
+        String before = labelColumns(id);
+        // Rebuild the exact previous schema from the current row, retaining ids and blobs.
+        SQLiteDatabase db = database.getWritableDatabase();
+        db.execSQL("ALTER TABLE scans RENAME TO scans_v3");
+        db.execSQL("CREATE TABLE scans (_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "created_at INTEGER NOT NULL, overall_status TEXT NOT NULL, "
+                + "summary_allergens TEXT NOT NULL DEFAULT '', low_confidence INTEGER NOT NULL DEFAULT 0, "
+                + "ai_incomplete INTEGER NOT NULL DEFAULT 0, raw_text TEXT NOT NULL DEFAULT '', "
+                + "image_name TEXT, report_blob BLOB, report_version INTEGER NOT NULL DEFAULT 0, "
+                + "message_title TEXT, message_body TEXT)");
+        db.execSQL("INSERT INTO scans SELECT _id, created_at, overall_status, summary_allergens, "
+                + "low_confidence, ai_incomplete, raw_text, image_name, report_blob, report_version, "
+                + "message_title, message_body FROM scans_v3");
+        db.execSQL("DROP TABLE scans_v3");
+        db.execSQL("CREATE INDEX idx_scans_created_at ON scans (created_at DESC, _id DESC)");
+        db.setVersion(2);
+        database.close();
+
+        assertEquals(3, database.getReadableDatabase().getVersion());
+        assertEquals(before, labelColumns(id));
+        ScanHistoryDetail restored = store.detail(id);
+        assertNotNull(restored.report());
+        assertNull(restored.foodTypeCrossCheck());
+        assertTrue(store.updateFoodTypeCrossCheck(id, FoodTypeCrossCheck.compare(restored.report(),
+                new FoodTypeEstimate("milk drink", Collections.singletonList(dictionary.byId("MILK"))))));
+        assertNotNull(store.detail(id).foodTypeCrossCheck());
+    }
+
+    @Test
+    public void committedAdviceNotifiesOnMainThreadAndListenerCanRemoveItself() throws InterruptedException {
+        AnalysisReport report = analyse("Ingredients: sugar, salt, cocoa.");
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cookies", Collections.singletonList(dictionary.byId("MILK"))));
+        long id = store.insert(NOW, report);
+        ScanHistory history = new ScanHistory(context, store, imageDirectory);
+        CountDownLatch notified = new CountDownLatch(1);
+        AtomicBoolean onMain = new AtomicBoolean();
+        AtomicLong savedId = new AtomicLong(-1);
+        AtomicInteger calls = new AtomicInteger();
+        LongConsumer[] listener = new LongConsumer[1];
+        listener[0] = changedId -> {
+            onMain.set(Looper.myLooper() == Looper.getMainLooper());
+            savedId.set(changedId);
+            calls.incrementAndGet();
+            history.removeOnCrossCheckChangedListener(listener[0]);
+            notified.countDown();
+        };
+        try {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+                history.addOnCrossCheckChangedListener(listener[0]);
+                history.updateFoodTypeCrossCheck(id, advice);
+            });
+            assertTrue("The committed advisory did not notify its observer",
+                    notified.await(10, TimeUnit.SECONDS));
+            assertTrue(onMain.get());
+            assertEquals(id, savedId.get());
+            assertEquals("cookies", store.detail(id).foodTypeCrossCheck().foodType());
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() ->
+                    history.updateFoodTypeCrossCheck(id, advice));
+            awaitHistoryWorker(history);
+            assertEquals("A removed listener must not receive queued updates", 1, calls.get());
+        } finally {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() ->
+                    history.removeOnCrossCheckChangedListener(listener[0]));
+        }
+    }
+
+    @Test
+    public void adviceForADeletedRowDoesNotNotifyOrRecreateHistory() throws InterruptedException {
+        AnalysisReport report = analyse("Ingredients: sugar, salt, cocoa.");
+        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report,
+                new FoodTypeEstimate("cookies", Collections.singletonList(dictionary.byId("MILK"))));
+        long id = store.insert(NOW, report);
+        store.delete(id);
+        ScanHistory history = new ScanHistory(context, store, imageDirectory);
+        AtomicInteger calls = new AtomicInteger();
+        LongConsumer listener = ignored -> calls.incrementAndGet();
+        try {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+                history.addOnCrossCheckChangedListener(listener);
+                history.updateFoodTypeCrossCheck(id, advice);
+            });
+            awaitHistoryWorker(history);
+            assertEquals(0, calls.get());
+            assertEquals(0, store.count());
+            assertNull(store.detail(id));
+        } finally {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(() ->
+                    history.removeOnCrossCheckChangedListener(listener));
+        }
     }
 
     // ----- Ordering and limits -----
@@ -461,6 +668,33 @@ public class ScanHistoryStoreTest {
     }
 
     // ----- Helpers -----
+
+    private static void awaitHistoryWorker(ScanHistory history) throws InterruptedException {
+        CountDownLatch idle = new CountDownLatch(1);
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() ->
+                history.load(1, items -> idle.countDown()));
+        assertTrue("The history worker did not drain", idle.await(10, TimeUnit.SECONDS));
+    }
+
+    private String labelColumns(long id) {
+        try (Cursor row = database.getReadableDatabase().rawQuery("SELECT * FROM scans WHERE _id=?",
+                new String[]{Long.toString(id)})) {
+            assertTrue(row.moveToFirst());
+            StringBuilder result = new StringBuilder();
+            // Order by name because the v2 upgrade appends its new column after all old fields.
+            java.util.Map<String, String> values = new java.util.TreeMap<>();
+            for (int index = 0; index < row.getColumnCount(); index++) {
+                String name = row.getColumnName(index);
+                if (ScanHistoryDatabase.FOOD_TYPE_CROSSCHECK.equals(name)) continue;
+                values.put(name, row.isNull(index) ? "<null>" : row.getType(index) == Cursor.FIELD_TYPE_BLOB
+                        ? Arrays.toString(row.getBlob(index)) : row.getString(index));
+            }
+            for (java.util.Map.Entry<String, String> value : values.entrySet()) {
+                result.append(value.getKey()).append('=').append(value.getValue()).append('\u001f');
+            }
+            return result.toString();
+        }
+    }
 
     private AnalysisReport analyse(String text) {
         Collection<Allergen> selected = dictionary.allergens();

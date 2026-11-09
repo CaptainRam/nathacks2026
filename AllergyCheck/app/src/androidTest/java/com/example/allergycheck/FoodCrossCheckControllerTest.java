@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.View;
 import android.widget.ImageView;
@@ -16,6 +17,7 @@ import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
 import com.example.allergycheck.crosscheck.FoodTypeEstimate;
 import com.example.allergycheck.crosscheck.UnknownFoodTypeException;
 
@@ -28,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,6 +98,7 @@ public class FoodCrossCheckControllerTest {
     public void optionalPhotoWaitsForLabelThenAddsOnlyAnIndependentReminder() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         AtomicReference<String> image = new AtomicReference<>();
+        List<FoodTypeCrossCheck> advice = new ArrayList<>();
         byte[] original = serialized(report);
         File front = support.createLabel("FRONT PHOTO: COOKIES");
         try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
@@ -106,6 +110,12 @@ public class FoodCrossCheckControllerTest {
             }));
             try {
                 scan.onActivity(activity -> {
+                    controller.setOnAdviceChangedListener(value -> {
+                        assertSame("Advice must be delivered on the main thread",
+                                Looper.getMainLooper(), Looper.myLooper());
+                        advice.add(value);
+                    });
+                    assertEquals(Collections.singletonList(null), advice);
                     controller.onLabelPhoto(Uri.parse("content://test/ingredient-label"));
                     controller.setVisible(true);
                     controller.loadPhoto(support.photoUri(front));
@@ -121,6 +131,19 @@ public class FoodCrossCheckControllerTest {
                     assertTrue(reminder.contains("Milk"));
                     assertTrue(reminder.contains("does not confirm"));
                     assertTrue(reminder.contains("not identified"));
+                    assertEquals("Initial null followed by the completed advice", 2, advice.size());
+                    assertEquals("cookies", advice.get(1).foodType());
+                    assertEquals(Collections.singletonList(milk), advice.get(1).missingAllergens());
+                    controller.setVisible(false);
+                    controller.setVisible(true);
+                    controller.refreshConfiguration();
+                    controller.onReport(report);
+                    assertEquals("Rendering the same advisory must not repeat delivery", 2, advice.size());
+                    List<FoodTypeCrossCheck> replacement = new ArrayList<>();
+                    controller.setOnAdviceChangedListener(replacement::add);
+                    assertEquals("A new listener receives the current advisory immediately", 1,
+                            replacement.size());
+                    assertEquals("cookies", replacement.get(0).foodType());
                 });
                 assertArrayEquals("The front-photo inference must not change the ingredient report", original, serialized(report));
                 assertEquals(AnalysisReport.Status.NOT_DETECTED, report.results().get(0).status());
@@ -203,6 +226,7 @@ public class FoodCrossCheckControllerTest {
         CountDownLatch release = new CountDownLatch(1);
         CountDownLatch closed = new CountDownLatch(1);
         File front = support.createLabel("FRONT PHOTO");
+        List<FoodTypeCrossCheck> advice = new ArrayList<>();
         try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
             FoodCrossCheckController controller = create(scan, null, (key, model) -> new FoodCrossCheckController.FrontPhotoModel() {
                 @Override
@@ -220,6 +244,7 @@ public class FoodCrossCheckControllerTest {
             });
             try {
                 scan.onActivity(activity -> {
+                    controller.setOnAdviceChangedListener(advice::add);
                     controller.onLabelPhoto(Uri.parse("content://test/ingredient-label"));
                     controller.onReport(report);
                     controller.setVisible(true);
@@ -235,6 +260,8 @@ public class FoodCrossCheckControllerTest {
                     assertEquals(View.GONE, activity.findViewById(R.id.front_photo_preview).getVisibility());
                     assertFalse(activity.findViewById(R.id.front_crosscheck_run).isEnabled());
                     assertFalse(message(activity).contains("Estimated food type"));
+                    assertEquals("A cancelled late response must never publish advice",
+                            Collections.singletonList(null), advice);
                 });
             } finally {
                 release.countDown();
@@ -246,6 +273,7 @@ public class FoodCrossCheckControllerTest {
     @Test
     public void replacingIngredientPhotoClearsThePreviousProductsFrontPhoto() throws Exception {
         AtomicInteger calls = new AtomicInteger();
+        List<FoodTypeCrossCheck> advice = new ArrayList<>();
         File front = support.createLabel("FRONT PHOTO");
         try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
             FoodCrossCheckController controller = create(scan, null, (key, model) -> model((data, selected) -> {
@@ -254,17 +282,121 @@ public class FoodCrossCheckControllerTest {
             }));
             try {
                 scan.onActivity(activity -> {
+                    controller.setOnAdviceChangedListener(advice::add);
                     controller.onLabelPhoto(Uri.parse("content://test/product-one"));
+                    controller.onReport(report);
                     controller.loadPhoto(support.photoUri(front));
                 });
-                awaitPhoto(scan);
+                awaitMessage(scan, "Common allergens to review");
                 scan.onActivity(activity -> {
+                    assertNotNull(advice.get(advice.size() - 1));
                     controller.onLabelPhoto(Uri.parse("content://test/product-two"));
                     controller.onReport(report);
                     assertEquals(View.GONE, activity.findViewById(R.id.front_photo_preview).getVisibility());
                     assertFalse(activity.findViewById(R.id.front_crosscheck_run).isEnabled());
+                    assertNull("Changing products must clear the previous advisory",
+                            advice.get(advice.size() - 1));
                 });
-                assertEquals("A new product needs its own optional front photo", 0, calls.get());
+                assertEquals("A new product needs its own optional front photo", 1, calls.get());
+            } finally {
+                scan.onActivity(activity -> { controller.removePhoto(); controller.close(); });
+            }
+        }
+    }
+
+    @Test
+    public void completedAdviceClearsDuringRetryNewAnalysisAndFrontPhotoReplacement() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        AtomicReference<FoodTypeCrossCheck> advice = new AtomicReference<>();
+        File front = support.createLabel("FRONT PHOTO ONE");
+        File replacement = support.createLabel("FRONT PHOTO TWO");
+        try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
+            FoodCrossCheckController controller = create(scan, null, (key, model) -> model((data, selected) -> {
+                if (calls.incrementAndGet() == 2) throw new java.io.IOException("synthetic retry failure");
+                return cookies();
+            }));
+            try {
+                scan.onActivity(activity -> {
+                    controller.setOnAdviceChangedListener(advice::set);
+                    controller.onLabelPhoto(Uri.parse("content://test/ingredient-label"));
+                    controller.onReport(report);
+                    controller.loadPhoto(support.photoUri(front));
+                });
+                awaitMessage(scan, "Common allergens to review");
+                scan.onActivity(activity -> {
+                    assertNotNull(advice.get());
+                    controller.runCheck();
+                    assertNull("Retrying must remove the previous successful advisory", advice.get());
+                });
+                awaitMessage(scan, "could not be completed");
+                scan.onActivity(activity -> {
+                    assertNull("A failed retry must not restore old advice", advice.get());
+                    controller.runCheck();
+                });
+                awaitMessage(scan, "Common allergens to review");
+                scan.onActivity(activity -> {
+                    assertNotNull(advice.get());
+                    controller.onLabelAnalysisStarted();
+                    assertNull("Advice must wait for a current ingredient-label result", advice.get());
+                    controller.onReport(report);
+                    assertNotNull("A completed estimate can be compared to the refreshed label", advice.get());
+                    controller.loadPhoto(support.photoUri(replacement));
+                    assertNull("Replacing the front photo must immediately clear old advice", advice.get());
+                });
+                awaitMessage(scan, "Common allergens to review");
+                scan.onActivity(activity -> {
+                    assertNotNull(advice.get());
+                    controller.removePhoto();
+                    assertNull("Removing a completed photo must clear its advisory", advice.get());
+                });
+                assertEquals(4, calls.get());
+            } finally {
+                scan.onActivity(activity -> { controller.removePhoto(); controller.close(); });
+            }
+        }
+    }
+
+    @Test
+    public void cachedAdviceNeverAppliesToChangedModelSelectionOrFailedPhotoReplacement() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        AtomicReference<FoodTypeCrossCheck> advice = new AtomicReference<>();
+        File front = support.createLabel("FRONT PHOTO");
+        AllergenDictionary dictionary = AllergenDictionaryProvider.get(context);
+        AnalysisReport changedSelection = Analyzer.analyse("Ingredients: sugar, salt, cocoa.", dictionary,
+                Collections.singleton(dictionary.byId("EGGS")));
+        try (ScanTestSupport.Scan scan = ScanTestSupport.launch(context)) {
+            FoodCrossCheckController controller = create(scan, null, (key, model) -> model((data, selected) -> {
+                calls.incrementAndGet();
+                return cookies();
+            }));
+            try {
+                scan.onActivity(activity -> {
+                    controller.setOnAdviceChangedListener(advice::set);
+                    controller.onLabelPhoto(Uri.parse("content://test/ingredient-label"));
+                    controller.onReport(report);
+                    controller.loadPhoto(support.photoUri(front));
+                });
+                awaitMessage(scan, "Common allergens to review");
+                scan.onActivity(activity -> {
+                    assertNotNull(advice.get());
+                    controller.suspend();
+                    AnalysisPreferences.saveFoodTypeModel(context, "test/another-vision-model");
+                    controller.setVisible(true);
+                    assertNull("An estimate belongs to the model that produced it", advice.get());
+                    AnalysisPreferences.saveFoodTypeModel(context, "test/vision-model");
+                    controller.setVisible(true);
+                    assertNotNull(advice.get());
+                    controller.onReport(changedSelection);
+                    assertNull("A cached estimate must not broaden the selected allergens", advice.get());
+                    controller.onReport(report);
+                    assertNotNull(advice.get());
+                    controller.loadPhoto(Uri.parse("content://test/missing-front-photo"));
+                    assertNull(advice.get());
+                });
+                awaitMessage(scan, "could not be opened");
+                scan.onActivity(activity -> assertNull(
+                        "A failed replacement must not restore the previous photo's advice", advice.get()));
+                assertEquals("Suspended configuration checks must not submit another photo", 1, calls.get());
             } finally {
                 scan.onActivity(activity -> { controller.removePhoto(); controller.close(); });
             }

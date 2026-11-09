@@ -45,6 +45,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 /** Optional photo advice, deliberately kept outside the label report and scan-history writer. */
 final class FoodCrossCheckController implements AutoCloseable {
@@ -98,6 +99,9 @@ final class FoodCrossCheckController implements AutoCloseable {
     private boolean pickerOpen;
     private PopupMenu photoMenu;
     private Runnable onPhotoChanged;
+    private Consumer<FoodTypeCrossCheck> onAdviceChanged;
+    private FoodTypeCrossCheck lastAdvice;
+    private boolean advicePublished;
 
     FoodCrossCheckController(AppCompatActivity activity, Bundle state, Runnable openSettings) {
         this(activity, state, openSettings, (key, model) -> {
@@ -191,6 +195,19 @@ final class FoodCrossCheckController implements AutoCloseable {
 
     void setOnPhotoChangedListener(Runnable listener) {
         onPhotoChanged = listener;
+    }
+
+    /** Publishes separate, nullable advice without changing the ingredient-label report. */
+    void setOnAdviceChangedListener(Consumer<FoodTypeCrossCheck> listener) {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            main.post(() -> setOnAdviceChangedListener(listener));
+            return;
+        }
+        if (closed) return;
+        onAdviceChanged = listener;
+        advicePublished = false;
+        lastAdvice = null;
+        publishAdvice(currentAdvice());
     }
 
     Bitmap currentBitmap() {
@@ -496,6 +513,7 @@ final class FoodCrossCheckController implements AutoCloseable {
 
     private void render() {
         boolean hasPhoto = photo != null;
+        FoodTypeCrossCheck advice = currentAdvice();
         panel.setVisibility(visible && labelPhoto != null
                 && (report != null && (hasPhoto || loading)
                 || status == R.string.crosscheck_photo_error)
@@ -548,8 +566,33 @@ final class FoodCrossCheckController implements AutoCloseable {
         else if (report.results().isEmpty()) setMessage(R.string.crosscheck_no_allergens);
         else if (!usableReport()) setMessage(R.string.crosscheck_label_unavailable);
         else if (photo == null) setMessage(R.string.crosscheck_waiting_photo);
-        else if (estimate != null) showAdvice();
+        else if (advice != null) showAdvice(advice);
         else setMessage(status);
+        publishAdvice(advice);
+    }
+
+    private FoodTypeCrossCheck currentAdvice() {
+        if (closed || photo == null || loading || !usableReport() || estimate == null
+                || status == R.string.crosscheck_photo_error
+                || !allergenIds().equals(estimateAllergens)
+                || !AnalysisPreferences.foodTypeModel(activity).equals(estimateModel)) return null;
+        return FoodTypeCrossCheck.compare(report, estimate);
+    }
+
+    private void publishAdvice(FoodTypeCrossCheck advice) {
+        if (onAdviceChanged == null || closed) return;
+        if (advicePublished && sameAdvice(lastAdvice, advice)) return;
+        advicePublished = true;
+        lastAdvice = advice;
+        onAdviceChanged.accept(advice);
+    }
+
+    private static boolean sameAdvice(FoodTypeCrossCheck first, FoodTypeCrossCheck second) {
+        if (first == second) return true;
+        return first != null && second != null
+                && first.foodType().equals(second.foodType())
+                && first.commonAllergens().equals(second.commonAllergens())
+                && first.missingAllergens().equals(second.missingAllergens());
     }
 
     private void setMessage(int text) {
@@ -561,8 +604,7 @@ final class FoodCrossCheckController implements AutoCloseable {
         if (!TextUtils.equals(message.getText(), text)) message.setText(text);
     }
 
-    private void showAdvice() {
-        FoodTypeCrossCheck advice = FoodTypeCrossCheck.compare(report, estimate);
+    private void showAdvice(FoodTypeCrossCheck advice) {
         List<Allergen> missing = advice.missingAllergens();
         if (missing.isEmpty()) {
             setMessage(activity.getString(R.string.crosscheck_no_missing, advice.foodType()));
@@ -625,6 +667,8 @@ final class FoodCrossCheckController implements AutoCloseable {
     @Override public void close() {
         closed = true;
         onPhotoChanged = null;
+        onAdviceChanged = null;
+        lastAdvice = null;
         dismissPhotoMenu();
         cancel();
         ++imageRequest;

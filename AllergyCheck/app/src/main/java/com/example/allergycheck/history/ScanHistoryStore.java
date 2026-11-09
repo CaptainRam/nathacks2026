@@ -9,8 +9,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import com.example.allergycheck.analysis.Allergen;
 import com.example.allergycheck.analysis.AllergenResult;
 import com.example.allergycheck.analysis.AnalysisReport;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
+import com.example.allergycheck.crosscheck.FoodTypeEstimate;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -75,6 +82,7 @@ public final class ScanHistoryStore {
             ScanHistoryDatabase.MESSAGE_BODY,
             ScanHistoryDatabase.REPORT_BLOB,
             ScanHistoryDatabase.REPORT_VERSION,
+            ScanHistoryDatabase.FOOD_TYPE_CROSSCHECK,
     };
 
     private static final String NEWEST_FIRST =
@@ -141,6 +149,20 @@ public final class ScanHistoryStore {
                 ScanHistoryDatabase.ID + " = ?", new String[]{Long.toString(id)});
     }
 
+    /** Updates only the optional advice for an existing, readable ingredient scan. */
+    @WorkerThread
+    public boolean updateFoodTypeCrossCheck(long id, @Nullable FoodTypeCrossCheck advice) {
+        ScanHistoryDetail saved = detail(id);
+        if (saved == null || saved.item().isFailure() || !usableReport(saved.report())) return false;
+        String encoded = advice == null ? null : encodeAdvice(saved.report(), advice);
+        if (advice != null && encoded == null) return false;
+        ContentValues values = new ContentValues();
+        if (encoded == null) values.putNull(ScanHistoryDatabase.FOOD_TYPE_CROSSCHECK);
+        else values.put(ScanHistoryDatabase.FOOD_TYPE_CROSSCHECK, encoded);
+        return database.getWritableDatabase().update(ScanHistoryDatabase.TABLE, values,
+                ScanHistoryDatabase.ID + " = ?", new String[]{Long.toString(id)}) > 0;
+    }
+
     // ----- Reading -----
 
     /** Newest first. Deliberately selects neither the report blob nor the OCR text. */
@@ -181,7 +203,9 @@ public final class ScanHistoryStore {
             if (!cursor.isNull(10) && cursor.getInt(11) == CURRENT_REPORT_VERSION) {
                 report = deserialise(cursor.getBlob(10));
             }
-            return new ScanHistoryDetail(item, report, rawText, messageBody);
+            FoodTypeCrossCheck advice = item.isFailure() || cursor.isNull(12) ? null
+                    : decodeAdvice(report, cursor.getString(12));
+            return new ScanHistoryDetail(item, report, rawText, messageBody, advice);
         }
     }
 
@@ -317,6 +341,57 @@ public final class ScanHistoryStore {
             // A row written by an incompatible build, or a corrupted blob. The caller shows the
             // summary and the stored OCR text instead.
             Log.w(TAG, "Could not read a stored report; showing the summary only", e);
+            return null;
+        }
+    }
+
+    private static boolean usableReport(@Nullable AnalysisReport report) {
+        return report != null && report.overall() != AnalysisReport.Status.UNREADABLE
+                && report.overall() != AnalysisReport.Status.NO_ALLERGENS_SELECTED
+                && !report.label().ingredients().isEmpty() && !report.results().isEmpty();
+    }
+
+    @Nullable
+    private static String encodeAdvice(@NonNull AnalysisReport report,
+                                       @NonNull FoodTypeCrossCheck advice) {
+        try {
+            // Recompute the comparison from the saved report; never persist inferred findings.
+            FoodTypeCrossCheck validated = FoodTypeCrossCheck.compare(report,
+                    new FoodTypeEstimate(advice.foodType(), advice.commonAllergens()));
+            JSONArray allergens = new JSONArray();
+            for (Allergen allergen : validated.commonAllergens()) allergens.put(allergen.id());
+            return new JSONObject().put("version", 1).put("food_type", validated.foodType())
+                    .put("common_allergen_ids", allergens).toString();
+        } catch (JSONException | IllegalArgumentException e) {
+            Log.w(TAG, "Could not encode advice for the saved label report", e);
+            return null;
+        }
+    }
+
+    @Nullable
+    private static FoodTypeCrossCheck decodeAdvice(@Nullable AnalysisReport report,
+                                                   @NonNull String encoded) {
+        if (!usableReport(report) || encoded.length() > 16_384) return null;
+        try {
+            JSONObject saved = new JSONObject(encoded);
+            if (saved.getInt("version") != 1 || !(saved.get("food_type") instanceof String)) return null;
+            JSONArray ids = saved.getJSONArray("common_allergen_ids");
+            if (ids.length() > report.results().size()) return null;
+            List<Allergen> common = new ArrayList<>();
+            for (int index = 0; index < ids.length(); index++) {
+                String id = ids.getString(index);
+                Allergen selected = null;
+                for (AllergenResult result : report.results()) {
+                    if (result.allergen().id().equals(id)) selected = result.allergen();
+                }
+                if (selected == null) return null;
+                common.add(selected);
+            }
+            return FoodTypeCrossCheck.compare(report,
+                    new FoodTypeEstimate(saved.getString("food_type"), common));
+        } catch (JSONException | IllegalArgumentException e) {
+            // An invalid optional reminder must never prevent the ingredient report opening.
+            Log.w(TAG, "Could not read saved front-photo advice", e);
             return null;
         }
     }

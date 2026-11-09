@@ -27,6 +27,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.content.FileProvider;
@@ -43,6 +44,7 @@ import com.example.allergycheck.analysis.AiAnalyzer;
 import com.example.allergycheck.analysis.AllergenDictionary;
 import com.example.allergycheck.analysis.AnalysisReport;
 import com.example.allergycheck.analysis.Analyzer;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
 import com.example.allergycheck.history.ScanHistory;
 import com.example.allergycheck.ingredients.IngredientExtractor;
 import com.example.allergycheck.ingredients.LocalModelManager;
@@ -114,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private OcrPipeline ocrPipeline;
     private AiAnalysisRunner aiRunner;
     private FoodCrossCheckController foodCrossCheck;
+    @Nullable private SavedAnalysis savedAnalysis;
     private boolean settingsOpen;
     private boolean settingsInterruptedScan;
     /** True while the page shows a check (in progress or finished) instead of the home. */
@@ -138,6 +141,12 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     /** The extra button under a result, when the result needs one. */
     private enum ResultAction { NONE, RETRY, CHOOSE_ALLERGENS, CONFIGURE_AI }
+
+    /** Each save owns its pending advice, even when its row ID arrives after another scan starts. */
+    private static final class SavedAnalysis {
+        long id = -1;
+        @Nullable FoodTypeCrossCheck advice;
+    }
 
     /** Back during a check returns to the photo instead of leaving the app. */
     private final OnBackPressedCallback analysisBackCallback = new OnBackPressedCallback(false) {
@@ -301,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
         foodCrossCheck = new FoodCrossCheckController(this, savedInstanceState,
                 () -> openSettings(true));
         foodCrossCheck.setOnPhotoChangedListener(this::onFrontPhotoChanged);
+        foodCrossCheck.setOnAdviceChangedListener(this::onFoodTypeAdviceChanged);
         updatePhotoLayout();
         getOnBackPressedDispatcher().addCallback(this, analysisBackCallback);
         // After the analysis callback, so it wins while history is showing.
@@ -435,6 +445,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
 
     private void loadPhoto(Uri uri) {
         aiRunner.cancel();
+        savedAnalysis = null;
         foodCrossCheck.onLabelAnalysisStarted();
         final int request = ++imageRequest;
         pendingPhoto = uri;
@@ -534,6 +545,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
             return;
         }
         aiRunner.cancel();
+        savedAnalysis = null;
         foodCrossCheck.onLabelAnalysisStarted();
         showAnalysisLoading();
         // Continues from the decode the ring may already be showing; never moves it backwards.
@@ -639,10 +651,30 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void showAnalysisReport(Uri photo, AnalysisReport report, ResultAction action) {
         ResultAction recovery = bindAnalysisReport(report);
         showResult(action != null ? action : recovery, () -> {
-            ScanHistory.get(this).save(report, photo);
+            ScanHistory history = ScanHistory.get(this);
+            SavedAnalysis saved = new SavedAnalysis();
+            savedAnalysis = saved;
+            history.save(report, photo, id -> {
+                saved.id = id;
+                if (id >= 0 && saved.advice != null) {
+                    history.updateFoodTypeCrossCheck(id, saved.advice);
+                }
+            });
             foodCrossCheck.onReport(report);
         });
 
+    }
+
+    private void onFoodTypeAdviceChanged(@Nullable FoodTypeCrossCheck advice) {
+        resultView.showFoodTypeCrossCheck(advice);
+        SavedAnalysis saved = savedAnalysis;
+        // Null means a transient UI reset (retry, removal or a new scan), not a successful
+        // replacement of the saved result. History retains its last completed photo check.
+        if (saved == null || advice == null) return;
+        saved.advice = advice;
+        if (saved.id >= 0) {
+            ScanHistory.get(this).updateFoodTypeCrossCheck(saved.id, advice);
+        }
     }
 
     private ResultAction bindAnalysisReport(AnalysisReport report) {
@@ -684,6 +716,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     }
 
     private void bindReadFailureMessage(String title, String message) {
+        savedAnalysis = null;
         cancelRetryAvailability();
         resultRetryAtMillis = 0;
         resultView.showMessage(title, message);
@@ -839,6 +872,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void leaveAnalysisMode(boolean animate) {
         ++imageRequest;
         aiRunner.cancel();
+        savedAnalysis = null;
         foodCrossCheck.onLabelAnalysisStarted();
         endPhotoFlight();
         stopScanning();
@@ -1337,6 +1371,7 @@ public class MainActivity extends AppCompatActivity implements HistoryHost {
     private void removePhoto() {
         ++imageRequest;
         aiRunner.cancel();
+        savedAnalysis = null;
         foodCrossCheck.onLabelPhoto(null);
         if (selectedPhoto != null) {
             releasePhotoAccess(selectedPhoto);

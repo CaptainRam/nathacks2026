@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.allergycheck.analysis.AnalysisReport;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
 
 /**
  * A history row opened for display: the summary, the label text as it was read, and the report if
@@ -15,13 +16,16 @@ public final class ScanHistoryDetail {
     private final AnalysisReport report;
     private final String rawText;
     private final String messageBody;
+    private final FoodTypeCrossCheck foodTypeCrossCheck;
 
     ScanHistoryDetail(@NonNull ScanHistoryItem item, @Nullable AnalysisReport report,
-                      @NonNull String rawText, @Nullable String messageBody) {
+                      @NonNull String rawText, @Nullable String messageBody,
+                      @Nullable FoodTypeCrossCheck foodTypeCrossCheck) {
         this.item = item;
         this.report = report;
         this.rawText = rawText;
         this.messageBody = messageBody;
+        this.foodTypeCrossCheck = foodTypeCrossCheck;
     }
 
     @NonNull
@@ -48,5 +52,11 @@ public final class ScanHistoryDetail {
     @Nullable
     public String messageBody() {
         return messageBody;
+    }
+
+    /** The completed front-photo estimate, validated against this scan's original label report. */
+    @Nullable
+    public FoodTypeCrossCheck foodTypeCrossCheck() {
+        return foodTypeCrossCheck;
     }
 }

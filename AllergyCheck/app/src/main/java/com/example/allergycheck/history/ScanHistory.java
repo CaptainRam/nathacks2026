@@ -13,15 +13,19 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.example.allergycheck.analysis.AnalysisReport;
+import com.example.allergycheck.crosscheck.FoodTypeCrossCheck;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.LongConsumer;
 
 /**
  * Scan history, from the main thread. Every database and file operation runs on one worker, and
@@ -70,11 +74,18 @@ public final class ScanHistory {
         void onDone();
     }
 
+    public interface SavedCallback {
+        /** The existing row to which a later completed photo check can be attached. */
+        @MainThread
+        void onSaved(long id);
+    }
+
     private final Context context;
     private final ScanHistoryStore store;
     private final File imageDirectory;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
+    private final Set<LongConsumer> crossCheckChangedListeners = new HashSet<>();
 
     @MainThread
     public static synchronized ScanHistory get(@NonNull Context context) {
@@ -104,14 +115,51 @@ public final class ScanHistory {
      */
     @MainThread
     public void save(@NonNull AnalysisReport report, @Nullable Uri photo) {
+        save(report, photo, null);
+    }
+
+    @MainThread
+    public void save(@NonNull AnalysisReport report, @Nullable Uri photo,
+                     @Nullable SavedCallback callback) {
         long createdAt = System.currentTimeMillis();
         worker.execute(() -> {
             try {
-                saveImage(store.insert(createdAt, report), photo);
+                long id = store.insert(createdAt, report);
+                saveImage(id, photo);
+                if (callback != null && id >= 0) main.post(() -> callback.onSaved(id));
             } catch (RuntimeException e) {
                 Log.w(TAG, "Could not save a scan to history", e);
             }
         });
+    }
+
+    /** Attaches a completed photo check to its exact scan without replacing the label report. */
+    @MainThread
+    public void updateFoodTypeCrossCheck(long id, @Nullable FoodTypeCrossCheck advice) {
+        worker.execute(() -> {
+            try {
+                if (store.updateFoodTypeCrossCheck(id, advice)) {
+                    main.post(() -> {
+                        for (LongConsumer listener : new ArrayList<>(crossCheckChangedListeners)) {
+                            listener.accept(id);
+                        }
+                    });
+                }
+            } catch (RuntimeException e) {
+                Log.w(TAG, "Could not update front-photo advice for scan " + id, e);
+            }
+        });
+    }
+
+    /** Refreshes an open detail only when completed advice for its saved scan changes. */
+    @MainThread
+    public void addOnCrossCheckChangedListener(@NonNull LongConsumer listener) {
+        crossCheckChangedListeners.add(listener);
+    }
+
+    @MainThread
+    public void removeOnCrossCheckChangedListener(@NonNull LongConsumer listener) {
+        crossCheckChangedListeners.remove(listener);
     }
 
     /** Records a scan that reached the user as a message rather than a report. */

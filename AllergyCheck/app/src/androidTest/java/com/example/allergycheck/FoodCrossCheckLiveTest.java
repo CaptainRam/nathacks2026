@@ -203,9 +203,11 @@ public class FoodCrossCheckLiveTest {
                     reminder.set(((TextView) activity.findViewById(R.id.front_crosscheck_message))
                             .getText().toString());
                     renderedAfter.set(visibleText(activity.findViewById(R.id.analysis_result)));
+                    assertMainResultAdvice(activity, original, advice);
                     saveContentScreenshot(activity, new File(artifacts, "after-cloud-crosscheck.png"));
                 });
                 AnalysisReport after = (AnalysisReport) field(controller, "report");
+                awaitStoredAdvice(store, historyId, advice);
                 HistorySnapshot historyAfter = historySnapshot(database, historyId);
                 evidence.put("food_type", estimated.foodType());
                 evidence.put("common_allergen_ids", allergenIds(estimated.commonAllergens()));
@@ -218,7 +220,9 @@ public class FoodCrossCheckLiveTest {
                 evidence.put("rendered_ingredient_result_after", renderedAfter.get());
                 evidence.put("report_bytes_unchanged", Arrays.equals(originalBytes, serialized(after)));
                 evidence.put("history_blob_unchanged", Arrays.equals(historyBefore.report, historyAfter.report));
-                evidence.put("rendered_ingredient_result_unchanged", renderedBefore.get().equals(renderedAfter.get()));
+                evidence.put("history_photo_reminders_saved", !advice.missingAllergens().isEmpty());
+                evidence.put("main_result_shows_photo_reminders", !advice.missingAllergens().isEmpty());
+                evidence.put("main_result_text_unchanged", renderedBefore.get().equals(renderedAfter.get()));
                 writeJson(new File(artifacts, "live-evidence.json"), evidence);
 
                 if (requireMissingReminder) {
@@ -239,8 +243,10 @@ public class FoodCrossCheckLiveTest {
                 }
                 assertSame("The controller must retain the original label report object", original, after);
                 assertArrayEquals("The cloud result changed the label report", originalBytes, serialized(after));
-                assertEquals("The cloud result changed the rendered ingredient result",
-                        renderedBefore.get(), renderedAfter.get());
+                if (advice.missingAllergens().isEmpty()) {
+                    assertEquals("A no-reminder cross-check must leave the main result unchanged",
+                            renderedBefore.get(), renderedAfter.get());
+                }
                 for (Allergen missing : advice.missingAllergens()) {
                     AllergenResult result = after.results().stream()
                             .filter(r -> r.allergen().equals(missing)).findFirst().orElseThrow(AssertionError::new);
@@ -284,6 +290,31 @@ public class FoodCrossCheckLiveTest {
         throw new AssertionError("No readable ingredient report appeared; inspect the real label/OCR fixture");
     }
 
+    private static void assertMainResultAdvice(MainActivity activity, AnalysisReport report,
+                                               FoodTypeCrossCheck advice) {
+        if (advice.missingAllergens().isEmpty()) return;
+        String summary = ((TextView) activity.findViewById(R.id.verdict_message)).getText().toString();
+        assertTrue("The main verdict must include the estimated food type", summary.contains(advice.foodType()));
+        assertTrue("The main verdict must keep the reminder unconfirmed", summary.contains("does not confirm"));
+        ViewGroup rows = activity.findViewById(R.id.allergen_rows);
+        for (Allergen allergen : advice.missingAllergens()) {
+            assertTrue("The main verdict must name the allergen to review", summary.contains(allergen.label()));
+            View matching = null;
+            for (int i = 0; i < rows.getChildCount(); i++) {
+                View row = rows.getChildAt(i);
+                if (allergen.id().equals(row.getTag(R.id.allergen_name))) matching = row;
+            }
+            assertNotNull("A photo reminder must appear among the main allergen rows", matching);
+            assertEquals(activity.getString(R.string.crosscheck_review_status),
+                    ((TextView) matching.findViewById(R.id.allergen_status)).getText().toString());
+        }
+        String expectedTitle = report.overall() == AnalysisReport.Status.NOT_DETECTED
+                ? activity.getString(R.string.crosscheck_review_title)
+                : new AnalysisMessage(activity.getResources()).title(report);
+        assertEquals("The photo reminder must preserve stronger label warnings", expectedTitle,
+                ((TextView) activity.findViewById(R.id.verdict_title)).getText().toString());
+    }
+
     private static FoodTypeEstimate awaitCloudEstimate(ScanTestSupport.Scan scan, FoodCrossCheckController controller) {
         long deadline = SystemClock.uptimeMillis() + 120_000;
         String[] latest = {""};
@@ -313,6 +344,20 @@ public class FoodCrossCheckLiveTest {
             SystemClock.sleep(50);
         } while (SystemClock.uptimeMillis() < deadline);
         throw new AssertionError("The real ingredient scan was not saved with its label photo");
+    }
+
+    private static void awaitStoredAdvice(ScanHistoryStore store, long id, FoodTypeCrossCheck expected) {
+        long deadline = SystemClock.uptimeMillis() + 10_000;
+        do {
+            ScanHistoryDetail detail = store.detail(id);
+            FoodTypeCrossCheck saved = detail == null ? null : detail.foodTypeCrossCheck();
+            if (expected.missingAllergens().isEmpty() && saved == null) return;
+            if (saved != null && expected.foodType().equals(saved.foodType())
+                    && expected.commonAllergens().equals(saved.commonAllergens())
+                    && expected.missingAllergens().equals(saved.missingAllergens())) return;
+            SystemClock.sleep(25);
+        } while (SystemClock.uptimeMillis() < deadline);
+        throw new AssertionError("The cloud reminder was not saved with its ingredient-history row");
     }
 
     private static HistorySnapshot historySnapshot(ScanHistoryDatabase database, long id) {

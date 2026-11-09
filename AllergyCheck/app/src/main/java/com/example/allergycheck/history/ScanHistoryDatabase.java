@@ -13,7 +13,7 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
 
     public static final String FILE_NAME = "scan_history.db";
 
-    private static final int VERSION = 2;
+    private static final int VERSION = 3;
 
     static final String TABLE = "scans";
     static final String ID = "_id";
@@ -28,6 +28,7 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
     static final String REPORT_VERSION = "report_version";
     static final String MESSAGE_TITLE = "message_title";
     static final String MESSAGE_BODY = "message_body";
+    static final String FOOD_TYPE_CROSSCHECK = "food_type_crosscheck";
 
     public ScanHistoryDatabase(@NonNull Context context) {
         this(context, FILE_NAME);
@@ -55,7 +56,8 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
                 + REPORT_BLOB + " BLOB, "
                 + REPORT_VERSION + " INTEGER NOT NULL DEFAULT 0, "
                 + MESSAGE_TITLE + " TEXT, "
-                + MESSAGE_BODY + " TEXT)");
+                + MESSAGE_BODY + " TEXT, "
+                + FOOD_TYPE_CROSSCHECK + " TEXT)");
         db.execSQL("CREATE INDEX idx_scans_created_at ON " + TABLE
                 + " (" + CREATED_AT + " DESC, " + ID + " DESC)");
     }
@@ -67,6 +69,10 @@ public final class ScanHistoryDatabase extends SQLiteOpenHelper {
             // Keep the saved reports, photos and failure messages intact.
             db.execSQL("ALTER TABLE " + TABLE + " ADD COLUMN " + AI_INCOMPLETE
                     + " INTEGER NOT NULL DEFAULT 0");
+        }
+        if (from < 3) {
+            // Optional photo advice belongs to the saved scan, not to its ingredient report.
+            db.execSQL("ALTER TABLE " + TABLE + " ADD COLUMN " + FOOD_TYPE_CROSSCHECK + " TEXT");
         }
     }
 }

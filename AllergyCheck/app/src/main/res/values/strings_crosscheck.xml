@@ -23,6 +23,10 @@
     <string name="crosscheck_error">The optional cloud check could not be completed. Check the connection and image-capable model settings, then retry. Ingredient-label results are unchanged.</string>
     <string name="crosscheck_missing_allergens">Estimated food type: %1$s.\n\nCommon allergens to review: %2$s. These were not identified in the ingredient-label analysis. Check the complete label again. This reminder does not confirm their presence or add them to your results.</string>
     <string name="crosscheck_no_missing">Estimated food type: %1$s. No additional reminders for your selected allergens. This does not establish that the product is allergen-free. Ingredient-label results are unchanged.</string>
+    <string name="crosscheck_review_title">Review the ingredient label</string>
+    <string name="crosscheck_review_status">Review needed</string>
+    <string name="crosscheck_review_summary">The front photo suggests %1$s. Common allergens to review: %2$s. These were not identified in the ingredient-label analysis. This estimate does not confirm their presence. Check the complete label again.</string>
+    <string name="crosscheck_review_evidence">Ingredient label: %1$s.\n\nFront photo: %2$s. %3$s is common for this food type, but its presence is unconfirmed. Check the complete label again.</string>
     <string name="crosscheck_label_unavailable">A readable ingredient-label result is needed for this comparison. Retry the label photo first.</string>
     <string name="crosscheck_no_allergens">Select allergens and check the ingredient label before running this comparison.</string>
     <string name="crosscheck_retry">Retry cross-check</string>
